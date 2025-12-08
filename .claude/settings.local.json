@@ -3,7 +3,14 @@
     "allow": [
       "Bash(tree:*)",
       "Bash(go work sync:*)",
-      "Bash(go version:*)"
+      "Bash(go version:*)",
+      "Bash(gh:*)",
+      "Bash(winget:*)",
+      "Bash(choco:*)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" --version)",
+      "Bash(\"C:\\Program Files (x86)\\GitHub CLI\\gh.exe\" --version)",
+      "Bash(where:*)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" auth login --web --git-protocol https --hostname github.com)"
     ],
     "deny": [],
     "ask": []

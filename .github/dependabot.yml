@@ -1,0 +1,174 @@
+version: 2
+updates:
+  # Go modules for auth-service
+  - package-ecosystem: "gomod"
+    directory: "/services/auth-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "go"
+      - "auth-service"
+    reviewers:
+      - "giia-team"
+
+  # Go modules for catalog-service
+  - package-ecosystem: "gomod"
+    directory: "/services/catalog-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "go"
+      - "catalog-service"
+
+  # Go modules for ddmrp-engine-service
+  - package-ecosystem: "gomod"
+    directory: "/services/ddmrp-engine-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "go"
+      - "ddmrp-engine-service"
+
+  # Go modules for execution-service
+  - package-ecosystem: "gomod"
+    directory: "/services/execution-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "go"
+      - "execution-service"
+
+  # Go modules for analytics-service
+  - package-ecosystem: "gomod"
+    directory: "/services/analytics-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "go"
+      - "analytics-service"
+
+  # Go modules for ai-agent-service
+  - package-ecosystem: "gomod"
+    directory: "/services/ai-agent-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "go"
+      - "ai-agent-service"
+
+  # Shared packages
+  - package-ecosystem: "gomod"
+    directory: "/pkg/config"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "shared-pkg"
+
+  - package-ecosystem: "gomod"
+    directory: "/pkg/logger"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "shared-pkg"
+
+  - package-ecosystem: "gomod"
+    directory: "/pkg/database"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "shared-pkg"
+
+  - package-ecosystem: "gomod"
+    directory: "/pkg/errors"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "shared-pkg"
+
+  - package-ecosystem: "gomod"
+    directory: "/pkg/events"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "shared-pkg"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/services/auth-service"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker"
+    directory: "/services/catalog-service"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker"
+    directory: "/services/ddmrp-engine-service"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker"
+    directory: "/services/execution-service"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker"
+    directory: "/services/analytics-service"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker"
+    directory: "/services/ai-agent-service"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
