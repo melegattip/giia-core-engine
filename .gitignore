@@ -1,0 +1,106 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.txt
+coverage.html
+
+# Dependency directories
+vendor/
+
+# Go workspace file (optional - some teams commit this)
+# go.work.sum
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Compiled Object files
+*.o
+*.a
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Docker volumes
+docker-compose.override.yml
+
+# Build artifacts
+services/*/bin/
+services/*/dist/
+
+# Generated protobuf files (will be regenerated)
+*.pb.go
+*_grpc.pb.go
+
+# Air live reload
+.air.toml
+tmp/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# Node modules (if using tools like Prettier)
+node_modules/
+
+# Migration state
+*.migration.lock
+
+# Kubernetes secrets
+deployments/**/secrets.yaml
+deployments/**/*-secret.yaml
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
+# Sensitive data
+secrets/
+*.key
+*.pem
+*.crt
+*.p12
+*.jks

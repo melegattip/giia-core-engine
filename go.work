@@ -1,0 +1,18 @@
+go 1.23
+
+use (
+	// Services
+	./services/auth-service
+	./services/catalog-service
+	./services/ddmrp-engine-service
+	./services/execution-service
+	./services/analytics-service
+	./services/ai-agent-service
+
+	// Shared Packages
+	./pkg/config
+	./pkg/logger
+	./pkg/database
+	./pkg/errors
+	./pkg/events
+)

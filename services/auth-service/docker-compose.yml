@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: users_service_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: users_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - users_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: users_service_redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - users_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  users-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: users_service_api
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: users_db
+      DB_SSLMODE: disable
+      DB_POOL_MODE: transaction
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 1
+      JWT_SECRET: financial_resume_secret_key_2024_dev
+      ENVIRONMENT: development
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  users_postgres_data:
+  users_redis_data: 

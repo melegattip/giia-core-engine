@@ -1,0 +1,278 @@
+---
+alwaysApply: true
+---
+
+# 🧪 Reglas de Testing
+
+## Comandos de Testing
+
+### Con Fury (Preferido)
+```bash
+# Activar entorno
+colima start
+
+# Ejecutar tests
+fury test
+```
+
+### Con Go Nativo
+```bash
+# Tests básicos
+go test ./... -count=1
+
+# Tests con race detection
+go test ./... -count=1 -race
+```
+
+### Coverage
+```bash
+# Generar coverage de un package específico
+go test -coverprofile=coverage.out [package_path]
+
+# Ejemplo
+go test -coverprofile=coverage.out github.com/melisource/fury_credits-scoring-engine/internal/core/usecases/subcases/information
+
+# Visualizar coverage
+go tool cover -html="coverage.out"
+```
+
+## Convenciones de Testing
+
+### Estructura de Tests
+Usar el patrón **Given-When-Then**:
+
+```go
+// ✅ Estructura recomendada
+func TestFunctionName_Scenario_ExpectedBehavior(t *testing.T) {
+    // Given - Preparar datos de prueba
+    input := setupTestData()
+    expectedResult := "expected_value"
+    
+    // When - Ejecutar función bajo prueba
+    result, err := FunctionToTest(input)
+    
+    // Then - Verificar resultados
+    assert.NoError(t, err)
+    assert.Equal(t, expectedResult, result)
+}
+```
+
+### Convenciones de Nombrado de Variables en Test Cases
+
+Para estructuras de casos de prueba, usar prefijos específicos para identificar claramente el propósito de cada variable:
+
+#### Prefijo `given` - Datos de Entrada y Configuración
+Variables que **nosotros establecemos** como datos de entrada, configuración de mocks, o condiciones iniciales:
+
+```go
+// ✅ Ejemplos de variables "given"
+type testScenario struct {
+    name                        string
+    givenRequestString          string                    // Datos de entrada
+    givenSiteID                 constants.Site           // Parámetros de configuración
+    givenLatestRecord           *dependencies.DebtContext // Estados iniciales
+    givenKvsGetError            error                     // Errores simulados en mocks
+    givenKvsSaveError           error                     // Comportamiento de dependencias
+    givenTimestampToUTCResponse time.Time               // Respuestas mockeadas
+}
+```
+
+#### Prefijo `expected` - Resultados Esperados
+Variables que representan **los resultados que esperamos** obtener del test:
+
+```go
+// ✅ Ejemplos de variables "expected"  
+type testScenario struct {
+    expectedError               error  // Error esperado como resultado
+    expectedKvsSaveCalls        int    // Número de llamadas esperadas
+    expectedKvsGetCalls         int    // Interacciones esperadas con mocks
+    expectedPublishCalls        int    // Validaciones de comportamiento
+    expectedResult              string // Valores de retorno esperados
+}
+```
+
+#### Ejemplo Completo
+```go
+type testScenario struct {
+    name                        string
+    // Given - Lo que establecemos
+    givenUserID                 int64
+    givenRequestData            string
+    givenRepositoryError        error
+    givenMockResponse           *entities.User
+    
+    // Expected - Lo que esperamos
+    expectedError               error
+    expectedResult              *entities.User
+    expectedRepositoryCalls     int
+    expectedCacheWrites         int
+}
+```
+
+#### ⚠️ Beneficios de esta Convención
+- **Claridad**: Inmediatamente se identifica si una variable es entrada o resultado esperado
+- **Mantenibilidad**: Facilita la lectura y modificación de tests complejos
+- **Consistencia**: Patrón uniforme en todo el codebase para estructuras de test cases
+
+### Naming Convention
+```go
+// Formato: TestFunctionName_Scenario_ExpectedBehavior
+func TestSearch_WithValidUserID_ReturnsResults(t *testing.T) {}
+func TestSearch_WithInvalidUserID_ReturnsError(t *testing.T) {}
+func TestSearch_WithEmptyProducts_ReturnsAllProducts(t *testing.T) {}
+```
+
+## Convenciones de Mocks
+
+### Ubicación y Nomenclatura
+- **Ubicación**: Mismo package que lo que mockea
+- **Nombre**: Igual al original + sufijo `Mock`
+- **Archivo**: Termina en `_mock.go`
+
+```go
+// ✅ Ejemplo: internal/core/providers/credit_line_mock.go
+type CreditLineMock struct {
+    mock.Mock
+}
+
+func (m *CreditLineMock) Search(ctx context.Context, userID int64, statuses []string, products []string) ([]entities.SearchResults, error) {
+    args := m.Called(ctx, userID, statuses, products)
+    return args.Get(0).([]entities.SearchResults), args.Error(1)
+}
+```
+
+### Configuración de Mocks
+```go
+// ✅ Setup en tests - SER ESPECÍFICO en los parámetros
+func TestService_ProcessData_Success(t *testing.T) {
+    // Given
+    mockRepo := new(CreditLineMock)
+    service := NewService(mockRepo)
+    
+    expectedResults := []entities.SearchResults{{ID: 1}}
+    expectedStatuses := []string{"approved", "active"}
+    expectedProducts := []string{"consumer_loan", "personal_loan"}
+    
+    // ✅ Especificar valores exactos en lugar de mock.Anything
+    mockRepo.On("Search", 
+        context.Background(),
+        int64(123),
+        expectedStatuses,
+        expectedProducts,
+    ).Return(expectedResults, nil)
+    
+    // When
+    results, err := service.ProcessData(context.Background(), 123)
+    
+    // Then
+    assert.NoError(t, err)
+    assert.Equal(t, expectedResults, results)
+    mockRepo.AssertExpectations(t)
+}
+```
+
+### ⚠️ Reglas para mock.Anything
+```go
+// ❌ MAL - Usar mock.Anything indiscriminadamente
+mockRepo.On("Search", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+
+// ✅ BIEN - Solo cuando realmente no importa el valor específico
+mockRepo.On("Search", 
+    mock.AnythingOfType("*context.Context"), // Cuando el contexto no es relevante para el test
+    int64(123),                              // UserID específico
+    []string{"approved"},                    // Statuses específicos
+    mock.Anything,                          // Solo si products realmente puede ser cualquier cosa
+)
+
+// 🎯 MEJOR - Ser específico siempre que sea posible
+mockRepo.On("Search",
+    context.Background(),
+    int64(123),
+    []string{"approved", "active"},
+    []string{"consumer_loan"},
+).Return(expectedResults, nil)
+```
+
+### 🎯 Best Practices para Mocks
+
+#### Principios Fundamentales
+- **Ser específico** es mejor que usar `mock.Anything`
+- **Validar comportamiento** no solo resultados
+- **Un mock por responsabilidad** - no mockear todo
+- **Limpiar mocks** entre tests
+
+#### Cuándo usar mock.Anything
+```go
+// ✅ ACEPTABLE - Context que no afecta la lógica de negocio
+mockService.On("ProcessData", mock.AnythingOfType("*context.Context"), specificUserID)
+
+// ✅ ACEPTABLE - IDs generados dinámicamente que no se pueden predecir
+mockRepo.On("Save", mock.AnythingOfType("*entities.User")).Return(mock.Anything, nil)
+
+// ❌ EVITAR - Parámetros que sí importan para la lógica
+mockRepo.On("FindByStatus", mock.Anything) // ¿Qué status? ¡Debe ser específico!
+```
+
+#### Validaciones en Mocks
+```go
+// ✅ Validar que se llamó con parámetros correctos
+mockRepo.On("UpdateStatus", int64(123), "approved").Return(nil).Once()
+
+// ✅ Validar número de llamadas
+mockRepo.AssertNumberOfCalls(t, "UpdateStatus", 1)
+
+// ✅ Validar que NO se llamó un método
+mockRepo.AssertNotCalled(t, "Delete")
+```
+
+## Estrategias de Testing
+
+### Tipos de Tests
+- **Unit Tests**: Para cada función/método público
+- **Integration Tests**: Para flujos completos entre componentes
+- **Repository Tests**: Para validar integración con APIs externas
+
+### Coverage Goals
+- **Mínimo**: 80% de coverage
+- **Objetivo**: 90%+ para código crítico
+- **Foco**: Priorizar paths principales y casos de error
+
+### Test Data Management
+
+#### Para Tests Unitarios
+```go
+// ✅ Usar TimeManagerMock en tests
+func setupTestData() *TestInput {
+    mockTimeManager := new(timeManager.TimeManagerMock)
+    testDate := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
+    
+    return &TestInput{
+        UserID:    123,
+        Products:  []string{"consumer_loan", "personal_loan"},
+        CreatedAt: testDate,
+    }
+}
+```
+
+## Testing con Sandbox/Beta
+
+### Loki para Mocking
+Para pruebas en beta, usar Loki client para mockear dependencias:
+- Seguir documentación: `github.com/melisource/fury_loki-client`
+- Crear casos de prueba documentados
+- Validar comportamiento en environment real
+
+### Limitaciones Locales
+- **Rules Engine**: Solo responde con `low` en desarrollo local
+- **Validación completa**: Realizar pruebas en entorno beta
+- **Credit Level**: Testing real solo en beta
+
+## Checklist de Testing
+
+- [ ] ¿Tests unitarios para nuevas funciones públicas?
+- [ ] ¿Tests de error cases y edge cases?
+- [ ] ¿Mocks siguen las convenciones de naming?
+- [ ] ¿Coverage mínimo del 80%?
+- [ ] ¿Tests de integración para flujos críticos?
+- [ ] ¿Documentación de casos de prueba para beta? 
+- [ ] ¿Son los tests unitarios lo mas atómicos posibles?

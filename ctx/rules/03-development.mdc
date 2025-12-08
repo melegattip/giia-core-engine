@@ -1,0 +1,69 @@
+---
+alwaysApply: true
+---
+
+# 🔄 Reglas de Proceso de Desarrollo
+
+## Branching Strategy
+
+### Formato de Ramas
+```bash
+# Formato obligatorio
+feature/CBA3-[número_tarea]-[título-descriptivo]
+
+# Ejemplos
+feature/CBA3-1728-interface-time
+feature/CBA3-648-epic-short-loan
+feature/CBA3-790-add-short-loan-product
+```
+
+### Flujo de Branches
+- **Base Branch**: Todas las ramas deben generarse desde `develop`
+- **Target Branch**: PRs deben apuntar a `develop`
+- **Approvals**: Mínimo 2 approvals para merge
+- **Merge Strategy**: Usar "Squash and Merge" para features
+- **Epic Branch**: Para features grandes que requieren múltiples ramas paralelas:
+  - Crear una rama `feature/CBA3-epic-[nombre]` desde `develop`
+  - Las ramas individuales se crean desde esta epic branch
+  - Los PRs se apuntan a la epic branch
+  - Una vez completadas todas las features, la epic branch se mergea a `develop`
+
+## Versionado Semántico
+
+Seguir el formato `MAJOR.MINOR.PATCH`:
+
+- **MAJOR**: Cambios incompatibles en API (rompe compatibilidad)
+- **MINOR**: Nuevas funcionalidades compatibles hacia atrás
+- **PATCH**: Correcciones de errores compatibles
+
+### Ejemplos
+```
+1.0.0 → 1.0.1  (patch: bug fix)
+1.0.1 → 1.1.0  (minor: nueva feature)
+1.1.0 → 2.0.0  (major: breaking change)
+```
+
+## Deployment Strategy
+
+### Estrategias de Merge por Branch
+- **feature → develop**: SQUASH
+- **hotfix → master**: MERGE
+- **release → master**: MERGE
+- **backports → develop**: MERGE
+- **backports → master**: MERGE
+
+### Proceso de Release
+1. Crear release branch desde develop
+2. PR a master con formato: `Release - X.Y.Z - dd-mm-yyyy`
+3. Deploy RC a blue-green
+4. Verificar en logs de Kibana
+5. Merge a master con "Create a merge commit"
+
+## Pre-commit Checklist
+
+- [ ] ¿La rama sigue el formato `feature/CBA3-xxx`?
+- [ ] ¿El PR apunta a `develop`?
+- [ ] ¿Tiene mínimo 2 reviewers?
+- [ ] ¿Sigue las reglas arquitectónicas?
+- [ ] ¿Pasan todos los linters?
+- [ ] ¿Tiene tests unitarios?

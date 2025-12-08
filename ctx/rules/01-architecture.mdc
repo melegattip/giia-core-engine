@@ -1,0 +1,73 @@
+---
+alwaysApply: true
+---
+
+# 🏗️ Reglas de Arquitectura
+
+## Proyecto
+**Credits Scoring Engine** desarrollado en **Go 1.23.4** implementando **Clean Architecture** con separación clara de capas.
+
+## Estructura de Directorios
+
+### 📁 Estructura Actual del Proyecto
+```
+fury_credits-scoring-engine/
+├── cmd/                     # Puntos de entrada
+│   └── api/                # Servidor HTTP principal
+│
+├── internal/               # Código privado
+│   ├── core/              # 🧠 DOMINIO Y LÓGICA DE NEGOCIO
+│   │   ├── domain/        # Entidades y value objects
+│   │   ├── usecases/      # Casos de uso
+│   │   ├── providers/     # Interfaces/contratos
+│   │   ├── errors/        # Errores de dominio
+│   │   └── logs/          # Logging del core
+│   │
+│   ├── infrastructure/    # 🔌 ADAPTADORES EXTERNOS
+│   │   ├── adapters/      # Implementaciones de interfaces
+│   │   ├── repositories/  # Acceso a datos
+│   │   ├── entrypoints/   # Controllers HTTP
+│   │   ├── middlewares/   # Middlewares HTTP
+│   │   ├── context/       # Contexto de infraestructura
+│   │   └── logger/        # Sistema de logging
+│   │
+│   ├── app/              # 🏗️ CONFIGURACIÓN
+│   └── stub/             # 🧪 MOCKS Y TESTING
+│
+├── docs/                 # Documentación
+├── .cursor/              # Reglas para Cursor
+│   └── rules/           # Reglas de desarrollo
+│
+├── go.mod               # Dependencias
+├── go.sum               # Checksums
+├── Makefile            # Comandos de automatización
+└── README.md           # Documentación principal
+```
+
+## Principios Arquitectónicos
+
+### Clean Architecture
+- **Separación clara** entre core, infrastructure y app
+- **Dependencias hacia adentro**: Las capas externas dependen de las internas
+- **Independencia de frameworks**: El core no debe depender de herramientas externas
+
+### Patrones de Diseño
+- **Dependency Injection**: Desacoplar componentes
+- **Repository Pattern**: Para acceso a datos externos
+- **Interface Segregation**: Interfaces pequeñas y específicas
+
+## Dependency Management
+
+### Go Modules
+- Mantener `go.mod` actualizado
+- Usar versiones específicas de dependencias Fury
+- No agregar dependencias innecesarias
+
+### Fury Toolkits Principales
+```go
+// Toolkits principales del proyecto
+github.com/melisource/fury_go-core
+github.com/melisource/fury_go-platform
+github.com/melisource/fury_go-toolkit-kvs
+github.com/melisource/fury_go-toolkit-config
+```

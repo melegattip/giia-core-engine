@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: giia-postgres
+    environment:
+      POSTGRES_USER: giia
+      POSTGRES_PASSWORD: giia_dev_password
+      POSTGRES_DB: giia_dev
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U giia"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - giia-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: giia-redis
+    command: redis-server --requirepass giia_redis_password
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - giia-network
+
+  # NATS Jetstream (Message Bus)
+  nats:
+    image: nats:2-alpine
+    container_name: giia-nats
+    command: "-js -m 8222"
+    ports:
+      - "4222:4222"  # Client connections
+      - "8222:8222"  # HTTP monitoring
+    volumes:
+      - nats_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - giia-network
+
+  # pgAdmin (Optional - for database management)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: giia-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@giia.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - giia-network
+    profiles:
+      - tools
+
+  # Redis Commander (Optional - for Redis management)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: giia-redis-commander
+    environment:
+      REDIS_HOSTS: local:giia-redis:6379:0:giia_redis_password
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - giia-network
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  nats_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  giia-network:
+    driver: bridge
