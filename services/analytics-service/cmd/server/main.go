@@ -15,7 +15,9 @@ func main() {
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok","service":"analytics-service"}`))
+		if _, err := w.Write([]byte(`{"status":"ok","service":"analytics-service"}`)); err != nil {
+			log.Printf("Error writing response: %v", err)
+		}
 	})
 
 	fmt.Printf("🚀 Analytics Service starting on port %s...\n", port)
