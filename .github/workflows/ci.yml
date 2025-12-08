@@ -23,11 +23,32 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v4
-        with:
-          version: latest
-          args: --timeout=5m
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.8
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Run golangci-lint on workspace modules
+        run: |
+          # Lint each service
+          for service in services/*/; do
+            if [ -f "${service}go.mod" ]; then
+              echo "Linting ${service}"
+              cd "${service}"
+              golangci-lint run --timeout=5m ./... || exit 1
+              cd - > /dev/null
+            fi
+          done
+
+          # Lint shared packages
+          for pkg in pkg/*/; do
+            if [ -f "${pkg}go.mod" ]; then
+              echo "Linting ${pkg}"
+              cd "${pkg}"
+              golangci-lint run --timeout=5m ./... || exit 1
+              cd - > /dev/null
+            fi
+          done
 
   test:
     name: Run Tests
@@ -78,22 +99,65 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Download dependencies
-        run: go mod download
-
-      - name: Run tests with coverage
+      - name: Run tests for workspace modules
         run: |
-          go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+          # Initialize combined coverage
+          echo "mode: atomic" > coverage.out
+
+          # Test each service
+          for service in services/*/; do
+            if [ -f "${service}go.mod" ]; then
+              echo "Testing ${service}"
+              cd "${service}"
+              go mod download
+              if go test -v -race -coverprofile=coverage.tmp -covermode=atomic ./... 2>&1 | tee test.log; then
+                if [ -f coverage.tmp ]; then
+                  tail -n +2 coverage.tmp >> ../../coverage.out
+                  rm coverage.tmp
+                fi
+              else
+                echo "Tests failed for ${service}"
+                cat test.log
+                exit 1
+              fi
+              cd - > /dev/null
+            fi
+          done
+
+          # Test shared packages
+          for pkg in pkg/*/; do
+            if [ -f "${pkg}go.mod" ]; then
+              echo "Testing ${pkg}"
+              cd "${pkg}"
+              go mod download
+              if go test -v -race -coverprofile=coverage.tmp -covermode=atomic ./... 2>&1 | tee test.log; then
+                if [ -f coverage.tmp ]; then
+                  tail -n +2 coverage.tmp >> ../../coverage.out
+                  rm coverage.tmp
+                fi
+              else
+                echo "Tests failed for ${pkg}"
+                cat test.log
+                exit 1
+              fi
+              cd - > /dev/null
+            fi
+          done
 
       - name: Generate coverage report
         run: |
-          go tool cover -func=coverage.out -o=coverage.txt
-          echo "## Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat coverage.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          if [ -f coverage.out ] && [ -s coverage.out ]; then
+            go tool cover -func=coverage.out -o=coverage.txt
+            echo "## Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat coverage.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No coverage data generated" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Upload coverage to Codecov
+        if: hashFiles('coverage.out') != ''
         uses: codecov/codecov-action@v4
         with:
           files: ./coverage.out
