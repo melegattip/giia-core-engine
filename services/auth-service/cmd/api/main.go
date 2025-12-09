@@ -12,13 +12,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
-	"users-service/internal/handlers"
-	"users-service/internal/infrastructure/auth"
-	"users-service/internal/infrastructure/config"
-	"users-service/internal/infrastructure/middleware"
-	"users-service/internal/repository"
-	"users-service/internal/usecases"
-	"users-service/pkg/database"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/handlers"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/auth"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/config"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/middleware"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/repository"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/usecases"
+	"github.com/giia/giia-core-engine/services/auth-service/pkg/database"
 )
 
 func main() {

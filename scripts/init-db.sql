@@ -1,70 +1,74 @@
+-- =============================================================================
 -- GIIA Database Initialization Script
--- This script creates separate databases for each service
+-- =============================================================================
+-- This script creates separate schemas within the giia_dev database for each
+-- microservice, following the multi-schema approach for logical data isolation.
+-- =============================================================================
 
--- Create databases for each service
-CREATE DATABASE IF NOT EXISTS giia_auth;
-CREATE DATABASE IF NOT EXISTS giia_catalog;
-CREATE DATABASE IF NOT EXISTS giia_ddmrp;
-CREATE DATABASE IF NOT EXISTS giia_execution;
-CREATE DATABASE IF NOT EXISTS giia_analytics;
-CREATE DATABASE IF NOT EXISTS giia_ai;
+-- Create schemas for each microservice
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE SCHEMA IF NOT EXISTS catalog;
+CREATE SCHEMA IF NOT EXISTS ddmrp;
+CREATE SCHEMA IF NOT EXISTS execution;
+CREATE SCHEMA IF NOT EXISTS analytics;
+CREATE SCHEMA IF NOT EXISTS ai_agent;
 
--- Create users (optional - for service isolation)
-DO
-$$
-BEGIN
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'auth_service') THEN
-        CREATE USER auth_service WITH PASSWORD 'auth_service_password';
-    END IF;
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'catalog_service') THEN
-        CREATE USER catalog_service WITH PASSWORD 'catalog_service_password';
-    END IF;
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'ddmrp_service') THEN
-        CREATE USER ddmrp_service WITH PASSWORD 'ddmrp_service_password';
-    END IF;
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'execution_service') THEN
-        CREATE USER execution_service WITH PASSWORD 'execution_service_password';
-    END IF;
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'analytics_service') THEN
-        CREATE USER analytics_service WITH PASSWORD 'analytics_service_password';
-    END IF;
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'ai_service') THEN
-        CREATE USER ai_service WITH PASSWORD 'ai_service_password';
-    END IF;
-END
-$$;
-
--- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE giia_auth TO auth_service;
-GRANT ALL PRIVILEGES ON DATABASE giia_catalog TO catalog_service;
-GRANT ALL PRIVILEGES ON DATABASE giia_ddmrp TO ddmrp_service;
-GRANT ALL PRIVILEGES ON DATABASE giia_execution TO execution_service;
-GRANT ALL PRIVILEGES ON DATABASE giia_analytics TO analytics_service;
-GRANT ALL PRIVILEGES ON DATABASE giia_ai TO ai_service;
-
--- Enable UUID extension
-\c giia_auth
+-- Enable required PostgreSQL extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-\c giia_catalog
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enable vector extension for AI service (if available)
+-- Note: This may require pg_vector to be installed
+-- Uncomment if using vector embeddings:
+-- CREATE EXTENSION IF NOT EXISTS "vector";
 
-\c giia_ddmrp
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Set default search_path to include all schemas (optional)
+-- Each service should specify its schema in connection string
+ALTER DATABASE giia_dev SET search_path TO auth, catalog, ddmrp, execution, analytics, ai_agent, public;
 
-\c giia_execution
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Grant schema usage to the giia user
+GRANT USAGE ON SCHEMA auth TO giia;
+GRANT USAGE ON SCHEMA catalog TO giia;
+GRANT USAGE ON SCHEMA ddmrp TO giia;
+GRANT USAGE ON SCHEMA execution TO giia;
+GRANT USAGE ON SCHEMA analytics TO giia;
+GRANT USAGE ON SCHEMA ai_agent TO giia;
 
-\c giia_analytics
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Grant all privileges on all tables in schemas to giia user
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA auth TO giia;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA catalog TO giia;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ddmrp TO giia;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA execution TO giia;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA analytics TO giia;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ai_agent TO giia;
 
-\c giia_ai
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "vector";  -- For embeddings (if using RAG)
+-- Grant all privileges on all sequences in schemas to giia user
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA auth TO giia;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA catalog TO giia;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA ddmrp TO giia;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA execution TO giia;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA analytics TO giia;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA ai_agent TO giia;
 
--- Switch back to default database
-\c giia_dev;
+-- Set default privileges for future tables
+ALTER DEFAULT PRIVILEGES IN SCHEMA auth GRANT ALL ON TABLES TO giia;
+ALTER DEFAULT PRIVILEGES IN SCHEMA catalog GRANT ALL ON TABLES TO giia;
+ALTER DEFAULT PRIVILEGES IN SCHEMA ddmrp GRANT ALL ON TABLES TO giia;
+ALTER DEFAULT PRIVILEGES IN SCHEMA execution GRANT ALL ON TABLES TO giia;
+ALTER DEFAULT PRIVILEGES IN SCHEMA analytics GRANT ALL ON TABLES TO giia;
+ALTER DEFAULT PRIVILEGES IN SCHEMA ai_agent GRANT ALL ON TABLES TO giia;
+
+-- Set default privileges for future sequences
+ALTER DEFAULT PRIVILEGES IN SCHEMA auth GRANT ALL ON SEQUENCES TO giia;
+ALTER DEFAULT PRIVILEGES IN SCHEMA catalog GRANT ALL ON SEQUENCES TO giia;
+ALTER DEFAULT PRIVILEGES IN SCHEMA ddmrp GRANT ALL ON SEQUENCES TO giia;
+ALTER DEFAULT PRIVILEGES IN SCHEMA execution GRANT ALL ON SEQUENCES TO giia;
+ALTER DEFAULT PRIVILEGES IN SCHEMA analytics GRANT ALL ON SEQUENCES TO giia;
+ALTER DEFAULT PRIVILEGES IN SCHEMA ai_agent GRANT ALL ON SEQUENCES TO giia;
 
 -- Log initialization complete
-SELECT 'GIIA databases initialized successfully!' AS status;
+DO $$
+BEGIN
+    RAISE NOTICE 'GIIA database schemas initialized successfully!';
+    RAISE NOTICE 'Schemas created: auth, catalog, ddmrp, execution, analytics, ai_agent';
+END $$;

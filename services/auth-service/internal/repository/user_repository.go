@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"users-service/internal/domain"
-	"users-service/pkg/database"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/domain"
+	"github.com/giia/giia-core-engine/services/auth-service/pkg/database"
 
 	"github.com/lib/pq"
 )

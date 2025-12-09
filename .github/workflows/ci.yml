@@ -78,12 +78,14 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Download dependencies
-        run: go mod download
+      - name: Sync workspace
+        run: go work sync
 
       - name: Run tests with coverage
         run: |
-          go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+          # Test auth-service (only service with tests currently)
+          cd services/auth-service
+          go test -v -race -coverprofile=../../coverage.out -covermode=atomic ./...
 
       - name: Generate coverage report
         run: |
