@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"users-service/internal/domain"
-	"users-service/internal/usecases"
-	"users-service/pkg/imageprocessor"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/domain"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/usecases"
+	"github.com/giia/giia-core-engine/services/auth-service/pkg/imageprocessor"
 
 	"github.com/gin-gonic/gin"
 )

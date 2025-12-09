@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"users-service/internal/infrastructure/auth"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/auth"
 )
 
 type AuthMiddleware struct {

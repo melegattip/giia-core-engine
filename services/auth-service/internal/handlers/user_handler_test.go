@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"users-service/internal/domain"
-	"users-service/internal/infrastructure/auth"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/domain"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/auth"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"

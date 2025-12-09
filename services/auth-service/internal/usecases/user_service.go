@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	"users-service/internal/domain"
-	"users-service/internal/infrastructure/auth"
-	"users-service/internal/repository"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/domain"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/auth"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/repository"
 )
 
 type UserService interface {

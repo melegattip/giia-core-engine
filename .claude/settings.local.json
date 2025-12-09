@@ -44,7 +44,13 @@
       "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" run view 20043772060 --repo melegattip/giia-core-engine --log-failed --job 57484243996)",
       "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" pr list --repo melegattip/giia-core-engine --limit 100 --json number,title,author --jq 'length')",
       "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" pr list --repo melegattip/giia-core-engine --limit 100 --json number,title,author --jq '.[] | select(.author.login==\"\"\"\"dependabot[bot]\"\"\"\") | .number')",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(go mod download:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(go work vendor:*)",
+      "Bash(go build:*)",
+      "Bash(go test:*)",
+      "Bash(make build-auth:*)"
     ],
     "deny": [],
     "ask": []
