@@ -30,7 +30,21 @@
       "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" api repos/melegattip/giia-core-engine/branches/develop/protection --method PUT --input branch-protection-develop.json)",
       "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" api repos/melegattip/giia-core-engine --jq '{visibility: .visibility, actions_enabled: .has_actions, environments: \"\"check_environments\"\"}')",
       "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" api repos/melegattip/giia-core-engine/branches/main/protection --jq '{branch: \"\"main\"\", requires_pr: .required_pull_request_reviews.required_approving_review_count, linear_history: .required_linear_history.enabled, conversation_resolution: .required_conversation_resolution.enabled}')",
-      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" api repos/melegattip/giia-core-engine/branches/develop/protection --jq '{branch: \"\"develop\"\", requires_pr: .required_pull_request_reviews.required_approving_review_count, linear_history: .required_linear_history.enabled, conversation_resolution: .required_conversation_resolution.enabled}')"
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" api repos/melegattip/giia-core-engine/branches/develop/protection --jq '{branch: \"\"develop\"\", requires_pr: .required_pull_request_reviews.required_approving_review_count, linear_history: .required_linear_history.enabled, conversation_resolution: .required_conversation_resolution.enabled}')",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" pr view 51 --repo melegattip/giia-core-engine)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" pr checks 51 --repo melegattip/giia-core-engine)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" run list --repo melegattip/giia-core-engine --limit 3)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" run view 20043588839 --repo melegattip/giia-core-engine --log-failed)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" run view 20043668035 --repo melegattip/giia-core-engine --log-failed --job 57483880109)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" pr view 51 --repo melegattip/giia-core-engine --json title,state,statusCheckRollup)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" run view 20043772060 --repo melegattip/giia-core-engine --log-failed --job 57484243996)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" pr list --repo melegattip/giia-core-engine --limit 100 --json number,title,author --jq 'length')",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" pr list --repo melegattip/giia-core-engine --limit 100 --json number,title,author --jq '.[] | select(.author.login==\"\"\"\"dependabot[bot]\"\"\"\") | .number')",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

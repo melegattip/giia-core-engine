@@ -140,20 +140,68 @@ docker-push: ## Push all Docker images
 
 ##@ Local Development
 
+setup-local: ## Complete local development setup (one-command)
+	@echo "$(COLOR_GREEN)Running complete local setup...$(COLOR_RESET)"
+	@bash scripts/setup-local.sh
+
 run-local: ## Run local development environment with Docker Compose
 	@echo "$(COLOR_GREEN)Starting local development environment...$(COLOR_RESET)"
 	docker-compose up -d
-	@echo "$(COLOR_GREEN)Development environment started!$(COLOR_RESET)"
-	@echo "$(COLOR_YELLOW)PostgreSQL: localhost:5432$(COLOR_RESET)"
-	@echo "$(COLOR_YELLOW)Redis: localhost:6379$(COLOR_RESET)"
-	@echo "$(COLOR_YELLOW)NATS: localhost:4222$(COLOR_RESET)"
+	@echo "$(COLOR_BLUE)Waiting for services to be healthy...$(COLOR_RESET)"
+	@bash scripts/wait-for-services.sh || true
+	@echo "$(COLOR_GREEN)✓ All services ready!$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Connection Information:$(COLOR_RESET)"
+	@echo "  PostgreSQL: localhost:5432 (user: giia, db: giia_dev)"
+	@echo "  Redis:      localhost:6379 (password: giia_redis_password)"
+	@echo "  NATS:       localhost:4222 (monitoring: http://localhost:8222)"
 
 stop-local: ## Stop local development environment
 	@echo "$(COLOR_YELLOW)Stopping local development environment...$(COLOR_RESET)"
 	docker-compose down
+	@echo "$(COLOR_GREEN)Services stopped$(COLOR_RESET)"
+
+restart-local: stop-local run-local ## Restart local development environment
 
 logs-local: ## Show logs from local development environment
 	docker-compose logs -f
+
+status-local: ## Show status of local infrastructure services
+	@echo "$(COLOR_BLUE)Local Infrastructure Status:$(COLOR_RESET)"
+	@echo ""
+	@docker-compose ps
+	@echo ""
+	@echo "$(COLOR_BLUE)Health Checks:$(COLOR_RESET)"
+	@docker exec giia-postgres pg_isready -U giia && echo "$(COLOR_GREEN)✓ PostgreSQL: Healthy$(COLOR_RESET)" || echo "$(COLOR_RED)✗ PostgreSQL: Unhealthy$(COLOR_RESET)"
+	@docker exec giia-redis redis-cli -a giia_redis_password ping > /dev/null 2>&1 && echo "$(COLOR_GREEN)✓ Redis: Healthy$(COLOR_RESET)" || echo "$(COLOR_RED)✗ Redis: Unhealthy$(COLOR_RESET)"
+	@curl -s http://localhost:8222/healthz > /dev/null 2>&1 && echo "$(COLOR_GREEN)✓ NATS: Healthy$(COLOR_RESET)" || echo "$(COLOR_RED)✗ NATS: Unhealthy$(COLOR_RESET)"
+
+clean-local: ## Clean local environment (remove all data and containers)
+	@echo "$(COLOR_YELLOW)⚠️  WARNING: This will delete all local data!$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Press Ctrl+C to cancel, or wait 5 seconds to continue...$(COLOR_RESET)"
+	@sleep 5
+	@echo "$(COLOR_RED)Removing containers and volumes...$(COLOR_RESET)"
+	docker-compose down -v
+	@echo "$(COLOR_GREEN)✓ Local environment cleaned$(COLOR_RESET)"
+	@echo "$(COLOR_BLUE)Run 'make run-local' to start fresh$(COLOR_RESET)"
+
+run-tools: ## Start optional development tools (pgAdmin, Redis Commander)
+	@echo "$(COLOR_GREEN)Starting development tools...$(COLOR_RESET)"
+	docker-compose --profile tools up -d
+	@echo "$(COLOR_GREEN)✓ Tools started!$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Access Tools:$(COLOR_RESET)"
+	@echo "  pgAdmin:         http://localhost:5050 (admin@giia.local / admin)"
+	@echo "  Redis Commander: http://localhost:8081"
+
+run-service: ## Run a specific service locally (usage: make run-service SERVICE=auth)
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "$(COLOR_RED)Error: SERVICE not specified$(COLOR_RESET)"; \
+		echo "$(COLOR_BLUE)Usage: make run-service SERVICE=auth$(COLOR_RESET)"; \
+		exit 1; \
+	fi
+	@echo "$(COLOR_GREEN)Running $(SERVICE)-service...$(COLOR_RESET)"
+	@cd services/$(SERVICE)-service && $(GO) run cmd/api/main.go || $(GO) run cmd/server/main.go
 
 ##@ Database
 
@@ -169,6 +217,11 @@ migrate-up: ## Run database migrations
 migrate-down: ## Rollback database migrations
 	@echo "$(COLOR_YELLOW)Rolling back database migrations...$(COLOR_RESET)"
 	# Add rollback command here when ready
+
+seed-data: ## Load sample data into local database
+	@echo "$(COLOR_GREEN)Loading seed data...$(COLOR_RESET)"
+	@docker exec -i giia-postgres psql -U giia -d giia_dev < scripts/seed-data.sql
+	@echo "$(COLOR_GREEN)✓ Seed data loaded successfully$(COLOR_RESET)"
 
 ##@ Kubernetes
 

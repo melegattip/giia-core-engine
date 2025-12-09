@@ -145,24 +145,30 @@ giia-core-engine/
 git clone https://github.com/yourusername/giia-core-engine.git
 cd giia-core-engine
 
-# 2. Setup development tools
+# 2. One-command setup (recommended)
+make setup-local
+
+# Or step-by-step:
+# 2a. Setup development tools
 make setup
 
-# 3. Start local infrastructure (PostgreSQL, Redis, NATS)
+# 2b. Start local infrastructure (PostgreSQL, Redis, NATS)
 make run-local
 
-# 4. Download dependencies
+# 3. Download dependencies
 make deps
 
-# 5. Build all services
+# 4. Build all services
 make build
 
-# 6. Run tests
+# 5. Run tests
 make test
 
-# 7. Run a service locally (example: auth-service)
+# 6. Run a service locally (example: auth-service)
 ./bin/auth-service
 ```
+
+**📘 For detailed setup instructions, see [Local Development Guide](docs/LOCAL_DEVELOPMENT.md)**
 
 ---
 
@@ -271,12 +277,20 @@ go test -tags=e2e ./tests/e2e/...
 ### Local Development
 
 ```bash
-# Start PostgreSQL, Redis, NATS
-docker-compose up -d
+# Start infrastructure with health checks
+make run-local
+
+# (Optional) Start development tools (pgAdmin, Redis Commander)
+make run-tools
 
 # Run service locally
+make run-service SERVICE=auth
+
+# Or run directly
 go run services/auth-service/cmd/api/main.go
 ```
+
+**📘 See [Local Development Guide](docs/LOCAL_DEVELOPMENT.md) for complete instructions**
 
 ### Kubernetes (Development)
 
@@ -302,6 +316,7 @@ See [deployments/README.md](deployments/README.md) for production deployment gui
 
 ## 📚 Documentation
 
+- **Local Development**: [docs/LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md) ⭐ **Start Here!**
 - **Architecture**: [ctx/ARCHITECTURE_BALANCED.md](ctx/ARCHITECTURE_BALANCED.md)
 - **Development Rules**: [ctx/rules/](ctx/rules/)
 - **API Documentation**: [docs/api/](docs/api/)
@@ -358,8 +373,8 @@ refactor(scope): code refactoring
 **Phase 1: Foundation (Months 1-3)** - 🚧 In Progress
 
 - [x] Task 1: Setup monorepo structure ✅
-- [ ] Task 2: CI/CD pipeline
-- [ ] Task 3: Local development environment
+- [x] Task 2: CI/CD pipeline ✅
+- [x] Task 3: Local development environment ✅
 - [ ] Task 4: Shared infrastructure packages
 - [ ] Task 5: Auth/IAM service with multi-tenancy
 - [ ] Task 6: RBAC implementation
