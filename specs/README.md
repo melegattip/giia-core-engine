@@ -115,7 +115,7 @@ specs/
 |------|------|------|--------|
 | Task 3: Local Dev Environment | ✅ Complete | ✅ Complete | ✅ **COMPLETED** |
 | Task 4: Shared Packages | ✅ Complete | ✅ Complete | ✅ **COMPLETED** |
-| Task 5: Auth Service Migration | ⏳ Pending | ⏳ Pending | Not Started |
+| Task 5: Auth Service Migration | ✅ Complete | ✅ Complete | 🟡 **IN PROGRESS** (~30% - P1 Foundation Complete) |
 | Task 6: RBAC Implementation | ⏳ Pending | ⏳ Pending | Not Started |
 | Task 7: gRPC Server | ⏳ Pending | ⏳ Pending | Not Started |
 | Task 8: NATS Jetstream | ⏳ Pending | ⏳ Pending | Not Started |
