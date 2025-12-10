@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "auth/v1/messages.proto";
+
+option go_package = "github.com/giia/giia-core-engine/services/auth-service/api/proto/gen/go/auth/v1;authv1";
+
+// AuthService provides authentication and authorization services
+service AuthService {
+  // ValidateToken validates a JWT token and returns user information
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+
+  // CheckPermission checks if a user has a specific permission
+  rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse);
+
+  // BatchCheckPermissions checks multiple permissions in a single call
+  rpc BatchCheckPermissions(BatchCheckPermissionsRequest) returns (BatchCheckPermissionsResponse);
+
+  // GetUser retrieves user information by user ID
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+}
+
+// ValidateToken messages
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message ValidateTokenResponse {
+  bool valid = 1;
+  string reason = 2;
+  UserInfo user = 3;
+  int64 expires_at = 4;
+}
+
+// CheckPermission messages
+message CheckPermissionRequest {
+  string user_id = 1;
+  string organization_id = 2;
+  string permission = 3;
+}
+
+message CheckPermissionResponse {
+  bool allowed = 1;
+  string reason = 2;
+}
+
+// BatchCheckPermissions messages
+message BatchCheckPermissionsRequest {
+  string user_id = 1;
+  string organization_id = 2;
+  repeated string permissions = 3;
+}
+
+message BatchCheckPermissionsResponse {
+  repeated bool results = 1;
+}
+
+// GetUser messages
+message GetUserRequest {
+  string user_id = 1;
+  string organization_id = 2;
+}
+
+message GetUserResponse {
+  UserInfo user = 1;
+}

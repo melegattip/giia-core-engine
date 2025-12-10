@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -11,10 +12,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 
+	pkgDatabase "github.com/giia/giia-core-engine/pkg/database"
+	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/handlers"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/auth"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/config"
+	grpcInit "github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/grpc/initialization"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/middleware"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/repository"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/usecases"
@@ -71,6 +77,61 @@ func main() {
 	if err := db.RunMigrations(); err != nil {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
+
+	// Initialize Redis client
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     cfg.GetRedisAddr(),
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+
+	// Test Redis connection
+	ctx := context.Background()
+	if err := redisClient.Ping(ctx).Err(); err != nil {
+		log.Printf("⚠️  [Redis] Warning: Failed to connect to Redis: %v", err)
+		log.Printf("⚠️  [Redis] gRPC server will not start without Redis")
+	} else {
+		log.Printf("✅ [Redis] Connected successfully to %s", cfg.GetRedisAddr())
+	}
+
+	// Initialize logger
+	logger := pkgLogger.New("auth-service", "info")
+
+	// Initialize GORM database for gRPC server
+	gormDB, err := connectGormDB(cfg)
+	if err != nil {
+		log.Fatalf("Failed to connect GORM database: %v", err)
+	}
+	defer func() {
+		sqlDB, _ := gormDB.DB()
+		if sqlDB != nil {
+			sqlDB.Close()
+		}
+	}()
+
+	// Initialize gRPC server
+	grpcPort := fmt.Sprintf(":%s", getEnvOrDefault("GRPC_PORT", "9091"))
+	grpcContainer, err := grpcInit.InitializeGRPCServer(&grpcInit.GRPCConfig{
+		Port:             grpcPort,
+		JWTSecretKey:     cfg.JWT.SecretKey,
+		JWTAccessExpiry:  cfg.JWT.AccessExpiry,
+		JWTRefreshExpiry: cfg.JWT.RefreshExpiry,
+		JWTIssuer:        cfg.JWT.Issuer,
+		DB:               gormDB,
+		RedisClient:      redisClient,
+		Logger:           logger,
+	})
+	if err != nil {
+		log.Fatalf("Failed to initialize gRPC server: %v", err)
+	}
+
+	// Start gRPC server in a goroutine
+	go func() {
+		log.Printf("🚀 [gRPC Server] Starting on %s", grpcPort)
+		if err := grpcContainer.Server.Start(); err != nil {
+			log.Fatalf("Failed to start gRPC server: %v", err)
+		}
+	}()
 
 	// Initialize services
 	jwtService := auth.NewJWTService(
@@ -214,16 +275,43 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("🛑 [Users Service] Shutting down server...")
+	log.Println("🛑 [Auth Service] Shutting down servers...")
 
 	// Create a context with timeout for shutdown
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// Shutdown server
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Printf("❌ [Users Service] Server forced to shutdown: %v", err)
+	// Shutdown HTTP server
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("❌ [HTTP Server] Server forced to shutdown: %v", err)
 	} else {
-		log.Println("✅ [Users Service] Server shutdown gracefully")
+		log.Println("✅ [HTTP Server] Server shutdown gracefully")
 	}
+
+	// Shutdown gRPC server
+	grpcContainer.Server.Stop()
+	log.Println("✅ [gRPC Server] Server shutdown gracefully")
+
+	// Close Redis connection
+	if err := redisClient.Close(); err != nil {
+		log.Printf("⚠️  [Redis] Error closing connection: %v", err)
+	} else {
+		log.Println("✅ [Redis] Connection closed")
+	}
+}
+
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+func connectGormDB(cfg *config.Config) (*gorm.DB, error) {
+	dsn := cfg.GetDatabaseDSN()
+	gormDB, err := pkgDatabase.ConnectWithDSN(context.Background(), dsn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	}
+	return gormDB, nil
 }
