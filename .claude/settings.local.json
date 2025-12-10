@@ -50,7 +50,8 @@
       "Bash(go work vendor:*)",
       "Bash(go build:*)",
       "Bash(go test:*)",
-      "Bash(make build-auth:*)"
+      "Bash(make build-auth:*)",
+      "Bash(go vet:*)"
     ],
     "deny": [],
     "ask": []
