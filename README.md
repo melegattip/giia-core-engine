@@ -4,7 +4,7 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.23-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Architecture](https://img.shields.io/badge/Architecture-Microservices-green.svg)](ctx/ARCHITECTURE_BALANCED.md)
+[![Architecture](https://img.shields.io/badge/Architecture-Monolithic-green.svg)](docs/architecture/adr/001-consolidate-to-monolithic-architecture.md)
 
 ## 📖 Table of Contents
 
@@ -13,6 +13,7 @@
 - [Monorepo Structure](#monorepo-structure)
 - [Getting Started](#getting-started)
 - [Development](#development)
+- [Code Quality & Linting](#code-quality--linting)
 - [Testing](#testing)
 - [Deployment](#deployment)
 - [Documentation](#documentation)
@@ -37,20 +38,37 @@ GIIA is a SaaS platform that implements **DDMRP (Demand Driven Material Requirem
 
 ## 🏗️ Architecture
 
-This project follows the **Balanced Microservices Architecture** as defined in [ARCHITECTURE_BALANCED.md](ctx/ARCHITECTURE_BALANCED.md).
+This project follows a **Monolith-First Architecture** approach ([ADR 001](docs/architecture/adr/001-consolidate-to-monolithic-architecture.md)).
 
-### Microservices
+### Current Architecture (Monolithic)
 
 ```
-┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│  Auth Service   │  │ Catalog Service │  │ DDMRP Engine    │
-│  (Multi-tenant) │  │  (Master Data)  │  │ (Core Logic)    │
-└─────────────────┘  └─────────────────┘  └─────────────────┘
-┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│ Execution Svc   │  │ Analytics Svc   │  │  AI Agent Svc   │
-│ (Orders/Inv)    │  │ (KPIs/Reports)  │  │ (ChatGPT)       │
-└─────────────────┘  └─────────────────┘  └─────────────────┘
+┌─────────────────────────────────────────┐
+│         GIIA Core Service               │
+│  ┌──────────────────────────────────┐   │
+│  │  Auth Module (Multi-tenant/RBAC) │   │
+│  └──────────────────────────────────┘   │
+│  ┌──────────────────────────────────┐   │
+│  │  Catalog Module (planned)        │   │
+│  │  DDMRP Engine Module (planned)   │   │
+│  │  Execution Module (planned)      │   │
+│  │  Analytics Module (planned)      │   │
+│  │  AI Agent Module (planned)       │   │
+│  └──────────────────────────────────┘   │
+└─────────────────────────────────────────┘
 ```
+
+> **Note**: The project started with a microservices design but consolidated to a monolith following industry best practices (monolith-first approach). Services will be split when domain boundaries are validated and proven scalability needs arise. See [ADR 001](docs/architecture/adr/001-consolidate-to-monolithic-architecture.md) for rationale.
+
+### Future Microservices (Planned)
+
+Once domain boundaries are validated through implementation, the platform may decompose into:
+- **Auth Service** - Authentication, Multi-tenancy, RBAC
+- **Catalog Service** - Products, Suppliers, Buffer Profiles
+- **DDMRP Engine** - Buffer Calculations, Replenishment
+- **Execution Service** - Orders, Inventory, ERP Integrations
+- **Analytics Service** - KPIs, Reports, Dashboards
+- **AI Agent Service** - ChatGPT Integration, Proactive Insights
 
 ### Technology Stack
 
@@ -68,13 +86,16 @@ This project follows the **Balanced Microservices Architecture** as defined in [
 
 ```
 giia-core-engine/
-├── services/                     # Microservices
-│   ├── auth-service/            # Authentication, Multi-tenancy, RBAC
-│   ├── catalog-service/         # Products, Suppliers, Buffer Profiles
-│   ├── ddmrp-engine-service/    # Buffer calculations, CPD, Replenishment
-│   ├── execution-service/       # Orders, Inventory, ERP integrations
-│   ├── analytics-service/       # KPIs, Reports, Projections
-│   └── ai-agent-service/        # AI Chat, Proactive Analysis
+├── services/                     # Active Service
+│   └── auth-service/            # Main application (Auth + future modules)
+│
+├── archive/                      # Archived Skeleton Services
+│   ├── catalog-service/         # Preserved for future reference
+│   ├── ddmrp-engine-service/    # See archive/README.md for details
+│   ├── execution-service/
+│   ├── analytics-service/
+│   ├── ai-agent-service/
+│   └── README.md               # Why these are archived
 │
 ├── pkg/                         # Shared Libraries
 │   ├── config/                  # Configuration management (Viper)
@@ -227,10 +248,91 @@ go work use ./services/my-new-service
 
 ### Code Style
 
-- **Go**: Follow [Effective Go](https://go.dev/doc/effective_go) and project rules in [ctx/rules/02-go-standards.mdc](ctx/rules/02-go-standards.mdc)
+- **Go**: Follow [Effective Go](https://go.dev/doc/effective_go) and project rules in [CLAUDE.md](CLAUDE.md)
 - **Formatting**: Run `make fmt` before committing
-- **Linting**: Run `make lint` and fix all issues
+- **Linting**: Run `make lint` and fix all issues (see below)
 - **Testing**: Maintain >80% code coverage
+
+---
+
+## ✅ Code Quality & Linting
+
+This project uses [golangci-lint](https://golangci-lint.run/) to enforce code quality standards and catch common mistakes early.
+
+### Quick Start
+
+```bash
+# Run all linters
+make lint
+
+# Auto-fix issues
+make lint-fix
+
+# Format code
+make fmt
+```
+
+### What Gets Checked
+
+We run multiple linters that check for:
+
+- ✅ **Errors**: Unchecked errors, error handling issues
+- ✅ **Code Quality**: Unused code, inefficient assignments, type conversions
+- ✅ **Style**: Formatting, naming conventions, code complexity
+- ✅ **Security**: Potential security vulnerabilities (gosec)
+- ✅ **Best Practices**: Context usage, shadowing, nil checks
+
+### Custom Rules
+
+We enforce project-specific rules:
+
+1. **No `fmt.Errorf` in core/infrastructure** - Use typed errors from `pkg/errors`
+   ```go
+   // ❌ BAD
+   return fmt.Errorf("user not found")
+
+   // ✅ GOOD
+   return errors.NewResourceNotFound("user not found")
+   ```
+
+2. **No `time.Now()` in core/infrastructure** - Use injected `TimeManager`
+   ```go
+   // ❌ BAD
+   createdAt := time.Now()
+
+   // ✅ GOOD
+   createdAt := s.timeManager.Now()
+   ```
+
+### Pre-commit Hooks
+
+Install pre-commit hooks to run linters automatically before each commit:
+
+```bash
+# Install pre-commit
+pip install pre-commit
+# Or: brew install pre-commit
+
+# Install hooks
+pre-commit install
+
+# Run manually
+pre-commit run --all-files
+```
+
+### CI/CD Integration
+
+Linting runs automatically on:
+- ✅ **Pull Requests** - Lint changed files
+- ✅ **Push to main/develop** - Lint entire codebase
+
+**PRs with linting errors will be blocked from merging.**
+
+### Documentation
+
+For complete linting guide, see:
+- 📘 [Linting Guide](docs/LINTING_GUIDE.md) - Comprehensive guide with examples
+- 📘 [CLAUDE.md](CLAUDE.md) - Development guidelines and coding standards
 
 ---
 
@@ -317,8 +419,9 @@ See [deployments/README.md](deployments/README.md) for production deployment gui
 ## 📚 Documentation
 
 - **Local Development**: [docs/LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md) ⭐ **Start Here!**
-- **Architecture**: [ctx/ARCHITECTURE_BALANCED.md](ctx/ARCHITECTURE_BALANCED.md)
-- **Development Rules**: [ctx/rules/](ctx/rules/)
+- **Code Quality**: [docs/LINTING_GUIDE.md](docs/LINTING_GUIDE.md) - Linting guide
+- **Development Guidelines**: [CLAUDE.md](CLAUDE.md) - Coding standards and best practices
+- **Architecture**: [docs/architecture/](docs/architecture/)
 - **API Documentation**: [docs/api/](docs/api/)
 - **Service Docs**:
   - [Auth Service](services/auth-service/README.md)

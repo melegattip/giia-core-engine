@@ -3,11 +3,12 @@ package role
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/google/uuid"
 )
 
 type CreateRoleUseCase struct {
@@ -100,9 +101,9 @@ func (uc *CreateRoleUseCase) Execute(ctx context.Context, req *domain.CreateRole
 	}
 
 	uc.logger.Info(ctx, "Role created successfully", pkgLogger.Tags{
-		"role_id":          role.ID.String(),
-		"role_name":        role.Name,
-		"organization_id":  orgID,
+		"role_id":           role.ID.String(),
+		"role_name":         role.Name,
+		"organization_id":   orgID,
 		"permissions_count": len(req.PermissionIDs),
 	})
 

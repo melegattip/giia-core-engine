@@ -4,7 +4,8 @@
 GO := go
 DOCKER := docker
 KUBECTL := kubectl
-SERVICES := auth-service catalog-service ddmrp-engine-service execution-service analytics-service ai-agent-service
+SERVICES := auth-service
+ARCHIVED_SERVICES := catalog-service ddmrp-engine-service execution-service analytics-service ai-agent-service
 DOCKER_REGISTRY := ghcr.io/giia
 
 # Colors for output
@@ -42,25 +43,8 @@ build-auth: ## Build auth service
 	@echo "$(COLOR_BLUE)Building auth-service...$(COLOR_RESET)"
 	cd services/auth-service && $(GO) build -o ../../bin/auth-service ./cmd/api/
 
-build-catalog: ## Build catalog service
-	@echo "$(COLOR_BLUE)Building catalog-service...$(COLOR_RESET)"
-	cd services/catalog-service && $(GO) build -o ../../bin/catalog-service ./cmd/server/
-
-build-ddmrp: ## Build ddmrp service
-	@echo "$(COLOR_BLUE)Building ddmrp-engine-service...$(COLOR_RESET)"
-	cd services/ddmrp-engine-service && $(GO) build -o ../../bin/ddmrp-engine-service ./cmd/server/
-
-build-execution: ## Build execution service
-	@echo "$(COLOR_BLUE)Building execution-service...$(COLOR_RESET)"
-	cd services/execution-service && $(GO) build -o ../../bin/execution-service ./cmd/server/
-
-build-analytics: ## Build analytics service
-	@echo "$(COLOR_BLUE)Building analytics-service...$(COLOR_RESET)"
-	cd services/analytics-service && $(GO) build -o ../../bin/analytics-service ./cmd/server/
-
-build-ai: ## Build ai-agent service
-	@echo "$(COLOR_BLUE)Building ai-agent-service...$(COLOR_RESET)"
-	cd services/ai-agent-service && $(GO) build -o ../../bin/ai-agent-service ./cmd/server/
+# Archived service build targets removed - see archive/ directory
+# Services consolidated to monolithic architecture (ADR 001)
 
 ##@ Testing
 
@@ -78,9 +62,7 @@ test-auth: ## Run auth service tests
 	@echo "$(COLOR_BLUE)Testing auth-service...$(COLOR_RESET)"
 	cd services/auth-service && $(GO) test -v -race -count=1 ./...
 
-test-catalog: ## Run catalog service tests
-	@echo "$(COLOR_BLUE)Testing catalog-service...$(COLOR_RESET)"
-	cd services/catalog-service && $(GO) test -v -race -count=1 ./...
+# Archived service test targets removed - see archive/ directory
 
 ##@ Code Quality
 

@@ -1,0 +1,129 @@
+run:
+  timeout: 5m
+  tests: true
+  allow-parallel-runners: true
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - errcheck        # Check for unchecked errors
+    - gofmt           # Check formatting
+    - goimports       # Check import formatting and unused imports
+    - govet           # Examine Go source code and reports suspicious constructs
+    - ineffassign     # Detect ineffectual assignments
+    - staticcheck     # Static analysis
+    - unused          # Check for unused code
+    - forbidigo       # Ban specific function calls
+    - gosec           # Security-focused linter
+    - unconvert       # Remove unnecessary type conversions
+    - unparam         # Report unused function parameters
+    - misspell        # Find commonly misspelled English words
+    - revive          # Fast, configurable, extensible, flexible linter
+    - copyloopvar     # Checks for loop variable issues (replacement for exportloopref)
+
+linters-settings:
+  forbidigo:
+    forbid:
+      - p: 'fmt\.Errorf'
+        msg: 'Do not use fmt.Errorf. Use typed errors from pkg/errors instead (NewBadRequest, NewUnauthorized, NewNotFound, NewInternalServerError, etc.)'
+        pkg: '^github\.com/giia/giia-core-engine/(services/.*/internal|pkg).*'
+      - p: 'errors\.New'
+        msg: 'Do not use errors.New. Use typed errors from pkg/errors instead'
+        pkg: '^github\.com/giia/giia-core-engine/(services/.*/internal|pkg).*'
+      - p: 'time\.Now'
+        msg: 'Do not use time.Now() directly. Use injected TimeManager instead for testability'
+        pkg: '^github\.com/giia/giia-core-engine/services/.*/internal/(core|infrastructure).*'
+
+  govet:
+    enable:
+      - shadow          # Report shadowing of variables
+      - printf          # Check printf-like functions
+      - nilness         # Check for redundant or impossible nil comparisons
+
+  goimports:
+    local-prefixes: github.com/giia/giia-core-engine
+
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+        disabled: true  # Conflicts with project's "no comments" policy
+      - name: increment-decrement
+      - name: var-naming
+      - name: package-comments
+        disabled: true  # Conflicts with project's "no comments" policy
+      - name: range
+      - name: receiver-naming
+      - name: indent-error-flow
+      - name: superfluous-else
+      - name: unreachable-code
+      - name: redefines-builtin-id
+
+  gosec:
+    excludes:
+      - G104  # Audit errors not checked (covered by errcheck)
+      - G304  # File path provided as taint input (allow for legitimate use cases)
+      - G301  # Expect directory permissions - relax for common 0755 usage
+      - G402  # TLS MinVersion - allow when explicitly configured
+
+  unparam:
+    check-exported: false  # Don't check exported function parameters
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-dirs:
+    - vendor
+    - mocks
+    - .git
+    - archive
+
+  exclude-rules:
+    # Allow fmt.Errorf, errors.New, and time.Now in test files for test utilities
+    - path: _test\.go
+      linters:
+        - forbidigo
+        - gosec
+
+    # Allow in vendor directories
+    - path: vendor/
+      linters:
+        - forbidigo
+        - all
+
+    # Allow in generated code (protobuf)
+    - path: '\.pb\.go$'
+      linters:
+        - all
+
+    # Allow in mock files
+    - path: '(_mock\.go|mocks\.go)$'
+      linters:
+        - all
+
+    # Allow time.Now in main.go (application entry point)
+    - path: 'cmd/.*/main\.go$'
+      text: 'time\.Now'
+      linters:
+        - forbidigo
+
+    # Relax some linters for test files
+    - path: _test\.go
+      linters:
+        - errcheck
+        - unparam
+        - staticcheck
+
+output:
+  formats:
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  sort-results: true

@@ -4,9 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+
 	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/adapters/jwt"
-	"github.com/google/uuid"
 )
 
 type contextKey string

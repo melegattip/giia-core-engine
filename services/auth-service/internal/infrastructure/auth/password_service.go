@@ -6,6 +6,8 @@ import (
 	"unicode"
 
 	"golang.org/x/crypto/bcrypt"
+
+	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 )
 
 type PasswordService interface {
@@ -29,12 +31,12 @@ func NewPasswordService(minLength int) PasswordService {
 
 func (p *passwordService) HashPassword(password string) (string, error) {
 	if err := p.ValidatePasswordStrength(password); err != nil {
-		return "", fmt.Errorf("password validation failed: %w", err)
+		return "", err
 	}
 
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), p.cost)
 	if err != nil {
-		return "", fmt.Errorf("failed to hash password: %w", err)
+		return "", pkgErrors.NewInternalServerError("failed to hash password")
 	}
 
 	return string(hashedBytes), nil
@@ -43,18 +45,18 @@ func (p *passwordService) HashPassword(password string) (string, error) {
 func (p *passwordService) VerifyPassword(hashedPassword, password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	if err != nil {
-		return fmt.Errorf("password verification failed: %w", err)
+		return pkgErrors.NewUnauthorized("invalid password")
 	}
 	return nil
 }
 
 func (p *passwordService) ValidatePasswordStrength(password string) error {
 	if len(password) < p.minLength {
-		return fmt.Errorf("password must be at least %d characters long", p.minLength)
+		return pkgErrors.NewBadRequest(fmt.Sprintf("password must be at least %d characters long", p.minLength))
 	}
 
 	if len(password) > 128 {
-		return fmt.Errorf("password must be less than 128 characters long")
+		return pkgErrors.NewBadRequest("password must be less than 128 characters long")
 	}
 
 	var (
@@ -72,10 +74,10 @@ func (p *passwordService) ValidatePasswordStrength(password string) error {
 	}
 
 	if !hasUpper {
-		return fmt.Errorf("password must contain at least one uppercase letter")
+		return pkgErrors.NewBadRequest("password must contain at least one uppercase letter")
 	}
 	if !hasSpecial {
-		return fmt.Errorf("password must contain at least one special character")
+		return pkgErrors.NewBadRequest("password must contain at least one special character")
 	}
 
 	// Check for common weak patterns
@@ -90,13 +92,13 @@ func (p *passwordService) checkCommonPatterns(password string) error {
 	// Check for sequential characters
 	sequentialPattern := regexp.MustCompile(`(?i)(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz|123|234|345|456|567|678|789|890)`)
 	if sequentialPattern.MatchString(password) {
-		return fmt.Errorf("password cannot contain sequential characters")
+		return pkgErrors.NewBadRequest("password cannot contain sequential characters")
 	}
 
 	// Check for repeated characters
 	repeatedPattern := regexp.MustCompile(`(.)\\1{2,}`)
 	if repeatedPattern.MatchString(password) {
-		return fmt.Errorf("password cannot contain more than 2 consecutive identical characters")
+		return pkgErrors.NewBadRequest("password cannot contain more than 2 consecutive identical characters")
 	}
 
 	return nil

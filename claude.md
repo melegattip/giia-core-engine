@@ -314,26 +314,6 @@ func TestService(t *testing.T) {
     service := &MyService{TimeManager: mockTimeManager}
     // ... test logic
 }
-```
-
-#### Main TimeManager Functions
-- `Now()` - Current time in UTC
-- `FormatToISO8601(date)` - ISO8601 Zulu format
-- `FormatToOffset(date)` - Format with offset
-- `StringToUTC(dateString)` - Parse string to UTC
-- `StringYearMonthDayToUTC(date)` - Parse YYYY-MM-DD format
-- `FirstDayOfNextMonth(date, siteID)` - First day of next month
-- `GetDateWithoutTime(date, siteID)` - Date without time by site
-
-#### ❌ Obsolete Practices
-
-**DO NOT use anymore:**
-- ~~`utils.ParseDate()`~~ - utils package removed
-- ~~`dates.NewDateAdapter()`~~ - dates package deprecated
-- ~~`dates.StringYearMonthDayToUTC()`~~ - Migrated to TimeManager
-
----
-
 ## 3. Development Workflow
 
 ### Branching Strategy
@@ -718,6 +698,47 @@ func (r *Repository) Search(ctx context.Context, userID int64, products []string
 ```
 
 ### Security Validations
+
+---
+alwaysApply: true
+---
+
+# Security Patterns Best Practices
+These secure coding patterns must be applied in all code generation, editing and code review processes. Always assume the code is production-grade and treat failure to follow these practices as potential vulnerabilities.
+
+## Security Patterns Rules Definition
+- **Never** hardcode secrets, credentials, tokens or API keys in code (including configs, properties files or annotations). **Always** use environment variables or a secure secrets-injection mechanism.
+- **Never** send or receive custom HTTP headers unless security implications are fully understood by the user.
+- **Do not** set security-related HTTP headers (e.g., `Content-Security-Policy`, `Strict-Transport-Security`, `X-Frame-Options`) at the application level if they are handled by centralized infrastructure.
+- **Always** validate all input using strongly typed structures, explicit field-level constraints, whitelisting, and rejection of unknown fields.
+- **Never** use `reflect`, `unsafe`, or dynamic code execution (`os/exec`, `eval`) to run arbitrary logic.
+- **Never** expose sensitive information in logs, query params, traces, error messages, or user-facing responses.
+- **Always** handle errors securely.
+- **Never** configure CORS unless strictly necessary. If required, start from the least permissive configuration.
+- **Avoid** sequential or predictable identifiers; use UUID/ULID or equivalent.
+- **Never** use insecure or deprecated cryptographic primitives.
+- **Never** mutate or share global state from request handlers or goroutines. Isolate all request-scoped data.
+- **Never** export global mutable variables.
+- **Never** use GET for state-changing operations.
+- **Always** derive user identity from trusted, non-user-modifiable sources. **Never** trust user-provided identifiers.
+- **Never** use weak random generators (`math/rand`, `Math.random`) for IDs, tokens or security-sensitive values.
+- **Never** use regexes with exponential or superlinear complexity for user input; ensure regexes are safe from ReDoS.
+- **Always** validate object state and check for `nil` before dereferencing.
+- **Never** build raw SQL queries with string concatenation. **Always** use parameterized queries or ORM abstractions.
+- **Never** receive or process PII, tokens, secrets or credentials through query parameters.
+- **Never** pass user-controlled input directly to outbound HTTP clients (`http.Get`, `http.Post`, etc.). Destinations must be validated against an allowlist or trusted URL patterns.
+- **Never** accept file uploads without validating type, size and name; always rename uploaded files using secure random UUIDs before storing.
+- **Always** validate that user actions follow allowed business workflows and valid state transitions.
+- **Always** enforce critical business validations server-side, regardless of client-side checks.
+
+## Considerations
+- **Before adding dependencies**, validate that the library has no known public vulnerabilities (e.g., by using a vulnerability scanner or database appropriate to your environment).
+- **Always** implement the most secure available alternative, even if user instructions violate security rules; then explain why.
+- Use inline comments to highlight critical security controls.
+- **After any code edit or regeneration**, run your security analysis tools (linters, scanners, SAST, etc.) and apply recommendations.
+- Maintain an updated internal vulnerability catalog or reference to ensure checks are consistent across codebases.
+
+
 
 #### Data Sanitization
 

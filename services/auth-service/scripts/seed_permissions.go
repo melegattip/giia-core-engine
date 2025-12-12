@@ -2,15 +2,16 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/repositories"
 	"github.com/google/uuid"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/repositories"
 )
 
 func main() {
@@ -144,7 +145,7 @@ func parsePermissionCode(code string) []string {
 func assignDefaultPermissions(ctx context.Context, roleRepo providers.RoleRepository, permRepo providers.PermissionRepository) error {
 	allPermissions, err := permRepo.List(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get all permissions: %w", err)
+		return pkgErrors.NewInternalServerError("failed to get all permissions")
 	}
 
 	viewerID := uuid.MustParse("00000000-0000-0000-0000-000000000010")
@@ -175,17 +176,17 @@ func assignDefaultPermissions(ctx context.Context, roleRepo providers.RoleReposi
 
 	log.Printf("Assigning %d permissions to Viewer role", len(viewerPerms))
 	if err := permRepo.AssignPermissionsToRole(ctx, viewerID, viewerPerms); err != nil {
-		return fmt.Errorf("failed to assign permissions to Viewer: %w", err)
+		return pkgErrors.NewInternalServerError("failed to assign permissions to Viewer role")
 	}
 
 	log.Printf("Assigning %d permissions to Analyst role", len(analystPerms))
 	if err := permRepo.AssignPermissionsToRole(ctx, analystID, analystPerms); err != nil {
-		return fmt.Errorf("failed to assign permissions to Analyst: %w", err)
+		return pkgErrors.NewInternalServerError("failed to assign permissions to Analyst role")
 	}
 
 	log.Printf("Assigning %d permissions to Manager role", len(managerPerms))
 	if err := permRepo.AssignPermissionsToRole(ctx, managerID, managerPerms); err != nil {
-		return fmt.Errorf("failed to assign permissions to Manager: %w", err)
+		return pkgErrors.NewInternalServerError("failed to assign permissions to Manager role")
 	}
 
 	return nil

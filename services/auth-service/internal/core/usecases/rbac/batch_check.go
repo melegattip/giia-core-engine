@@ -3,9 +3,10 @@ package rbac
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/google/uuid"
 )
 
 type BatchCheckPermissionsUseCase struct {
@@ -47,7 +48,7 @@ func (uc *BatchCheckPermissionsUseCase) Execute(ctx context.Context, userID uuid
 	}
 
 	uc.logger.Debug(ctx, "Batch permission check completed", pkgLogger.Tags{
-		"user_id":          userID.String(),
+		"user_id":           userID.String(),
 		"permissions_count": len(permissions),
 	})
 

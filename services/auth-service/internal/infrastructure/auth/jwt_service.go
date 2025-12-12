@@ -6,6 +6,8 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+
+	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 )
 
 type JWTService interface {
@@ -19,10 +21,10 @@ type JWTService interface {
 }
 
 type jwtService struct {
-	secretKey      string
-	accessExpiry   time.Duration
-	refreshExpiry  time.Duration
-	issuer         string
+	secretKey     string
+	accessExpiry  time.Duration
+	refreshExpiry time.Duration
+	issuer        string
 }
 
 type Claims struct {
@@ -52,13 +54,13 @@ func (j *jwtService) GenerateTokens(userID uint, email string) (*TokenPair, erro
 	// Generate access token
 	accessToken, accessExpiry, err := j.generateToken(userID, email, "access", j.accessExpiry)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate access token: %w", err)
+		return nil, pkgErrors.NewInternalServerError("failed to generate access token")
 	}
 
 	// Generate refresh token
 	refreshToken, _, err := j.generateToken(userID, email, "refresh", j.refreshExpiry)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
+		return nil, pkgErrors.NewInternalServerError("failed to generate refresh token")
 	}
 
 	return &TokenPair{
@@ -117,7 +119,7 @@ func (j *jwtService) generateToken(userID uint, email, tokenType string, expiry 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(j.secretKey))
 	if err != nil {
-		return "", time.Time{}, fmt.Errorf("failed to sign token: %w", err)
+		return "", time.Time{}, pkgErrors.NewInternalServerError("failed to sign token")
 	}
 
 	return tokenString, expiresAt, nil
@@ -126,23 +128,23 @@ func (j *jwtService) generateToken(userID uint, email, tokenType string, expiry 
 func (j *jwtService) validateToken(tokenString, expectedType string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			return nil, pkgErrors.NewUnauthorized("unexpected signing method")
 		}
 		return []byte(j.secretKey), nil
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse token: %w", err)
+		return nil, pkgErrors.NewUnauthorized("invalid token")
 	}
 
 	claims, ok := token.Claims.(*Claims)
 	if !ok || !token.Valid {
-		return nil, fmt.Errorf("invalid token claims")
+		return nil, pkgErrors.NewUnauthorized("invalid token claims")
 	}
 
 	if claims.TokenType != expectedType {
-		return nil, fmt.Errorf("invalid token type: expected %s, got %s", expectedType, claims.TokenType)
+		return nil, pkgErrors.NewUnauthorized("invalid token type")
 	}
 
 	return claims, nil
-} 
+}

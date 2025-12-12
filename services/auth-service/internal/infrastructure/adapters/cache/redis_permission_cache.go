@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/redis/go-redis/v9"
+
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/redis/go-redis/v9"
 )
 
 type redisPermissionCache struct {
@@ -46,7 +47,7 @@ func (c *redisPermissionCache) GetUserPermissions(ctx context.Context, userID st
 	}
 
 	c.logger.Debug(ctx, "Cache hit for user permissions", pkgLogger.Tags{
-		"user_id":          userID,
+		"user_id":           userID,
 		"permissions_count": len(permissions),
 	})
 
@@ -73,9 +74,9 @@ func (c *redisPermissionCache) SetUserPermissions(ctx context.Context, userID st
 	}
 
 	c.logger.Debug(ctx, "Cached user permissions", pkgLogger.Tags{
-		"user_id":          userID,
+		"user_id":           userID,
 		"permissions_count": len(permissions),
-		"ttl":              ttl.String(),
+		"ttl":               ttl.String(),
 	})
 
 	return nil

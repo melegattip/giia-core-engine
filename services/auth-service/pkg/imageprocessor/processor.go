@@ -1,7 +1,6 @@
 package imageprocessor
 
 import (
-	"fmt"
 	"image"
 	"image/jpeg"
 	"io"
@@ -11,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/disintegration/imaging"
+
+	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 )
 
 // Config contiene la configuración para el procesamiento de imágenes
@@ -21,7 +22,7 @@ type Config struct {
 	MaxFileSize int64 // Tamaño máximo del archivo resultante en bytes
 }
 
-// DefaultAvatarConfig configuración por defecto para avatares
+// DefaultAvatarConfig configuración por defecto para avatars
 var DefaultAvatarConfig = Config{
 	MaxWidth:    300,
 	MaxHeight:   300,
@@ -36,10 +37,10 @@ func ProcessUploadedImage(src io.Reader, outputPath string, config Config) error
 	// Decodificar la imagen
 	img, format, err := image.Decode(src)
 	if err != nil {
-		return fmt.Errorf("failed to decode image: %w", err)
+		return pkgErrors.NewBadRequest("invalid image format")
 	}
 
-	log.Printf("🔧 [ImageProcessor] Imagen original: formato=%s, dimensiones=%dx%d",
+	log.Printf("🔧 [ImageProcessor] Imagen original: formato=%s, dimensions=%dx%d",
 		format, img.Bounds().Dx(), img.Bounds().Dy())
 
 	// Redimensionar la imagen manteniendo la proporción
@@ -50,29 +51,29 @@ func ProcessUploadedImage(src io.Reader, outputPath string, config Config) error
 
 	// Crear el directorio si no existe
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
+		return pkgErrors.NewInternalServerError("failed to create image directory")
 	}
 
-	// Determinar el formato de salida (siempre JPEG para avatares)
+	// Determinar el formato de salida (siempre JPEG para avatars)
 	outputPath = changeExtensionToJPEG(outputPath)
 
 	// Guardar la imagen comprimida
 	out, err := os.Create(outputPath)
 	if err != nil {
-		return fmt.Errorf("failed to create output file: %w", err)
+		return pkgErrors.NewInternalServerError("failed to save image file")
 	}
 	defer out.Close()
 
 	// Convertir a JPEG con la calidad especificada
 	err = jpeg.Encode(out, resized, &jpeg.Options{Quality: config.Quality})
 	if err != nil {
-		return fmt.Errorf("failed to encode JPEG: %w", err)
+		return pkgErrors.NewInternalServerError("failed to process image")
 	}
 
 	// Verificar el tamaño del archivo resultante
 	fileInfo, err := out.Stat()
 	if err != nil {
-		return fmt.Errorf("failed to get file info: %w", err)
+		return pkgErrors.NewInternalServerError("failed to verify image file")
 	}
 
 	fileSize := fileInfo.Size()
@@ -107,20 +108,20 @@ func recompressWithLowerQuality(img image.Image, outputPath string, config Confi
 
 		out, err := os.Create(outputPath)
 		if err != nil {
-			return fmt.Errorf("failed to create output file: %w", err)
+			return pkgErrors.NewInternalServerError("failed to save compressed image")
 		}
 
 		err = jpeg.Encode(out, img, &jpeg.Options{Quality: quality})
 		out.Close()
 
 		if err != nil {
-			return fmt.Errorf("failed to encode JPEG: %w", err)
+			return pkgErrors.NewInternalServerError("failed to compress image")
 		}
 
 		// Verificar el tamaño
 		fileInfo, err := os.Stat(outputPath)
 		if err != nil {
-			return fmt.Errorf("failed to get file info: %w", err)
+			return pkgErrors.NewInternalServerError("failed to verify compressed image")
 		}
 
 		fileSize := fileInfo.Size()
@@ -134,7 +135,7 @@ func recompressWithLowerQuality(img image.Image, outputPath string, config Confi
 		}
 	}
 
-	return fmt.Errorf("unable to compress image below %d bytes", config.MaxFileSize)
+	return pkgErrors.NewBadRequest("image too large to process")
 }
 
 // GetSupportedFormats retorna los formatos de imagen soportados

@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
+
 	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/google/uuid"
 )
 
 type ResolveInheritanceUseCase struct {
@@ -47,8 +48,8 @@ func (uc *ResolveInheritanceUseCase) Execute(ctx context.Context, roleID uuid.UU
 	}
 
 	uc.logger.Debug(ctx, "Resolved role inheritance", pkgLogger.Tags{
-		"role_id":          roleID.String(),
-		"inherited_roles":  len(visited),
+		"role_id":           roleID.String(),
+		"inherited_roles":   len(visited),
 		"total_permissions": len(permissions),
 	})
 

@@ -1,26 +1,20 @@
 package jwt
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+
+	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
 )
 
 type JWTManager struct {
-	secretKey      string
-	accessExpiry   time.Duration
-	refreshExpiry  time.Duration
-	issuer         string
-}
-
-type Claims struct {
-	UserID         string   `json:"user_id"`
-	Email          string   `json:"email"`
-	OrganizationID string   `json:"organization_id"`
-	Roles          []string `json:"roles,omitempty"`
-	jwt.RegisteredClaims
+	secretKey     string
+	accessExpiry  time.Duration
+	refreshExpiry time.Duration
+	issuer        string
 }
 
 func NewJWTManager(secretKey string, accessExpiry, refreshExpiry time.Duration, issuer string) *JWTManager {
@@ -34,7 +28,7 @@ func NewJWTManager(secretKey string, accessExpiry, refreshExpiry time.Duration, 
 
 func (j *JWTManager) GenerateAccessToken(userID, orgID uuid.UUID, email string, roles []string) (string, error) {
 	now := time.Now()
-	claims := &Claims{
+	claims := &providers.Claims{
 		UserID:         userID.String(),
 		Email:          email,
 		OrganizationID: orgID.String(),
@@ -50,7 +44,11 @@ func (j *JWTManager) GenerateAccessToken(userID, orgID uuid.UUID, email string, 
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(j.secretKey))
+	signedToken, err := token.SignedString([]byte(j.secretKey))
+	if err != nil {
+		return "", pkgErrors.NewInternalServerError("failed to sign access token")
+	}
+	return signedToken, nil
 }
 
 func (j *JWTManager) GenerateRefreshToken(userID uuid.UUID) (string, error) {
@@ -65,24 +63,28 @@ func (j *JWTManager) GenerateRefreshToken(userID uuid.UUID) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(j.secretKey))
+	signedToken, err := token.SignedString([]byte(j.secretKey))
+	if err != nil {
+		return "", pkgErrors.NewInternalServerError("failed to sign refresh token")
+	}
+	return signedToken, nil
 }
 
-func (j *JWTManager) ValidateAccessToken(tokenString string) (*Claims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+func (j *JWTManager) ValidateAccessToken(tokenString string) (*providers.Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &providers.Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			return nil, pkgErrors.NewUnauthorized("invalid token signing method")
 		}
 		return []byte(j.secretKey), nil
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse token: %w", err)
+		return nil, pkgErrors.NewUnauthorized("invalid or expired token")
 	}
 
-	claims, ok := token.Claims.(*Claims)
+	claims, ok := token.Claims.(*providers.Claims)
 	if !ok || !token.Valid {
-		return nil, fmt.Errorf("invalid token")
+		return nil, pkgErrors.NewUnauthorized("invalid token claims")
 	}
 
 	return claims, nil
@@ -91,18 +93,18 @@ func (j *JWTManager) ValidateAccessToken(tokenString string) (*Claims, error) {
 func (j *JWTManager) ValidateRefreshToken(tokenString string) (*jwt.RegisteredClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			return nil, pkgErrors.NewUnauthorized("invalid token signing method")
 		}
 		return []byte(j.secretKey), nil
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse refresh token: %w", err)
+		return nil, pkgErrors.NewUnauthorized("invalid or expired refresh token")
 	}
 
 	claims, ok := token.Claims.(*jwt.RegisteredClaims)
 	if !ok || !token.Valid {
-		return nil, fmt.Errorf("invalid refresh token")
+		return nil, pkgErrors.NewUnauthorized("invalid refresh token claims")
 	}
 
 	return claims, nil

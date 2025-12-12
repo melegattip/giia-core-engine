@@ -9,6 +9,8 @@ import (
 
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
+
+	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 )
 
 type TwoFAService interface {
@@ -24,8 +26,8 @@ type twoFAService struct {
 }
 
 type TwoFASetup struct {
-	Secret     string   `json:"secret"`
-	QRCodeURL  string   `json:"qr_code_url"`
+	Secret      string   `json:"secret"`
+	QRCodeURL   string   `json:"qr_code_url"`
 	BackupCodes []string `json:"backup_codes"`
 }
 
@@ -42,13 +44,13 @@ func (t *twoFAService) GenerateSecret(userEmail string) (*TwoFASetup, error) {
 		SecretSize:  32,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate TOTP key: %w", err)
+		return nil, pkgErrors.NewInternalServerError("failed to generate 2FA secret")
 	}
 
 	// Generate backup codes
 	backupCodes, err := t.GenerateBackupCodes(8)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate backup codes: %w", err)
+		return nil, pkgErrors.NewInternalServerError("failed to generate backup codes")
 	}
 
 	return &TwoFASetup{
@@ -62,19 +64,19 @@ func (t *twoFAService) GenerateQRCode(secret, userEmail string) ([]byte, error) 
 	key, err := otp.NewKeyFromURL(fmt.Sprintf("otpauth://totp/%s:%s?secret=%s&issuer=%s",
 		t.issuer, userEmail, secret, t.issuer))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create key from URL: %w", err)
+		return nil, pkgErrors.NewInternalServerError("failed to create 2FA key")
 	}
 
 	// Generate QR code image
 	img, err := key.Image(256, 256)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate QR code image: %w", err)
+		return nil, pkgErrors.NewInternalServerError("failed to generate QR code image")
 	}
 
 	// Convert image to PNG bytes
 	var buf strings.Builder
 	if err := png.Encode(&buf, img); err != nil {
-		return nil, fmt.Errorf("failed to encode QR code as PNG: %w", err)
+		return nil, pkgErrors.NewInternalServerError("failed to encode QR code")
 	}
 
 	return []byte(buf.String()), nil
@@ -94,7 +96,7 @@ func (t *twoFAService) GenerateBackupCodes(count int) ([]string, error) {
 	for i := 0; i < count; i++ {
 		code, err := t.generateRandomCode(8)
 		if err != nil {
-			return nil, fmt.Errorf("failed to generate backup code %d: %w", i+1, err)
+			return nil, pkgErrors.NewInternalServerError("failed to generate backup code")
 		}
 		codes[i] = code
 	}
@@ -124,7 +126,7 @@ func (t *twoFAService) generateRandomCode(length int) (string, error) {
 	bytes := make([]byte, length)
 
 	if _, err := rand.Read(bytes); err != nil {
-		return "", fmt.Errorf("failed to read random bytes: %w", err)
+		return "", pkgErrors.NewInternalServerError("failed to generate random code")
 	}
 
 	for i, b := range bytes {
@@ -154,4 +156,4 @@ func (t *twoFAService) ValidateCodeWithWindow(secret, code string, window int) b
 
 	valid, _ := totp.ValidateCustom(code, secret, time.Now(), opts)
 	return valid
-} 
+}
