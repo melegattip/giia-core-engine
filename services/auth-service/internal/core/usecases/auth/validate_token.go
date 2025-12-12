@@ -3,17 +3,17 @@ package auth
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/adapters/jwt"
-	"github.com/google/uuid"
 )
 
 type ValidateTokenUseCase struct {
 	userRepo   providers.UserRepository
-	jwtManager *jwt.JWTManager
+	jwtManager providers.JWTManager
 	logger     pkgLogger.Logger
 }
 
@@ -28,7 +28,7 @@ type TokenValidationResult struct {
 
 func NewValidateTokenUseCase(
 	userRepo providers.UserRepository,
-	jwtManager *jwt.JWTManager,
+	jwtManager providers.JWTManager,
 	logger pkgLogger.Logger,
 ) *ValidateTokenUseCase {
 	return &ValidateTokenUseCase{

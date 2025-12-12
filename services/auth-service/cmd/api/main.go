@@ -4,26 +4,20 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
 	pkgDatabase "github.com/giia/giia-core-engine/pkg/database"
+	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/handlers"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/auth"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/config"
 	grpcInit "github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/grpc/initialization"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/middleware"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/repository"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/usecases"
 	"github.com/giia/giia-core-engine/services/auth-service/pkg/database"
 )
 
@@ -133,160 +127,12 @@ func main() {
 		}
 	}()
 
-	// Initialize services
-	jwtService := auth.NewJWTService(
-		cfg.JWT.SecretKey,
-		cfg.JWT.AccessExpiry,
-		cfg.JWT.RefreshExpiry,
-		cfg.JWT.Issuer,
-	)
-	passwordService := auth.NewPasswordService(cfg.Security.PasswordMinLength)
-	twoFAService := auth.NewTwoFAService(cfg.JWT.Issuer)
-
-	// Initialize repository
-	userRepo := repository.NewUserRepository(db)
-
-	// Initialize use cases
-	userService := usecases.NewUserService(
-		userRepo,
-		jwtService,
-		passwordService,
-		twoFAService,
-		cfg.Security.MaxLoginAttempts,
-		cfg.Security.LockoutDuration,
-	)
-
-	// Initialize handlers
-	userHandler := handlers.NewUserHandler(userService)
-
-	// Initialize middleware
-	authMiddleware := middleware.NewAuthMiddleware(jwtService)
-
-	// Setup Gin
-	if cfg.Server.Environment == "production" {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
-	r := gin.New()
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
-
-	// CORS middleware (basic)
-	r.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, x-caller-id")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-
-		c.Next()
-	})
-
-	// Health check endpoint
-	r.GET("/health", userHandler.HealthCheck)
-
-	// API v1 group
-	api := r.Group("/api/v1")
-
-	// Serve static files (avatars) - publicly accessible
-	api.Static("/uploads", "./uploads")
-
-	// Public endpoints (no authentication required)
-	public := api.Group("/users")
-	{
-		public.POST("/register", userHandler.Register)
-		public.POST("/login", userHandler.Login)
-		public.POST("/check-2fa", userHandler.Check2FA)
-		public.POST("/refresh", userHandler.Refresh)
-		public.GET("/verify-email/:token", userHandler.VerifyEmail)
-		public.POST("/request-password-reset", userHandler.RequestPasswordReset)
-		public.POST("/reset-password", userHandler.ResetPassword)
-	}
-
-	// Auth endpoints (for compatibility with main API)
-	auth := api.Group("/auth")
-	{
-		auth.POST("/login", userHandler.Login)
-		auth.POST("/register", userHandler.Register)
-		auth.POST("/check-2fa", userHandler.Check2FA)
-		auth.POST("/refresh", userHandler.Refresh)
-		auth.PUT("/change-password", userHandler.ChangePassword)
-	}
-
-	// Protected endpoints (authentication required)
-	protected := api.Group("/users")
-	protected.Use(authMiddleware.RequireAuth())
-	{
-		// Profile management
-		protected.GET("/profile", userHandler.GetProfile)
-		protected.PUT("/profile", userHandler.UpdateProfile)
-		protected.POST("/logout", userHandler.Logout)
-		protected.POST("/avatar", userHandler.UploadAvatar)
-
-		// Preferences
-		protected.GET("/preferences", userHandler.GetPreferences)
-		protected.PUT("/preferences", userHandler.UpdatePreferences)
-
-		// Notification settings
-		protected.GET("/notifications/settings", userHandler.GetNotifications)
-		protected.PUT("/notifications/settings", userHandler.UpdateNotifications)
-
-		// Security
-		protected.PUT("/security/change-password", userHandler.ChangePassword)
-
-		// 2FA endpoints
-		twoFA := protected.Group("/security/2fa")
-		{
-			twoFA.POST("/setup", userHandler.Setup2FA)
-			twoFA.POST("/enable", userHandler.Enable2FA)
-			twoFA.POST("/disable", userHandler.Disable2FA)
-			twoFA.POST("/verify", userHandler.Verify2FA)
-		}
-
-		// Data management
-		protected.POST("/export", userHandler.ExportData)
-		protected.DELETE("", userHandler.DeleteAccount)
-	}
-
-	// Create HTTP server
-	srv := &http.Server{
-		Addr:         cfg.GetServerAddr(),
-		Handler:      r,
-		ReadTimeout:  cfg.Server.ReadTimeout,
-		WriteTimeout: cfg.Server.WriteTimeout,
-	}
-
-	// Start server in a goroutine
-	go func() {
-		log.Printf("🚀 [Users Service] Starting server on %s", cfg.GetServerAddr())
-		log.Printf("🌍 [Users Service] Environment: %s", cfg.Server.Environment)
-		log.Printf("📊 [Users Service] Health check: http://%s/health", cfg.GetServerAddr())
-
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Failed to start server: %v", err)
-		}
-	}()
-
 	// Setup graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("🛑 [Auth Service] Shutting down servers...")
-
-	// Create a context with timeout for shutdown
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	// Shutdown HTTP server
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Printf("❌ [HTTP Server] Server forced to shutdown: %v", err)
-	} else {
-		log.Println("✅ [HTTP Server] Server shutdown gracefully")
-	}
+	log.Println("🛑 [Auth Service] Shutting down server...")
 
 	// Shutdown gRPC server
 	grpcContainer.Server.Stop()
@@ -311,7 +157,7 @@ func connectGormDB(cfg *config.Config) (*gorm.DB, error) {
 	dsn := cfg.GetDatabaseDSN()
 	gormDB, err := pkgDatabase.ConnectWithDSN(context.Background(), dsn)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
+		return nil, pkgErrors.NewInternalServerError("failed to connect to database")
 	}
 	return gormDB, nil
 }

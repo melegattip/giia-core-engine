@@ -2,11 +2,14 @@ package providers
 
 import (
 	"context"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/mock"
 )
 
 // MockUserRepository is a mock implementation of UserRepository
@@ -194,12 +197,12 @@ func (m *MockPermissionRepository) GetRolePermissions(ctx context.Context, roleI
 	return args.Get(0).([]*domain.Permission), args.Error(1)
 }
 
-func (m *MockPermissionRepository) GetUserPermissions(ctx context.Context, userID uuid.UUID) ([]string, error) {
+func (m *MockPermissionRepository) GetUserPermissions(ctx context.Context, userID uuid.UUID) ([]*domain.Permission, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]string), args.Error(1)
+	return args.Get(0).([]*domain.Permission), args.Error(1)
 }
 
 func (m *MockPermissionRepository) AssignPermissionsToRole(ctx context.Context, roleID uuid.UUID, permissionIDs []uuid.UUID) error {
@@ -235,7 +238,7 @@ func (m *MockPermissionCache) GetUserPermissions(ctx context.Context, userID str
 	return args.Get(0).([]string), args.Error(1)
 }
 
-func (m *MockPermissionCache) SetUserPermissions(ctx context.Context, userID string, permissions []string, ttl int) error {
+func (m *MockPermissionCache) SetUserPermissions(ctx context.Context, userID string, permissions []string, ttl time.Duration) error {
 	args := m.Called(ctx, userID, permissions, ttl)
 	return args.Error(0)
 }
@@ -245,12 +248,17 @@ func (m *MockPermissionCache) InvalidateUserPermissions(ctx context.Context, use
 	return args.Error(0)
 }
 
+func (m *MockPermissionCache) InvalidateUsersWithRole(ctx context.Context, userIDs []string) error {
+	args := m.Called(ctx, userIDs)
+	return args.Error(0)
+}
+
 // MockTokenRepository is a mock implementation of TokenRepository
 type MockTokenRepository struct {
 	mock.Mock
 }
 
-func (m *MockTokenRepository) SaveRefreshToken(ctx context.Context, token *domain.RefreshToken) error {
+func (m *MockTokenRepository) StoreRefreshToken(ctx context.Context, token *domain.RefreshToken) error {
 	args := m.Called(ctx, token)
 	return args.Error(0)
 }
@@ -273,9 +281,50 @@ func (m *MockTokenRepository) RevokeAllUserTokens(ctx context.Context, userID uu
 	return args.Error(0)
 }
 
-func (m *MockTokenRepository) DeleteExpiredTokens(ctx context.Context) error {
-	args := m.Called(ctx)
+func (m *MockTokenRepository) StorePasswordResetToken(ctx context.Context, token *domain.PasswordResetToken) error {
+	args := m.Called(ctx, token)
 	return args.Error(0)
+}
+
+func (m *MockTokenRepository) GetPasswordResetToken(ctx context.Context, tokenHash string) (*domain.PasswordResetToken, error) {
+	args := m.Called(ctx, tokenHash)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.PasswordResetToken), args.Error(1)
+}
+
+func (m *MockTokenRepository) MarkPasswordResetTokenUsed(ctx context.Context, tokenHash string) error {
+	args := m.Called(ctx, tokenHash)
+	return args.Error(0)
+}
+
+func (m *MockTokenRepository) StoreActivationToken(ctx context.Context, token *domain.ActivationToken) error {
+	args := m.Called(ctx, token)
+	return args.Error(0)
+}
+
+func (m *MockTokenRepository) GetActivationToken(ctx context.Context, tokenHash string) (*domain.ActivationToken, error) {
+	args := m.Called(ctx, tokenHash)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.ActivationToken), args.Error(1)
+}
+
+func (m *MockTokenRepository) MarkActivationTokenUsed(ctx context.Context, tokenHash string) error {
+	args := m.Called(ctx, tokenHash)
+	return args.Error(0)
+}
+
+func (m *MockTokenRepository) BlacklistToken(ctx context.Context, token string, ttl time.Duration) error {
+	args := m.Called(ctx, token, ttl)
+	return args.Error(0)
+}
+
+func (m *MockTokenRepository) IsTokenBlacklisted(ctx context.Context, token string) (bool, error) {
+	args := m.Called(ctx, token)
+	return args.Bool(0), args.Error(1)
 }
 
 // MockOrganizationRepository is a mock implementation of OrganizationRepository
@@ -296,8 +345,8 @@ func (m *MockOrganizationRepository) GetByID(ctx context.Context, id uuid.UUID) 
 	return args.Get(0).(*domain.Organization), args.Error(1)
 }
 
-func (m *MockOrganizationRepository) GetByName(ctx context.Context, name string) (*domain.Organization, error) {
-	args := m.Called(ctx, name)
+func (m *MockOrganizationRepository) GetBySlug(ctx context.Context, slug string) (*domain.Organization, error) {
+	args := m.Called(ctx, slug)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -309,13 +358,8 @@ func (m *MockOrganizationRepository) Update(ctx context.Context, org *domain.Org
 	return args.Error(0)
 }
 
-func (m *MockOrganizationRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	args := m.Called(ctx, id)
-	return args.Error(0)
-}
-
-func (m *MockOrganizationRepository) List(ctx context.Context) ([]*domain.Organization, error) {
-	args := m.Called(ctx)
+func (m *MockOrganizationRepository) List(ctx context.Context, offset, limit int) ([]*domain.Organization, error) {
+	args := m.Called(ctx, offset, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -345,4 +389,45 @@ func (m *MockLogger) Error(ctx context.Context, err error, msg string, tags pkgL
 
 func (m *MockLogger) Fatal(ctx context.Context, err error, msg string, tags pkgLogger.Tags) {
 	m.Called(ctx, err, msg, tags)
+}
+
+// MockJWTManager is a mock implementation of JWTManager
+type MockJWTManager struct {
+	mock.Mock
+}
+
+func (m *MockJWTManager) GenerateAccessToken(userID, orgID uuid.UUID, email string, roles []string) (string, error) {
+	args := m.Called(userID, orgID, email, roles)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockJWTManager) GenerateRefreshToken(userID uuid.UUID) (string, error) {
+	args := m.Called(userID)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockJWTManager) ValidateAccessToken(tokenString string) (*Claims, error) {
+	args := m.Called(tokenString)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*Claims), args.Error(1)
+}
+
+func (m *MockJWTManager) ValidateRefreshToken(tokenString string) (*jwt.RegisteredClaims, error) {
+	args := m.Called(tokenString)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*jwt.RegisteredClaims), args.Error(1)
+}
+
+func (m *MockJWTManager) GetAccessExpiry() time.Duration {
+	args := m.Called()
+	return args.Get(0).(time.Duration)
+}
+
+func (m *MockJWTManager) GetRefreshExpiry() time.Duration {
+	args := m.Called()
+	return args.Get(0).(time.Duration)
 }

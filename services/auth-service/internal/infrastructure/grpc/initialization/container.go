@@ -3,6 +3,9 @@ package initialization
 import (
 	"time"
 
+	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
+
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/auth"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/rbac"
@@ -10,8 +13,6 @@ import (
 	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/adapters/jwt"
 	grpcServer "github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/grpc/server"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/repositories"
-	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 )
 
 type GRPCContainer struct {
@@ -20,14 +21,14 @@ type GRPCContainer struct {
 }
 
 type GRPCConfig struct {
-	Port              string
-	JWTSecretKey      string
-	JWTAccessExpiry   time.Duration
-	JWTRefreshExpiry  time.Duration
-	JWTIssuer         string
-	DB                *gorm.DB
-	RedisClient       *redis.Client
-	Logger            pkgLogger.Logger
+	Port             string
+	JWTSecretKey     string
+	JWTAccessExpiry  time.Duration
+	JWTRefreshExpiry time.Duration
+	JWTIssuer        string
+	DB               *gorm.DB
+	RedisClient      *redis.Client
+	Logger           pkgLogger.Logger
 }
 
 func InitializeGRPCServer(cfg *GRPCConfig) (*GRPCContainer, error) {

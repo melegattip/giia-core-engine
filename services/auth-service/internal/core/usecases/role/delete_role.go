@@ -3,10 +3,11 @@ package role
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/google/uuid"
 )
 
 type DeleteRoleUseCase struct {
@@ -74,8 +75,8 @@ func (uc *DeleteRoleUseCase) Execute(ctx context.Context, roleID uuid.UUID) erro
 	}
 
 	uc.logger.Info(ctx, "Role deleted successfully", pkgLogger.Tags{
-		"role_id":          roleID.String(),
-		"role_name":        role.Name,
+		"role_id":        roleID.String(),
+		"role_name":      role.Name,
 		"affected_users": len(userIDs),
 	})
 

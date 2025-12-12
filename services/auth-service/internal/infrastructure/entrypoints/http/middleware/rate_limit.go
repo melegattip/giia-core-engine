@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
 	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
 )

@@ -7,18 +7,18 @@ import (
 )
 
 type Role struct {
-	ID             uuid.UUID     `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Name           string        `json:"name" gorm:"type:varchar(100);not null"`
-	Description    string        `json:"description" gorm:"type:text"`
-	OrganizationID *uuid.UUID    `json:"organization_id,omitempty" gorm:"type:uuid;index:idx_roles_organization_id"`
-	ParentRoleID   *uuid.UUID    `json:"parent_role_id,omitempty" gorm:"type:uuid;index:idx_roles_parent_role_id"`
-	IsSystem       bool          `json:"is_system" gorm:"not null;default:false;index:idx_roles_is_system"`
-	CreatedAt      time.Time     `json:"created_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
-	UpdatedAt      time.Time     `json:"updated_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
+	ID             uuid.UUID  `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Name           string     `json:"name" gorm:"type:varchar(100);not null"`
+	Description    string     `json:"description" gorm:"type:text"`
+	OrganizationID *uuid.UUID `json:"organization_id,omitempty" gorm:"type:uuid;index:idx_roles_organization_id"`
+	ParentRoleID   *uuid.UUID `json:"parent_role_id,omitempty" gorm:"type:uuid;index:idx_roles_parent_role_id"`
+	IsSystem       bool       `json:"is_system" gorm:"not null;default:false;index:idx_roles_is_system"`
+	CreatedAt      time.Time  `json:"created_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
+	UpdatedAt      time.Time  `json:"updated_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
 
-	Organization   *Organization `json:"organization,omitempty" gorm:"foreignKey:OrganizationID"`
-	ParentRole     *Role         `json:"parent_role,omitempty" gorm:"foreignKey:ParentRoleID"`
-	Permissions    []Permission  `json:"permissions,omitempty" gorm:"many2many:role_permissions;"`
+	Organization *Organization `json:"organization,omitempty" gorm:"foreignKey:OrganizationID"`
+	ParentRole   *Role         `json:"parent_role,omitempty" gorm:"foreignKey:ParentRoleID"`
+	Permissions  []Permission  `json:"permissions,omitempty" gorm:"many2many:role_permissions;"`
 }
 
 func (Role) TableName() string {
@@ -26,14 +26,14 @@ func (Role) TableName() string {
 }
 
 type RoleResponse struct {
-	ID             uuid.UUID          `json:"id"`
-	Name           string             `json:"name"`
-	Description    string             `json:"description"`
-	OrganizationID *uuid.UUID         `json:"organization_id,omitempty"`
-	ParentRoleID   *uuid.UUID         `json:"parent_role_id,omitempty"`
-	IsSystem       bool               `json:"is_system"`
-	CreatedAt      time.Time          `json:"created_at"`
-	UpdatedAt      time.Time          `json:"updated_at"`
+	ID             uuid.UUID            `json:"id"`
+	Name           string               `json:"name"`
+	Description    string               `json:"description"`
+	OrganizationID *uuid.UUID           `json:"organization_id,omitempty"`
+	ParentRoleID   *uuid.UUID           `json:"parent_role_id,omitempty"`
+	IsSystem       bool                 `json:"is_system"`
+	CreatedAt      time.Time            `json:"created_at"`
+	UpdatedAt      time.Time            `json:"updated_at"`
 	Permissions    []PermissionResponse `json:"permissions,omitempty"`
 }
 

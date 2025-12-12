@@ -3,25 +3,25 @@ package auth
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/adapters/jwt"
-	"github.com/google/uuid"
 )
 
 type RefreshTokenUseCase struct {
 	userRepo   providers.UserRepository
 	tokenRepo  providers.TokenRepository
-	jwtManager *jwt.JWTManager
+	jwtManager providers.JWTManager
 	logger     pkgLogger.Logger
 }
 
 func NewRefreshTokenUseCase(
 	userRepo providers.UserRepository,
 	tokenRepo providers.TokenRepository,
-	jwtManager *jwt.JWTManager,
+	jwtManager providers.JWTManager,
 	logger pkgLogger.Logger,
 ) *RefreshTokenUseCase {
 	return &RefreshTokenUseCase{

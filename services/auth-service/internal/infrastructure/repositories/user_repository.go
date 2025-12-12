@@ -3,10 +3,11 @@ package repositories
 import (
 	"context"
 
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+
+	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
 )
 
 type userRepository struct {

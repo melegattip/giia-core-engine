@@ -3,11 +3,12 @@ package role
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/google/uuid"
 )
 
 type UpdateRoleUseCase struct {

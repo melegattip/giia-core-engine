@@ -2,13 +2,14 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	authv1 "github.com/giia/giia-core-engine/services/auth-service/api/proto/gen/go/auth/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+
+	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
+	authv1 "github.com/giia/giia-core-engine/services/auth-service/api/proto/gen/go/auth/v1"
 )
 
 type AuthClient struct {
@@ -43,7 +44,7 @@ func NewAuthClient(cfg *ClientConfig) (*AuthClient, error) {
 		),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to auth service: %w", err)
+		return nil, pkgErrors.NewInternalServerError("failed to connect to auth service")
 	}
 
 	client := authv1.NewAuthServiceClient(conn)
@@ -153,7 +154,7 @@ func NewConnectionPool(address string, size int) (*ConnectionPool, error) {
 		})
 		if err != nil {
 			pool.Close()
-			return nil, fmt.Errorf("failed to create client %d: %w", i, err)
+			return nil, pkgErrors.NewInternalServerError("failed to create auth client for connection pool")
 		}
 		pool.clients[i] = client
 	}

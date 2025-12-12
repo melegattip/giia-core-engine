@@ -56,7 +56,22 @@
       "Bash(chmod:*)",
       "Bash(go install:*)",
       "Bash(protoc:*)",
-      "Bash(bash scripts/generate-proto.sh:*)"
+      "Bash(bash scripts/generate-proto.sh:*)",
+      "Bash(dir:*)",
+      "Bash(cat:*)",
+      "Bash(cd:*)",
+      "Bash(go tool cover:*)",
+      "Bash(grep:*)",
+      "Bash(if exist internaldomain dir internaldomain /b)",
+      "Bash(if exist internalrepository dir internalrepository /b)",
+      "Bash(if exist internalhandlers dir internalhandlers /b)",
+      "Bash(if exist internalusecases dir internalusecases /b)",
+      "Bash(ls:*)",
+      "Bash(done)",
+      "Bash(git mv:*)",
+      "Bash(make build:*)",
+      "Bash(golangci-lint run:*)",
+      "Bash(~/go/bin/golangci-lint run:*)"
     ],
     "deny": [],
     "ask": []

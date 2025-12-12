@@ -71,6 +71,30 @@ func NewServiceUnavailable(message string) *CustomError {
 	}
 }
 
+func NewConflict(message string) *CustomError {
+	return &CustomError{
+		ErrorCode:  "CONFLICT",
+		Message:    message,
+		HTTPStatus: http.StatusConflict,
+	}
+}
+
+func NewTooManyRequests(message string) *CustomError {
+	return &CustomError{
+		ErrorCode:  "TOO_MANY_REQUESTS",
+		Message:    message,
+		HTTPStatus: http.StatusTooManyRequests,
+	}
+}
+
+func NewUnprocessableEntity(message string) *CustomError {
+	return &CustomError{
+		ErrorCode:  "UNPROCESSABLE_ENTITY",
+		Message:    message,
+		HTTPStatus: http.StatusUnprocessableEntity,
+	}
+}
+
 func Wrap(err error, message string) *CustomError {
 	if err == nil {
 		return nil

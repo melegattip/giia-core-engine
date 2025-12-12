@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
+	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 )
 
 func RecoveryInterceptor(logger pkgLogger.Logger) grpc.UnaryServerInterceptor {
@@ -16,7 +18,7 @@ func RecoveryInterceptor(logger pkgLogger.Logger) grpc.UnaryServerInterceptor {
 		defer func() {
 			if r := recover(); r != nil {
 				stack := debug.Stack()
-				logger.Error(ctx, fmt.Errorf("panic recovered: %v", r), "Panic in gRPC handler", pkgLogger.Tags{
+				logger.Error(ctx, pkgErrors.NewInternalServerError("panic recovered in gRPC handler"), "Panic in gRPC handler", pkgLogger.Tags{
 					"method": info.FullMethod,
 					"panic":  fmt.Sprintf("%v", r),
 					"stack":  string(stack),

@@ -13,9 +13,9 @@ type UserRole struct {
 	AssignedAt time.Time  `json:"assigned_at" gorm:"not null;default:CURRENT_TIMESTAMP;index:idx_user_roles_assigned_at"`
 	AssignedBy *uuid.UUID `json:"assigned_by,omitempty" gorm:"type:uuid;index:idx_user_roles_assigned_by"`
 
-	User       *User `json:"user,omitempty" gorm:"foreignKey:UserID"`
-	Role       *Role `json:"role,omitempty" gorm:"foreignKey:RoleID"`
-	Assigner   *User `json:"assigner,omitempty" gorm:"foreignKey:AssignedBy"`
+	User     *User `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	Role     *Role `json:"role,omitempty" gorm:"foreignKey:RoleID"`
+	Assigner *User `json:"assigner,omitempty" gorm:"foreignKey:AssignedBy"`
 }
 
 func (UserRole) TableName() string {

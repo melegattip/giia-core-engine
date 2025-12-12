@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/auth"
 )
 
@@ -72,4 +73,4 @@ func (m *AuthMiddleware) extractTokenFromHeader(c *gin.Context) string {
 	}
 
 	return parts[1]
-} 
+}

@@ -6,25 +6,25 @@ import (
 	"encoding/hex"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
+
 	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/adapters/jwt"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type LoginUseCase struct {
-	userRepo    providers.UserRepository
-	tokenRepo   providers.TokenRepository
-	jwtManager  *jwt.JWTManager
-	logger      pkgLogger.Logger
+	userRepo   providers.UserRepository
+	tokenRepo  providers.TokenRepository
+	jwtManager providers.JWTManager
+	logger     pkgLogger.Logger
 }
 
 func NewLoginUseCase(
 	userRepo providers.UserRepository,
 	tokenRepo providers.TokenRepository,
-	jwtManager *jwt.JWTManager,
+	jwtManager providers.JWTManager,
 	logger pkgLogger.Logger,
 ) *LoginUseCase {
 	return &LoginUseCase{

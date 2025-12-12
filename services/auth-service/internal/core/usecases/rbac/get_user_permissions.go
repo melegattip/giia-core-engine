@@ -4,10 +4,11 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
+
 	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/google/uuid"
 )
 
 const (
@@ -43,7 +44,7 @@ func (uc *GetUserPermissionsUseCase) Execute(ctx context.Context, userID uuid.UU
 	cached, err := uc.cache.GetUserPermissions(ctx, userID.String())
 	if err == nil && cached != nil {
 		uc.logger.Debug(ctx, "Cache hit for user permissions", pkgLogger.Tags{
-			"user_id":          userID.String(),
+			"user_id":           userID.String(),
 			"permissions_count": len(cached),
 		})
 		return cached, nil
@@ -110,10 +111,10 @@ func (uc *GetUserPermissionsUseCase) Execute(ctx context.Context, userID uuid.UU
 	}
 
 	uc.logger.Info(ctx, "Retrieved user permissions", pkgLogger.Tags{
-		"user_id":          userID.String(),
-		"roles_count":      len(roles),
+		"user_id":           userID.String(),
+		"roles_count":       len(roles),
 		"permissions_count": len(permissionCodes),
-		"has_wildcard":     hasWildcard,
+		"has_wildcard":      hasWildcard,
 	})
 
 	return permissionCodes, nil

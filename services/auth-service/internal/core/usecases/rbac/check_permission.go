@@ -4,9 +4,10 @@ import (
 	"context"
 	"strings"
 
+	"github.com/google/uuid"
+
 	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/google/uuid"
 )
 
 type CheckPermissionUseCase struct {

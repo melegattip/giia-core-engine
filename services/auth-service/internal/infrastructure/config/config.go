@@ -15,6 +15,7 @@ type Config struct {
 	Email    EmailConfig
 	Security SecurityConfig
 	Redis    RedisConfig
+	Timeouts TimeoutConfig
 }
 
 type ServerConfig struct {
@@ -66,6 +67,13 @@ type RedisConfig struct {
 	DB       int
 }
 
+type TimeoutConfig struct {
+	Database time.Duration
+	Cache    time.Duration
+	HTTP     time.Duration
+	External time.Duration
+}
+
 func Load() *Config {
 	return &Config{
 		Server: ServerConfig{
@@ -109,6 +117,12 @@ func Load() *Config {
 			Port:     getEnv("REDIS_PORT", "6379"),
 			Password: getEnv("REDIS_PASSWORD", ""),
 			DB:       getEnvAsInt("REDIS_DB", 1),
+		},
+		Timeouts: TimeoutConfig{
+			Database: time.Duration(getEnvAsInt("TIMEOUT_DATABASE_SECONDS", 5)) * time.Second,
+			Cache:    time.Duration(getEnvAsInt("TIMEOUT_CACHE_SECONDS", 1)) * time.Second,
+			HTTP:     time.Duration(getEnvAsInt("TIMEOUT_HTTP_SECONDS", 10)) * time.Second,
+			External: time.Duration(getEnvAsInt("TIMEOUT_EXTERNAL_SECONDS", 30)) * time.Second,
 		},
 	}
 }

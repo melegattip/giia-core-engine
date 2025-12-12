@@ -7,11 +7,6 @@ use (
 	./pkg/errors
 	./pkg/events
 	./pkg/logger
-	./services/ai-agent-service
-	./services/analytics-service
 	// Services
 	./services/auth-service
-	./services/catalog-service
-	./services/ddmrp-engine-service
-	./services/execution-service
 )

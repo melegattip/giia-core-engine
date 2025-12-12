@@ -3,10 +3,11 @@ package server
 import (
 	"context"
 
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"gorm.io/gorm"
+
+	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 )
 
 type HealthServiceServer struct {

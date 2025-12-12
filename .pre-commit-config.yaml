@@ -1,0 +1,90 @@
+# Pre-commit hooks configuration
+# See https://pre-commit.com for more information
+
+repos:
+  # Go formatting hooks
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      - id: go-fmt
+        name: Format Go code
+        description: Run gofmt on Go files
+        args: [-w]
+
+      - id: go-vet
+        name: Run go vet
+        description: Examine Go source code and report suspicious constructs
+
+      - id: go-imports
+        name: Run goimports
+        description: Update Go import lines
+        args: [-w]
+
+  # golangci-lint hook
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.64.8
+    hooks:
+      - id: golangci-lint
+        name: Run golangci-lint
+        description: Fast linters runner for Go
+        entry: golangci-lint run --fix
+        types: [go]
+        language: golang
+        pass_filenames: false
+        require_serial: true
+
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+        args: [--markdown-linebreak-ext=md]
+
+      - id: end-of-file-fixer
+        name: Fix end of files
+
+      - id: check-yaml
+        name: Check YAML syntax
+        exclude: ^deployments/
+
+      - id: check-added-large-files
+        name: Check for large files
+        args: ['--maxkb=1024']
+
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+
+      - id: detect-private-key
+        name: Detect private keys
+
+      - id: mixed-line-ending
+        name: Fix mixed line endings
+        args: ['--fix=lf']
+
+  # YAML linting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.0
+    hooks:
+      - id: yamllint
+        name: Lint YAML files
+        args: [-c=.yamllint.yaml, -s]
+        exclude: ^deployments/
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.45.0
+    hooks:
+      - id: markdownlint
+        name: Lint Markdown files
+        args: [--fix]
+
+# Configuration
+default_language_version:
+  python: python3
+
+# Default stages
+default_stages: [commit, push]
+
+# Minimum pre-commit version
+minimum_pre_commit_version: '2.20.0'

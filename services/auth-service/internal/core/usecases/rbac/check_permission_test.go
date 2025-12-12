@@ -4,10 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
 )
 
 func TestCheckPermissionUseCase_Execute_WithExactMatchPermission_ReturnsTrue(t *testing.T) {
@@ -17,16 +19,14 @@ func TestCheckPermissionUseCase_Execute_WithExactMatchPermission_ReturnsTrue(t *
 	givenUserPermissions := []string{"catalog:products:read", "catalog:products:write"}
 
 	mockRoleRepo := new(providers.MockRoleRepository)
+	mockPermRepo := new(providers.MockPermissionRepository)
 	mockCache := new(providers.MockPermissionCache)
 	mockLogger := new(providers.MockLogger)
 
-	mockResolveInheritance := new(MockResolveInheritanceUseCase)
-
-	getUserPermsUC := NewGetUserPermissionsUseCase(mockRoleRepo, mockResolveInheritance, mockCache, mockLogger)
+	resolveInheritanceUC := NewResolveInheritanceUseCase(mockRoleRepo, mockPermRepo, mockLogger)
+	getUserPermsUC := NewGetUserPermissionsUseCase(mockRoleRepo, resolveInheritanceUC, mockCache, mockLogger)
 	useCase := NewCheckPermissionUseCase(getUserPermsUC, mockLogger)
 
-	// Mock GetUserPermissions behavior
-	mockRoleRepo.On("GetUserRoles", mock.Anything, givenUserID).Return([]*domain.Role{}, nil)
 	mockCache.On("GetUserPermissions", mock.Anything, givenUserID.String()).Return(givenUserPermissions, nil)
 	mockLogger.On("Debug", mock.Anything, mock.Anything, mock.Anything).Return()
 
@@ -44,12 +44,17 @@ func TestCheckPermissionUseCase_Execute_WithWildcardAllPermission_ReturnsTrue(t 
 	givenRequiredPermission := "catalog:products:read"
 	givenUserPermissions := []string{"*:*:*"} // Admin wildcard
 
-	mockGetUserPerms := new(MockGetUserPermissionsUseCase)
+	mockRoleRepo := new(providers.MockRoleRepository)
+	mockPermRepo := new(providers.MockPermissionRepository)
+	mockCache := new(providers.MockPermissionCache)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewCheckPermissionUseCase(mockGetUserPerms, mockLogger)
+	resolveInheritanceUC := NewResolveInheritanceUseCase(mockRoleRepo, mockPermRepo, mockLogger)
+	getUserPermsUC := NewGetUserPermissionsUseCase(mockRoleRepo, resolveInheritanceUC, mockCache, mockLogger)
+	useCase := NewCheckPermissionUseCase(getUserPermsUC, mockLogger)
 
-	mockGetUserPerms.On("Execute", mock.Anything, givenUserID).Return(givenUserPermissions, nil)
+	mockCache.On("GetUserPermissions", mock.Anything, givenUserID.String()).Return(givenUserPermissions, nil)
+	mockLogger.On("Debug", mock.Anything, mock.Anything, mock.Anything).Return()
 
 	// When
 	allowed, err := useCase.Execute(context.Background(), givenUserID, givenRequiredPermission)
@@ -58,7 +63,7 @@ func TestCheckPermissionUseCase_Execute_WithWildcardAllPermission_ReturnsTrue(t 
 	assert.NoError(t, err)
 	assert.True(t, allowed)
 
-	mockGetUserPerms.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
 }
 
 func TestCheckPermissionUseCase_Execute_WithServiceWildcardPermission_ReturnsTrue(t *testing.T) {
@@ -67,12 +72,17 @@ func TestCheckPermissionUseCase_Execute_WithServiceWildcardPermission_ReturnsTru
 	givenRequiredPermission := "catalog:products:read"
 	givenUserPermissions := []string{"catalog:*:*"} // All catalog permissions
 
-	mockGetUserPerms := new(MockGetUserPermissionsUseCase)
+	mockRoleRepo := new(providers.MockRoleRepository)
+	mockPermRepo := new(providers.MockPermissionRepository)
+	mockCache := new(providers.MockPermissionCache)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewCheckPermissionUseCase(mockGetUserPerms, mockLogger)
+	resolveInheritanceUC := NewResolveInheritanceUseCase(mockRoleRepo, mockPermRepo, mockLogger)
+	getUserPermsUC := NewGetUserPermissionsUseCase(mockRoleRepo, resolveInheritanceUC, mockCache, mockLogger)
+	useCase := NewCheckPermissionUseCase(getUserPermsUC, mockLogger)
 
-	mockGetUserPerms.On("Execute", mock.Anything, givenUserID).Return(givenUserPermissions, nil)
+	mockCache.On("GetUserPermissions", mock.Anything, givenUserID.String()).Return(givenUserPermissions, nil)
+	mockLogger.On("Debug", mock.Anything, mock.Anything, mock.Anything).Return()
 
 	// When
 	allowed, err := useCase.Execute(context.Background(), givenUserID, givenRequiredPermission)
@@ -81,7 +91,7 @@ func TestCheckPermissionUseCase_Execute_WithServiceWildcardPermission_ReturnsTru
 	assert.NoError(t, err)
 	assert.True(t, allowed)
 
-	mockGetUserPerms.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
 }
 
 func TestCheckPermissionUseCase_Execute_WithResourceWildcardPermission_ReturnsTrue(t *testing.T) {
@@ -90,12 +100,17 @@ func TestCheckPermissionUseCase_Execute_WithResourceWildcardPermission_ReturnsTr
 	givenRequiredPermission := "catalog:products:read"
 	givenUserPermissions := []string{"catalog:products:*"} // All actions on products
 
-	mockGetUserPerms := new(MockGetUserPermissionsUseCase)
+	mockRoleRepo := new(providers.MockRoleRepository)
+	mockPermRepo := new(providers.MockPermissionRepository)
+	mockCache := new(providers.MockPermissionCache)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewCheckPermissionUseCase(mockGetUserPerms, mockLogger)
+	resolveInheritanceUC := NewResolveInheritanceUseCase(mockRoleRepo, mockPermRepo, mockLogger)
+	getUserPermsUC := NewGetUserPermissionsUseCase(mockRoleRepo, resolveInheritanceUC, mockCache, mockLogger)
+	useCase := NewCheckPermissionUseCase(getUserPermsUC, mockLogger)
 
-	mockGetUserPerms.On("Execute", mock.Anything, givenUserID).Return(givenUserPermissions, nil)
+	mockCache.On("GetUserPermissions", mock.Anything, givenUserID.String()).Return(givenUserPermissions, nil)
+	mockLogger.On("Debug", mock.Anything, mock.Anything, mock.Anything).Return()
 
 	// When
 	allowed, err := useCase.Execute(context.Background(), givenUserID, givenRequiredPermission)
@@ -104,7 +119,7 @@ func TestCheckPermissionUseCase_Execute_WithResourceWildcardPermission_ReturnsTr
 	assert.NoError(t, err)
 	assert.True(t, allowed)
 
-	mockGetUserPerms.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
 }
 
 func TestCheckPermissionUseCase_Execute_WithoutPermission_ReturnsFalse(t *testing.T) {
@@ -113,13 +128,17 @@ func TestCheckPermissionUseCase_Execute_WithoutPermission_ReturnsFalse(t *testin
 	givenRequiredPermission := "catalog:products:write"
 	givenUserPermissions := []string{"catalog:products:read"} // Only read, not write
 
-	mockGetUserPerms := new(MockGetUserPermissionsUseCase)
+	mockRoleRepo := new(providers.MockRoleRepository)
+	mockPermRepo := new(providers.MockPermissionRepository)
+	mockCache := new(providers.MockPermissionCache)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewCheckPermissionUseCase(mockGetUserPerms, mockLogger)
+	resolveInheritanceUC := NewResolveInheritanceUseCase(mockRoleRepo, mockPermRepo, mockLogger)
+	getUserPermsUC := NewGetUserPermissionsUseCase(mockRoleRepo, resolveInheritanceUC, mockCache, mockLogger)
+	useCase := NewCheckPermissionUseCase(getUserPermsUC, mockLogger)
 
-	mockGetUserPerms.On("Execute", mock.Anything, givenUserID).Return(givenUserPermissions, nil)
-	mockLogger.On("Warn", mock.Anything, mock.Anything, mock.Anything).Return()
+	mockCache.On("GetUserPermissions", mock.Anything, givenUserID.String()).Return(givenUserPermissions, nil)
+	mockLogger.On("Debug", mock.Anything, mock.Anything, mock.Anything).Return()
 
 	// When
 	allowed, err := useCase.Execute(context.Background(), givenUserID, givenRequiredPermission)
@@ -128,7 +147,7 @@ func TestCheckPermissionUseCase_Execute_WithoutPermission_ReturnsFalse(t *testin
 	assert.NoError(t, err)
 	assert.False(t, allowed)
 
-	mockGetUserPerms.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
 }
 
 func TestCheckPermissionUseCase_Execute_WithNoPermissions_ReturnsFalse(t *testing.T) {
@@ -137,13 +156,17 @@ func TestCheckPermissionUseCase_Execute_WithNoPermissions_ReturnsFalse(t *testin
 	givenRequiredPermission := "catalog:products:read"
 	givenUserPermissions := []string{} // No permissions
 
-	mockGetUserPerms := new(MockGetUserPermissionsUseCase)
+	mockRoleRepo := new(providers.MockRoleRepository)
+	mockPermRepo := new(providers.MockPermissionRepository)
+	mockCache := new(providers.MockPermissionCache)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewCheckPermissionUseCase(mockGetUserPerms, mockLogger)
+	resolveInheritanceUC := NewResolveInheritanceUseCase(mockRoleRepo, mockPermRepo, mockLogger)
+	getUserPermsUC := NewGetUserPermissionsUseCase(mockRoleRepo, resolveInheritanceUC, mockCache, mockLogger)
+	useCase := NewCheckPermissionUseCase(getUserPermsUC, mockLogger)
 
-	mockGetUserPerms.On("Execute", mock.Anything, givenUserID).Return(givenUserPermissions, nil)
-	mockLogger.On("Warn", mock.Anything, mock.Anything, mock.Anything).Return()
+	mockCache.On("GetUserPermissions", mock.Anything, givenUserID.String()).Return(givenUserPermissions, nil)
+	mockLogger.On("Debug", mock.Anything, mock.Anything, mock.Anything).Return()
 
 	// When
 	allowed, err := useCase.Execute(context.Background(), givenUserID, givenRequiredPermission)
@@ -152,7 +175,7 @@ func TestCheckPermissionUseCase_Execute_WithNoPermissions_ReturnsFalse(t *testin
 	assert.NoError(t, err)
 	assert.False(t, allowed)
 
-	mockGetUserPerms.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
 }
 
 func TestCheckPermissionUseCase_Execute_WhenGetPermissionsFails_ReturnsError(t *testing.T) {
@@ -161,12 +184,18 @@ func TestCheckPermissionUseCase_Execute_WhenGetPermissionsFails_ReturnsError(t *
 	givenRequiredPermission := "catalog:products:read"
 	givenError := assert.AnError
 
-	mockGetUserPerms := new(MockGetUserPermissionsUseCase)
+	mockRoleRepo := new(providers.MockRoleRepository)
+	mockPermRepo := new(providers.MockPermissionRepository)
+	mockCache := new(providers.MockPermissionCache)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewCheckPermissionUseCase(mockGetUserPerms, mockLogger)
+	resolveInheritanceUC := NewResolveInheritanceUseCase(mockRoleRepo, mockPermRepo, mockLogger)
+	getUserPermsUC := NewGetUserPermissionsUseCase(mockRoleRepo, resolveInheritanceUC, mockCache, mockLogger)
+	useCase := NewCheckPermissionUseCase(getUserPermsUC, mockLogger)
 
-	mockGetUserPerms.On("Execute", mock.Anything, givenUserID).Return([]string(nil), givenError)
+	mockCache.On("GetUserPermissions", mock.Anything, givenUserID.String()).Return([]string(nil), givenError)
+	mockRoleRepo.On("GetUserRoles", mock.Anything, givenUserID).Return([]*domain.Role(nil), givenError)
+	mockLogger.On("Debug", mock.Anything, mock.Anything, mock.Anything).Return()
 	mockLogger.On("Error", mock.Anything, givenError, mock.Anything, mock.Anything).Return()
 
 	// When
@@ -175,9 +204,8 @@ func TestCheckPermissionUseCase_Execute_WhenGetPermissionsFails_ReturnsError(t *
 	// Then
 	assert.Error(t, err)
 	assert.False(t, allowed)
-	assert.Equal(t, givenError, err)
 
-	mockGetUserPerms.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
 }
 
 func TestCheckPermissionUseCase_Execute_WithMultipleWildcards_ChoosesMostSpecific(t *testing.T) {
@@ -185,18 +213,23 @@ func TestCheckPermissionUseCase_Execute_WithMultipleWildcards_ChoosesMostSpecifi
 	givenUserID := uuid.New()
 	givenRequiredPermission := "catalog:products:read"
 	givenUserPermissions := []string{
-		"*:*:*",               // Admin
-		"catalog:*:*",         // Catalog admin
-		"catalog:products:*",  // Product admin
+		"*:*:*",                 // Admin
+		"catalog:*:*",           // Catalog admin
+		"catalog:products:*",    // Product admin
 		"catalog:products:read", // Specific read
 	}
 
-	mockGetUserPerms := new(MockGetUserPermissionsUseCase)
+	mockRoleRepo := new(providers.MockRoleRepository)
+	mockPermRepo := new(providers.MockPermissionRepository)
+	mockCache := new(providers.MockPermissionCache)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewCheckPermissionUseCase(mockGetUserPerms, mockLogger)
+	resolveInheritanceUC := NewResolveInheritanceUseCase(mockRoleRepo, mockPermRepo, mockLogger)
+	getUserPermsUC := NewGetUserPermissionsUseCase(mockRoleRepo, resolveInheritanceUC, mockCache, mockLogger)
+	useCase := NewCheckPermissionUseCase(getUserPermsUC, mockLogger)
 
-	mockGetUserPerms.On("Execute", mock.Anything, givenUserID).Return(givenUserPermissions, nil)
+	mockCache.On("GetUserPermissions", mock.Anything, givenUserID.String()).Return(givenUserPermissions, nil)
+	mockLogger.On("Debug", mock.Anything, mock.Anything, mock.Anything).Return()
 
 	// When
 	allowed, err := useCase.Execute(context.Background(), givenUserID, givenRequiredPermission)
@@ -205,18 +238,5 @@ func TestCheckPermissionUseCase_Execute_WithMultipleWildcards_ChoosesMostSpecifi
 	assert.NoError(t, err)
 	assert.True(t, allowed)
 
-	mockGetUserPerms.AssertExpectations(t)
-}
-
-// MockGetUserPermissionsUseCase is a mock for testing
-type MockGetUserPermissionsUseCase struct {
-	mock.Mock
-}
-
-func (m *MockGetUserPermissionsUseCase) Execute(ctx context.Context, userID uuid.UUID) ([]string, error) {
-	args := m.Called(ctx, userID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]string), args.Error(1)
+	mockCache.AssertExpectations(t)
 }

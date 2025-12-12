@@ -7,13 +7,14 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+
 	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 type RegisterUseCase struct {

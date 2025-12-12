@@ -7,26 +7,26 @@ import (
 )
 
 type User struct {
-	ID             uuid.UUID   `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Email          string      `json:"email" gorm:"type:varchar(255);not null;index:idx_users_email_org"`
-	Password       string      `json:"-" gorm:"type:varchar(255);not null"`
-	FirstName      string      `json:"first_name" gorm:"type:varchar(100)"`
-	LastName       string      `json:"last_name" gorm:"type:varchar(100)"`
-	Phone          string      `json:"phone" gorm:"type:varchar(20)"`
-	Avatar         string      `json:"avatar,omitempty" gorm:"type:varchar(500)"`
-	Status         UserStatus  `json:"status" gorm:"type:varchar(20);not null;default:'inactive'"`
-	OrganizationID uuid.UUID   `json:"organization_id" gorm:"type:uuid;not null;index:idx_users_organization_id,idx_users_email_org"`
-	LastLoginAt    *time.Time  `json:"last_login_at,omitempty" gorm:"type:timestamp"`
-	CreatedAt      time.Time   `json:"created_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
-	UpdatedAt      time.Time   `json:"updated_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
+	ID             uuid.UUID    `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Email          string       `json:"email" gorm:"type:varchar(255);not null;index:idx_users_email_org"`
+	Password       string       `json:"-" gorm:"type:varchar(255);not null"`
+	FirstName      string       `json:"first_name" gorm:"type:varchar(100)"`
+	LastName       string       `json:"last_name" gorm:"type:varchar(100)"`
+	Phone          string       `json:"phone" gorm:"type:varchar(20)"`
+	Avatar         string       `json:"avatar,omitempty" gorm:"type:varchar(500)"`
+	Status         UserStatus   `json:"status" gorm:"type:varchar(20);not null;default:'inactive'"`
+	OrganizationID uuid.UUID    `json:"organization_id" gorm:"type:uuid;not null;index:idx_users_organization_id,idx_users_email_org"`
+	LastLoginAt    *time.Time   `json:"last_login_at,omitempty" gorm:"type:timestamp"`
+	CreatedAt      time.Time    `json:"created_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
+	UpdatedAt      time.Time    `json:"updated_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
 	Organization   Organization `json:"organization,omitempty" gorm:"foreignKey:OrganizationID"`
 }
 
 type UserStatus string
 
 const (
-	UserStatusActive   UserStatus = "active"
-	UserStatusInactive UserStatus = "inactive"
+	UserStatusActive    UserStatus = "active"
+	UserStatusInactive  UserStatus = "inactive"
 	UserStatusSuspended UserStatus = "suspended"
 )
 

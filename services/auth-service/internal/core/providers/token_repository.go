@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
 	"github.com/google/uuid"
+
+	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
 )
 
 type TokenRepository interface {

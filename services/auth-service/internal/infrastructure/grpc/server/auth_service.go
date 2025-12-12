@@ -3,15 +3,16 @@ package server
 import (
 	"context"
 
-	authv1 "github.com/giia/giia-core-engine/services/auth-service/api/proto/gen/go/auth/v1"
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/auth"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/rbac"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
+	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
+	authv1 "github.com/giia/giia-core-engine/services/auth-service/api/proto/gen/go/auth/v1"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/auth"
+	"github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/rbac"
 )
 
 type AuthServiceServer struct {
@@ -121,7 +122,7 @@ func (s *AuthServiceServer) BatchCheckPermissions(ctx context.Context, req *auth
 	resultsMap, err := s.batchCheckUC.Execute(ctx, userID, req.Permissions)
 	if err != nil {
 		s.logger.Error(ctx, err, "Batch permission check failed", pkgLogger.Tags{
-			"user_id":          req.UserId,
+			"user_id":           req.UserId,
 			"permissions_count": len(req.Permissions),
 		})
 		return nil, status.Error(codes.Internal, "batch permission check failed")

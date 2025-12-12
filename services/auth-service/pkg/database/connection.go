@@ -3,11 +3,12 @@ package database
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 	"time"
 
 	_ "github.com/lib/pq"
+
+	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 )
 
 type DB struct {
@@ -29,7 +30,7 @@ func NewConnection(config Config) (*DB, error) {
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err)
+		return nil, pkgErrors.NewInternalServerError("failed to open database connection")
 	}
 
 	// Configure connection pool
@@ -59,7 +60,7 @@ func NewConnection(config Config) (*DB, error) {
 
 	// Test connection
 	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
+		return nil, pkgErrors.NewInternalServerError("failed to ping database")
 	}
 
 	log.Println("✅ [Database] Connection established successfully")
@@ -77,7 +78,7 @@ func (db *DB) HealthCheck() error {
 	defer cancel()
 
 	if err := db.PingContext(ctx); err != nil {
-		return fmt.Errorf("database health check failed: %w", err)
+		return pkgErrors.NewInternalServerError("database health check failed")
 	}
 
 	return nil
@@ -99,7 +100,7 @@ func (db *DB) RunMigrations() error {
 	for i, migration := range migrations {
 		log.Printf("Running migration %d/%d...", i+1, len(migrations))
 		if _, err := db.Exec(migration); err != nil {
-			return fmt.Errorf("migration %d failed: %w", i+1, err)
+			return pkgErrors.NewInternalServerError("database migration failed")
 		}
 	}
 

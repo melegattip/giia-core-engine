@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/redis/go-redis/v9"
+
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/redis/go-redis/v9"
 )
 
 type redisRateLimiter struct {
