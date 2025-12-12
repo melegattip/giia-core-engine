@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/giia/giia-core-engine/pkg/events"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
 )
@@ -430,4 +431,34 @@ func (m *MockJWTManager) GetAccessExpiry() time.Duration {
 func (m *MockJWTManager) GetRefreshExpiry() time.Duration {
 	args := m.Called()
 	return args.Get(0).(time.Duration)
+}
+
+// MockEventPublisher is a mock implementation of EventPublisher
+type MockEventPublisher struct {
+	mock.Mock
+}
+
+func (m *MockEventPublisher) Publish(ctx context.Context, subject string, event *events.Event) error {
+	args := m.Called(ctx, subject, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishAsync(ctx context.Context, subject string, event *events.Event) error {
+	args := m.Called(ctx, subject, event)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) Close() error {
+	args := m.Called()
+	return args.Error(0)
+}
+
+// MockTimeManager is a mock implementation of TimeManager
+type MockTimeManager struct {
+	mock.Mock
+}
+
+func (m *MockTimeManager) Now() time.Time {
+	args := m.Called()
+	return args.Get(0).(time.Time)
 }

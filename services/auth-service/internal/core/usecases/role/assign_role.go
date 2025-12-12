@@ -5,43 +5,50 @@ import (
 
 	"github.com/google/uuid"
 
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
+	"github.com/giia/giia-core-engine/pkg/errors"
+	"github.com/giia/giia-core-engine/pkg/events"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
 )
 
 type AssignRoleUseCase struct {
-	roleRepo providers.RoleRepository
-	userRepo providers.UserRepository
-	cache    providers.PermissionCache
-	logger   pkgLogger.Logger
+	roleRepo       providers.RoleRepository
+	userRepo       providers.UserRepository
+	cache          providers.PermissionCache
+	eventPublisher providers.EventPublisher
+	timeManager    providers.TimeManager
+	logger         pkgLogger.Logger
 }
 
 func NewAssignRoleUseCase(
 	roleRepo providers.RoleRepository,
 	userRepo providers.UserRepository,
 	cache providers.PermissionCache,
+	eventPublisher providers.EventPublisher,
+	timeManager providers.TimeManager,
 	logger pkgLogger.Logger,
 ) *AssignRoleUseCase {
 	return &AssignRoleUseCase{
-		roleRepo: roleRepo,
-		userRepo: userRepo,
-		cache:    cache,
-		logger:   logger,
+		roleRepo:       roleRepo,
+		userRepo:       userRepo,
+		cache:          cache,
+		eventPublisher: eventPublisher,
+		timeManager:    timeManager,
+		logger:         logger,
 	}
 }
 
 func (uc *AssignRoleUseCase) Execute(ctx context.Context, userID, roleID, assignedBy uuid.UUID) error {
 	if userID == uuid.Nil {
-		return pkgErrors.NewBadRequest("user ID cannot be empty")
+		return errors.NewBadRequest("user ID cannot be empty")
 	}
 
 	if roleID == uuid.Nil {
-		return pkgErrors.NewBadRequest("role ID cannot be empty")
+		return errors.NewBadRequest("role ID cannot be empty")
 	}
 
 	if assignedBy == uuid.Nil {
-		return pkgErrors.NewBadRequest("assigned by user ID cannot be empty")
+		return errors.NewBadRequest("assigned by user ID cannot be empty")
 	}
 
 	user, err := uc.userRepo.GetByID(ctx, userID)
@@ -49,7 +56,7 @@ func (uc *AssignRoleUseCase) Execute(ctx context.Context, userID, roleID, assign
 		uc.logger.Error(ctx, err, "Failed to get user", pkgLogger.Tags{
 			"user_id": userID.String(),
 		})
-		return pkgErrors.NewNotFound("user not found")
+		return errors.NewNotFound("user not found")
 	}
 
 	role, err := uc.roleRepo.GetByID(ctx, roleID)
@@ -57,7 +64,7 @@ func (uc *AssignRoleUseCase) Execute(ctx context.Context, userID, roleID, assign
 		uc.logger.Error(ctx, err, "Failed to get role", pkgLogger.Tags{
 			"role_id": roleID.String(),
 		})
-		return pkgErrors.NewNotFound("role not found")
+		return errors.NewNotFound("role not found")
 	}
 
 	if err := uc.roleRepo.AssignRoleToUser(ctx, userID, roleID, assignedBy); err != nil {
@@ -66,7 +73,7 @@ func (uc *AssignRoleUseCase) Execute(ctx context.Context, userID, roleID, assign
 			"role_id":     roleID.String(),
 			"assigned_by": assignedBy.String(),
 		})
-		return pkgErrors.NewInternalServerError("failed to assign role to user")
+		return errors.NewInternalServerError("failed to assign role to user")
 	}
 
 	if err := uc.cache.InvalidateUserPermissions(ctx, userID.String()); err != nil {
@@ -83,5 +90,29 @@ func (uc *AssignRoleUseCase) Execute(ctx context.Context, userID, roleID, assign
 		"assigned_by": assignedBy.String(),
 	})
 
+	uc.publishRoleAssignedEvent(ctx, user.OrganizationID.String(), userID.String(), user.Email, roleID.String(), role.Name)
+
 	return nil
+}
+
+func (uc *AssignRoleUseCase) publishRoleAssignedEvent(ctx context.Context, orgID, userID, userEmail, roleID, roleName string) {
+	event := events.NewEvent(
+		"user.role.assigned",
+		"auth-service",
+		orgID,
+		uc.timeManager.Now(),
+		map[string]interface{}{
+			"user_id":    userID,
+			"user_email": userEmail,
+			"role_id":    roleID,
+			"role_name":  roleName,
+		},
+	)
+
+	if err := uc.eventPublisher.PublishAsync(ctx, "auth.user.role.assigned", event); err != nil {
+		uc.logger.Error(ctx, err, "Failed to publish role assigned event", pkgLogger.Tags{
+			"user_id": userID,
+			"role_id": roleID,
+		})
+	}
 }

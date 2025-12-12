@@ -2,9 +2,9 @@ package events
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/giia/giia-core-engine/pkg/errors"
 	"github.com/nats-io/nats.go"
 )
 
@@ -20,9 +20,13 @@ type NATSPublisher struct {
 }
 
 func NewPublisher(nc *nats.Conn) (*NATSPublisher, error) {
+	if nc == nil {
+		return nil, errors.NewBadRequest("NATS connection is required")
+	}
+
 	js, err := nc.JetStream()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create JetStream context: %w", err)
+		return nil, errors.NewInternalServerError("failed to create JetStream context")
 	}
 
 	return &NATSPublisher{
@@ -32,9 +36,21 @@ func NewPublisher(nc *nats.Conn) (*NATSPublisher, error) {
 }
 
 func (p *NATSPublisher) Publish(ctx context.Context, subject string, event *Event) error {
+	if subject == "" {
+		return errors.NewBadRequest("subject is required")
+	}
+
+	if event == nil {
+		return errors.NewBadRequest("event is required")
+	}
+
+	if err := event.Validate(); err != nil {
+		return err
+	}
+
 	data, err := event.ToJSON()
 	if err != nil {
-		return fmt.Errorf("failed to serialize event: %w", err)
+		return errors.NewInternalServerError("failed to serialize event")
 	}
 
 	err = retryPublish(ctx, func() error {
@@ -43,21 +59,33 @@ func (p *NATSPublisher) Publish(ctx context.Context, subject string, event *Even
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to publish event after retries: %w", err)
+		return errors.NewInternalServerError("failed to publish event after retries")
 	}
 
 	return nil
 }
 
 func (p *NATSPublisher) PublishAsync(ctx context.Context, subject string, event *Event) error {
+	if subject == "" {
+		return errors.NewBadRequest("subject is required")
+	}
+
+	if event == nil {
+		return errors.NewBadRequest("event is required")
+	}
+
+	if err := event.Validate(); err != nil {
+		return err
+	}
+
 	data, err := event.ToJSON()
 	if err != nil {
-		return fmt.Errorf("failed to serialize event: %w", err)
+		return errors.NewInternalServerError("failed to serialize event")
 	}
 
 	_, err = p.js.PublishAsync(subject, data)
 	if err != nil {
-		return fmt.Errorf("failed to publish event async: %w", err)
+		return errors.NewInternalServerError("failed to publish event async")
 	}
 
 	return nil
@@ -69,7 +97,7 @@ func (p *NATSPublisher) Close() error {
 
 func retryPublish(ctx context.Context, operation func() error) error {
 	const maxRetries = 3
-	const initialBackoff = 100 * time.Millisecond
+	const initialBackoff = 1 * time.Second
 
 	var err error
 	backoff := initialBackoff
@@ -83,12 +111,12 @@ func retryPublish(ctx context.Context, operation func() error) error {
 		if attempt < maxRetries-1 {
 			select {
 			case <-ctx.Done():
-				return fmt.Errorf("publish cancelled: %w", ctx.Err())
+				return errors.NewInternalServerError("publish cancelled")
 			case <-time.After(backoff):
 				backoff *= 2
 			}
 		}
 	}
 
-	return fmt.Errorf("publish failed after %d attempts: %w", maxRetries, err)
+	return err
 }

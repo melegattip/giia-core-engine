@@ -3,6 +3,7 @@ package role
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -19,9 +20,10 @@ func TestAssignRoleUseCase_Execute_WithValidRequest_AssignsRoleSuccessfully(t *t
 	givenAssignedBy := uuid.New()
 
 	givenUser := &domain.User{
-		ID:     givenUserID,
-		Email:  "user@example.com",
-		Status: domain.UserStatusActive,
+		ID:             givenUserID,
+		Email:          "user@example.com",
+		Status:         domain.UserStatusActive,
+		OrganizationID: uuid.New(),
 	}
 
 	givenRole := &domain.Role{
@@ -32,14 +34,18 @@ func TestAssignRoleUseCase_Execute_WithValidRequest_AssignsRoleSuccessfully(t *t
 	mockRoleRepo := new(providers.MockRoleRepository)
 	mockUserRepo := new(providers.MockUserRepository)
 	mockCache := new(providers.MockPermissionCache)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockLogger)
+	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockUserRepo.On("GetByID", mock.Anything, givenUserID).Return(givenUser, nil)
 	mockRoleRepo.On("GetByID", mock.Anything, givenRoleID).Return(givenRole, nil)
 	mockRoleRepo.On("AssignRoleToUser", mock.Anything, givenUserID, givenRoleID, givenAssignedBy).Return(nil)
 	mockCache.On("InvalidateUserPermissions", mock.Anything, givenUserID.String()).Return(nil)
+	mockTimeManager.On("Now").Return(time.Now())
+	mockEventPublisher.On("PublishAsync", mock.Anything, "auth.user.role.assigned", mock.Anything).Return(nil)
 	mockLogger.On("Info", mock.Anything, mock.Anything, mock.Anything).Return()
 
 	// When
@@ -60,9 +66,11 @@ func TestAssignRoleUseCase_Execute_WithNilUserID_ReturnsBadRequest(t *testing.T)
 	mockRoleRepo := new(providers.MockRoleRepository)
 	mockUserRepo := new(providers.MockUserRepository)
 	mockCache := new(providers.MockPermissionCache)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockLogger)
+	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), uuid.Nil, givenRoleID, givenAssignedBy)
@@ -80,9 +88,11 @@ func TestAssignRoleUseCase_Execute_WithNilRoleID_ReturnsBadRequest(t *testing.T)
 	mockRoleRepo := new(providers.MockRoleRepository)
 	mockUserRepo := new(providers.MockUserRepository)
 	mockCache := new(providers.MockPermissionCache)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockLogger)
+	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), givenUserID, uuid.Nil, givenAssignedBy)
@@ -100,9 +110,11 @@ func TestAssignRoleUseCase_Execute_WithNilAssignedBy_ReturnsBadRequest(t *testin
 	mockRoleRepo := new(providers.MockRoleRepository)
 	mockUserRepo := new(providers.MockUserRepository)
 	mockCache := new(providers.MockPermissionCache)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockLogger)
+	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), givenUserID, givenRoleID, uuid.Nil)
@@ -121,9 +133,11 @@ func TestAssignRoleUseCase_Execute_WithNonExistentUser_ReturnsNotFound(t *testin
 	mockRoleRepo := new(providers.MockRoleRepository)
 	mockUserRepo := new(providers.MockUserRepository)
 	mockCache := new(providers.MockPermissionCache)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockLogger)
+	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockUserRepo.On("GetByID", mock.Anything, givenUserID).Return((*domain.User)(nil), assert.AnError)
 	mockLogger.On("Error", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
@@ -152,9 +166,11 @@ func TestAssignRoleUseCase_Execute_WithNonExistentRole_ReturnsNotFound(t *testin
 	mockRoleRepo := new(providers.MockRoleRepository)
 	mockUserRepo := new(providers.MockUserRepository)
 	mockCache := new(providers.MockPermissionCache)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockLogger)
+	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockUserRepo.On("GetByID", mock.Anything, givenUserID).Return(givenUser, nil)
 	mockRoleRepo.On("GetByID", mock.Anything, givenRoleID).Return((*domain.Role)(nil), assert.AnError)
@@ -190,9 +206,11 @@ func TestAssignRoleUseCase_Execute_WhenAssignmentFails_ReturnsInternalServerErro
 	mockRoleRepo := new(providers.MockRoleRepository)
 	mockUserRepo := new(providers.MockUserRepository)
 	mockCache := new(providers.MockPermissionCache)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockLogger)
+	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockUserRepo.On("GetByID", mock.Anything, givenUserID).Return(givenUser, nil)
 	mockRoleRepo.On("GetByID", mock.Anything, givenRoleID).Return(givenRole, nil)
@@ -229,9 +247,11 @@ func TestAssignRoleUseCase_Execute_WhenCacheInvalidationFails_StillReturnsSucces
 	mockRoleRepo := new(providers.MockRoleRepository)
 	mockUserRepo := new(providers.MockUserRepository)
 	mockCache := new(providers.MockPermissionCache)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockLogger)
+	useCase := NewAssignRoleUseCase(mockRoleRepo, mockUserRepo, mockCache, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockUserRepo.On("GetByID", mock.Anything, givenUserID).Return(givenUser, nil)
 	mockRoleRepo.On("GetByID", mock.Anything, givenRoleID).Return(givenRole, nil)

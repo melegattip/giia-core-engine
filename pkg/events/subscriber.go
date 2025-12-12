@@ -2,16 +2,23 @@ package events
 
 import (
 	"context"
-	"fmt"
+	"time"
 
+	"github.com/giia/giia-core-engine/pkg/errors"
 	"github.com/nats-io/nats.go"
 )
 
 type EventHandler func(ctx context.Context, event *Event) error
 
+type SubscriberConfig struct{
+	MaxDeliver int
+	AckWait    time.Duration
+}
+
 type Subscriber interface {
 	Subscribe(ctx context.Context, subject string, handler EventHandler) error
 	SubscribeDurable(ctx context.Context, subject, durableName string, handler EventHandler) error
+	SubscribeDurableWithConfig(ctx context.Context, subject, durableName string, config *SubscriberConfig, handler EventHandler) error
 	Close() error
 }
 
@@ -22,9 +29,13 @@ type NATSSubscriber struct {
 }
 
 func NewSubscriber(nc *nats.Conn) (*NATSSubscriber, error) {
+	if nc == nil {
+		return nil, errors.NewBadRequest("NATS connection is required")
+	}
+
 	js, err := nc.JetStream()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create JetStream context: %w", err)
+		return nil, errors.NewInternalServerError("failed to create JetStream context")
 	}
 
 	return &NATSSubscriber{
@@ -35,23 +46,17 @@ func NewSubscriber(nc *nats.Conn) (*NATSSubscriber, error) {
 }
 
 func (s *NATSSubscriber) Subscribe(ctx context.Context, subject string, handler EventHandler) error {
-	sub, err := s.js.Subscribe(subject, func(msg *nats.Msg) {
-		event, err := FromJSON(msg.Data)
-		if err != nil {
-			msg.Nak()
-			return
-		}
+	if subject == "" {
+		return errors.NewBadRequest("subject is required")
+	}
 
-		if err := handler(ctx, event); err != nil {
-			msg.Nak()
-			return
-		}
+	if handler == nil {
+		return errors.NewBadRequest("handler is required")
+	}
 
-		msg.Ack()
-	})
-
+	sub, err := s.js.Subscribe(subject, s.wrapHandler(ctx, handler))
 	if err != nil {
-		return fmt.Errorf("failed to subscribe to subject %s: %w", subject, err)
+		return errors.NewInternalServerError("failed to subscribe to subject")
 	}
 
 	s.subs = append(s.subs, sub)
@@ -59,33 +64,71 @@ func (s *NATSSubscriber) Subscribe(ctx context.Context, subject string, handler 
 }
 
 func (s *NATSSubscriber) SubscribeDurable(ctx context.Context, subject, durableName string, handler EventHandler) error {
-	sub, err := s.js.Subscribe(subject, func(msg *nats.Msg) {
-		event, err := FromJSON(msg.Data)
-		if err != nil {
-			msg.Nak()
-			return
-		}
+	config := &SubscriberConfig{
+		MaxDeliver: 5,
+		AckWait:    30 * time.Second,
+	}
+	return s.SubscribeDurableWithConfig(ctx, subject, durableName, config, handler)
+}
 
-		if err := handler(ctx, event); err != nil {
-			msg.Nak()
-			return
-		}
+func (s *NATSSubscriber) SubscribeDurableWithConfig(ctx context.Context, subject, durableName string, config *SubscriberConfig, handler EventHandler) error {
+	if subject == "" {
+		return errors.NewBadRequest("subject is required")
+	}
 
-		msg.Ack()
-	}, nats.Durable(durableName), nats.ManualAck())
+	if durableName == "" {
+		return errors.NewBadRequest("durable name is required")
+	}
+
+	if handler == nil {
+		return errors.NewBadRequest("handler is required")
+	}
+
+	if config == nil {
+		config = &SubscriberConfig{
+			MaxDeliver: 5,
+			AckWait:    30 * time.Second,
+		}
+	}
+
+	sub, err := s.js.Subscribe(
+		subject,
+		s.wrapHandler(ctx, handler),
+		nats.Durable(durableName),
+		nats.ManualAck(),
+		nats.MaxDeliver(config.MaxDeliver),
+		nats.AckWait(config.AckWait),
+	)
 
 	if err != nil {
-		return fmt.Errorf("failed to subscribe to subject %s with durable %s: %w", subject, durableName, err)
+		return errors.NewInternalServerError("failed to subscribe to subject with durable")
 	}
 
 	s.subs = append(s.subs, sub)
 	return nil
 }
 
+func (s *NATSSubscriber) wrapHandler(ctx context.Context, handler EventHandler) nats.MsgHandler {
+	return func(msg *nats.Msg) {
+		event, err := FromJSON(msg.Data)
+		if err != nil {
+			_ = msg.Nak()
+			return
+		}
+
+		if err := handler(ctx, event); err != nil {
+			_ = msg.Nak()
+			return
+		}
+
+		_ = msg.Ack()
+	}
+}
+
 func (s *NATSSubscriber) Close() error {
 	for _, sub := range s.subs {
 		if err := sub.Drain(); err != nil {
-			return fmt.Errorf("failed to drain subscription: %w", err)
+			return errors.NewInternalServerError("failed to drain subscription")
 		}
 	}
 

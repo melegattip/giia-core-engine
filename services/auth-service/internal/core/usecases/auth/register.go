@@ -11,52 +11,59 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
+	"github.com/giia/giia-core-engine/pkg/errors"
+	"github.com/giia/giia-core-engine/pkg/events"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
 )
 
 type RegisterUseCase struct {
-	userRepo  providers.UserRepository
-	orgRepo   providers.OrganizationRepository
-	tokenRepo providers.TokenRepository
-	logger    pkgLogger.Logger
+	userRepo       providers.UserRepository
+	orgRepo        providers.OrganizationRepository
+	tokenRepo      providers.TokenRepository
+	eventPublisher providers.EventPublisher
+	timeManager    providers.TimeManager
+	logger         pkgLogger.Logger
 }
 
 func NewRegisterUseCase(
 	userRepo providers.UserRepository,
 	orgRepo providers.OrganizationRepository,
 	tokenRepo providers.TokenRepository,
+	eventPublisher providers.EventPublisher,
+	timeManager providers.TimeManager,
 	logger pkgLogger.Logger,
 ) *RegisterUseCase {
 	return &RegisterUseCase{
-		userRepo:  userRepo,
-		orgRepo:   orgRepo,
-		tokenRepo: tokenRepo,
-		logger:    logger,
+		userRepo:       userRepo,
+		orgRepo:        orgRepo,
+		tokenRepo:      tokenRepo,
+		eventPublisher: eventPublisher,
+		timeManager:    timeManager,
+		logger:         logger,
 	}
 }
 
 func (uc *RegisterUseCase) Execute(ctx context.Context, req *domain.RegisterRequest) error {
 	if req.Email == "" {
-		return pkgErrors.NewBadRequest("email is required")
+		return errors.NewBadRequest("email is required")
 	}
 
 	if req.Password == "" {
-		return pkgErrors.NewBadRequest("password is required")
+		return errors.NewBadRequest("password is required")
 	}
 
 	if req.FirstName == "" {
-		return pkgErrors.NewBadRequest("first name is required")
+		return errors.NewBadRequest("first name is required")
 	}
 
 	if req.LastName == "" {
-		return pkgErrors.NewBadRequest("last name is required")
+		return errors.NewBadRequest("last name is required")
 	}
 
 	if req.OrganizationID == "" {
-		return pkgErrors.NewBadRequest("organization ID is required")
+		return errors.NewBadRequest("organization ID is required")
 	}
 
 	if err := validateEmail(req.Email); err != nil {
@@ -69,29 +76,29 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, req *domain.RegisterRequ
 
 	orgID, err := uuid.Parse(req.OrganizationID)
 	if err != nil {
-		return pkgErrors.NewBadRequest("invalid organization ID format")
+		return errors.NewBadRequest("invalid organization ID format")
 	}
 
 	_, err = uc.orgRepo.GetByID(ctx, orgID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return pkgErrors.NewBadRequest("organization not found")
+			return errors.NewBadRequest("organization not found")
 		}
 		uc.logger.Error(ctx, err, "Failed to get organization", pkgLogger.Tags{
 			"organization_id": orgID.String(),
 		})
-		return pkgErrors.NewInternalServerError("failed to verify organization")
+		return errors.NewInternalServerError("failed to verify organization")
 	}
 
 	existingUser, err := uc.userRepo.GetByEmailAndOrg(ctx, req.Email, orgID)
 	if err == nil && existingUser != nil {
-		return pkgErrors.NewBadRequest("email already registered in this organization")
+		return errors.NewBadRequest("email already registered in this organization")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		uc.logger.Error(ctx, err, "Failed to hash password", nil)
-		return pkgErrors.NewInternalServerError("failed to hash password")
+		return errors.NewInternalServerError("failed to hash password")
 	}
 
 	user := &domain.User{
@@ -109,7 +116,7 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, req *domain.RegisterRequ
 			"email":           req.Email,
 			"organization_id": orgID.String(),
 		})
-		return pkgErrors.NewInternalServerError("failed to create user")
+		return errors.NewInternalServerError("failed to create user")
 	}
 
 	activationToken := uuid.New().String()
@@ -134,20 +141,44 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, req *domain.RegisterRequ
 		"organization_id": user.OrganizationID.String(),
 	})
 
+	uc.publishUserCreatedEvent(ctx, user)
+
 	return nil
+}
+
+func (uc *RegisterUseCase) publishUserCreatedEvent(ctx context.Context, user *domain.User) {
+	event := events.NewEvent(
+		"user.created",
+		"auth-service",
+		user.OrganizationID.String(),
+		uc.timeManager.Now(),
+		map[string]interface{}{
+			"user_id":    user.ID.String(),
+			"email":      user.Email,
+			"first_name": user.FirstName,
+			"last_name":  user.LastName,
+			"status":     string(user.Status),
+		},
+	)
+
+	if err := uc.eventPublisher.PublishAsync(ctx, "auth.user.created", event); err != nil {
+		uc.logger.Error(ctx, err, "Failed to publish user created event", pkgLogger.Tags{
+			"user_id": user.ID.String(),
+		})
+	}
 }
 
 func validateEmail(email string) error {
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	if !emailRegex.MatchString(email) {
-		return pkgErrors.NewBadRequest("invalid email format")
+		return errors.NewBadRequest("invalid email format")
 	}
 	return nil
 }
 
 func validatePassword(password string) error {
 	if len(password) < 8 {
-		return pkgErrors.NewBadRequest("password must be at least 8 characters long")
+		return errors.NewBadRequest("password must be at least 8 characters long")
 	}
 
 	hasUpper := regexp.MustCompile(`[A-Z]`).MatchString(password)
@@ -156,19 +187,19 @@ func validatePassword(password string) error {
 	hasSpecial := regexp.MustCompile(`[!@#$%^&*(),.?":{}|<>]`).MatchString(password)
 
 	if !hasUpper {
-		return pkgErrors.NewBadRequest("password must contain at least one uppercase letter")
+		return errors.NewBadRequest("password must contain at least one uppercase letter")
 	}
 
 	if !hasLower {
-		return pkgErrors.NewBadRequest("password must contain at least one lowercase letter")
+		return errors.NewBadRequest("password must contain at least one lowercase letter")
 	}
 
 	if !hasNumber {
-		return pkgErrors.NewBadRequest("password must contain at least one number")
+		return errors.NewBadRequest("password must contain at least one number")
 	}
 
 	if !hasSpecial {
-		return pkgErrors.NewBadRequest("password must contain at least one special character")
+		return errors.NewBadRequest("password must contain at least one special character")
 	}
 
 	return nil

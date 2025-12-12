@@ -42,7 +42,11 @@ services:
   nats:
     image: nats:2-alpine
     container_name: giia-nats
-    command: "-js -m 8222"
+    command:
+      - "-js"              # Enable Jetstream
+      - "-sd=/data"        # Storage directory for persistence
+      - "-m=8222"          # HTTP monitoring port
+      - "--max_payload=8MB" # Max message size
     ports:
       - "4222:4222"  # Client connections
       - "8222:8222"  # HTTP monitoring

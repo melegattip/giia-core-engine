@@ -119,8 +119,23 @@ type Event struct {
     Source         string                 // Source service name
     OrganizationID string                 // Organization/tenant ID
     Timestamp      time.Time              // Event timestamp (UTC)
+    SchemaVersion  string                 // Schema version ("1.0")
     Data           map[string]interface{} // Event payload
 }
+```
+
+**Note**: The `NewEvent` function now requires a `timestamp` parameter. Use `TimeManager.Now()` for testability:
+
+```go
+event := events.NewEvent(
+    "user.created",
+    "auth-service",
+    "org-123",
+    timeManager.Now(), // Use injected TimeManager
+    map[string]interface{}{
+        "user_id": 12345,
+    },
+)
 ```
 
 ### Event JSON Format
@@ -182,6 +197,109 @@ payment.failed
 payment.refunded
 ```
 
+## Stream Management
+
+### Create Streams
+
+```go
+nc, _ := events.ConnectWithDefaults("nats://localhost:4222")
+js, _ := nc.JetStream()
+
+// Create all default streams (AUTH_EVENTS, CATALOG_EVENTS, etc.)
+err := events.CreateDefaultStreams(js)
+
+// Or create a custom stream
+streamConfig := events.NewStreamConfig("MY_EVENTS", []string{"my.>"})
+streamConfig.MaxAge = 14 * 24 * time.Hour  // 14 days retention
+streamConfig.MaxBytes = 2 * 1024 * 1024 * 1024  // 2GB max size
+err = events.CreateStream(js, streamConfig)
+```
+
+### Get Stream Info
+
+```go
+info, err := events.GetStreamInfo(js, "AUTH_EVENTS")
+if err != nil {
+    log.Fatal(err)
+}
+
+log.Printf("Stream: %s, Messages: %d, Bytes: %d",
+    info.Config.Name, info.State.Msgs, info.State.Bytes)
+```
+
+### Update Stream Configuration
+
+```go
+streamConfig := events.NewStreamConfig("AUTH_EVENTS", []string{"auth.>"})
+streamConfig.MaxAge = 30 * 24 * time.Hour  // Increase to 30 days
+err = events.UpdateStream(js, streamConfig)
+```
+
+### Default Streams
+
+The package provides pre-configured streams for all services:
+
+- `AUTH_EVENTS` - Authentication and authorization events
+- `CATALOG_EVENTS` - Product and catalog events
+- `DDMRP_EVENTS` - DDMRP buffer calculation events
+- `EXECUTION_EVENTS` - Order execution events
+- `ANALYTICS_EVENTS` - Analytics and reporting events
+- `AI_AGENT_EVENTS` - AI assistant events
+- `DLQ_EVENTS` - Dead letter queue for failed events
+
+All streams have:
+- 7-day retention
+- 1GB max size
+- File storage (persistent)
+- Old message discard policy
+
+## Advanced Features
+
+### Custom Subscriber Configuration
+
+Configure max retries and acknowledgment timeout:
+
+```go
+config := &events.SubscriberConfig{
+    MaxDeliver: 5,               // Retry up to 5 times
+    AckWait:    30 * time.Second, // Wait 30s for acknowledgment
+}
+
+err = subscriber.SubscribeDurableWithConfig(
+    ctx,
+    "auth.user.*",
+    "catalog-consumer",
+    config,
+    handler,
+)
+```
+
+### Event Validation
+
+Events are automatically validated before publishing:
+
+```go
+event := events.NewEvent("", "auth-service", "org-123", time.Now(), nil)
+err := publisher.Publish(ctx, "auth.user.created", event)
+// Returns: BadRequest error "event type is required"
+```
+
+### Typed Errors
+
+All errors use typed errors from `pkg/errors`:
+
+```go
+err := publisher.Publish(ctx, "", event)
+if err != nil {
+    switch e := err.(type) {
+    case *errors.BadRequest:
+        log.Printf("Invalid input: %v", e)
+    case *errors.InternalServerError:
+        log.Printf("NATS error: %v", e)
+    }
+}
+```
+
 ## Best Practices
 
 1. **Use durable subscriptions** for critical event processing
@@ -192,6 +310,8 @@ payment.refunded
 6. **Handle handler errors gracefully** (NAK will retry)
 7. **Use dead letter queues** for failed events after max retries
 8. **Monitor event lag** and processing time
+9. **Use TimeManager** for timestamps (testability)
+10. **Validate events** before publishing (automatic)
 
 ## Configuration
 
