@@ -4,7 +4,7 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.23-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Architecture](https://img.shields.io/badge/Architecture-Monolithic-green.svg)](docs/architecture/adr/001-consolidate-to-monolithic-architecture.md)
+[![Architecture](https://img.shields.io/badge/Architecture-Microservices-green.svg)](ctx/ARCHITECTURE_BALANCED.md)
 
 ## 📖 Table of Contents
 
@@ -38,37 +38,28 @@ GIIA is a SaaS platform that implements **DDMRP (Demand Driven Material Requirem
 
 ## 🏗️ Architecture
 
-This project follows a **Monolith-First Architecture** approach ([ADR 001](docs/architecture/adr/001-consolidate-to-monolithic-architecture.md)).
+This project follows the **Balanced Microservices Architecture** as defined in [ARCHITECTURE_BALANCED.md](ctx/ARCHITECTURE_BALANCED.md).
 
-### Current Architecture (Monolithic)
+### Microservices
 
 ```
-┌─────────────────────────────────────────┐
-│         GIIA Core Service               │
-│  ┌──────────────────────────────────┐   │
-│  │  Auth Module (Multi-tenant/RBAC) │   │
-│  └──────────────────────────────────┘   │
-│  ┌──────────────────────────────────┐   │
-│  │  Catalog Module (planned)        │   │
-│  │  DDMRP Engine Module (planned)   │   │
-│  │  Execution Module (planned)      │   │
-│  │  Analytics Module (planned)      │   │
-│  │  AI Agent Module (planned)       │   │
-│  └──────────────────────────────────┘   │
-└─────────────────────────────────────────┘
+┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+│  Auth Service   │  │ Catalog Service │  │ DDMRP Engine    │
+│  (Multi-tenant) │  │  (Master Data)  │  │ (Core Logic)    │
+└─────────────────┘  └─────────────────┘  └─────────────────┘
+┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+│ Execution Svc   │  │ Analytics Svc   │  │  AI Agent Svc   │
+│ (Orders/Inv)    │  │ (KPIs/Reports)  │  │ (ChatGPT)       │
+└─────────────────┘  └─────────────────┘  └─────────────────┘
 ```
 
-> **Note**: The project started with a microservices design but consolidated to a monolith following industry best practices (monolith-first approach). Services will be split when domain boundaries are validated and proven scalability needs arise. See [ADR 001](docs/architecture/adr/001-consolidate-to-monolithic-architecture.md) for rationale.
-
-### Future Microservices (Planned)
-
-Once domain boundaries are validated through implementation, the platform may decompose into:
-- **Auth Service** - Authentication, Multi-tenancy, RBAC
-- **Catalog Service** - Products, Suppliers, Buffer Profiles
-- **DDMRP Engine** - Buffer Calculations, Replenishment
-- **Execution Service** - Orders, Inventory, ERP Integrations
-- **Analytics Service** - KPIs, Reports, Dashboards
-- **AI Agent Service** - ChatGPT Integration, Proactive Insights
+**Service Status**:
+- **Auth Service**: 80% complete - Authentication, Multi-tenancy, RBAC, gRPC
+- **Catalog Service**: Skeleton ready - Products, Suppliers, Buffer Profiles (pending implementation)
+- **DDMRP Engine**: Skeleton ready - Buffer Calculations, Replenishment (pending)
+- **Execution Service**: Skeleton ready - Orders, Inventory, ERP Integrations (pending)
+- **Analytics Service**: Skeleton ready - KPIs, Reports, Dashboards (pending)
+- **AI Agent Service**: Skeleton ready - ChatGPT Integration, Proactive Insights (pending)
 
 ### Technology Stack
 
@@ -86,16 +77,13 @@ Once domain boundaries are validated through implementation, the platform may de
 
 ```
 giia-core-engine/
-├── services/                     # Active Service
-│   └── auth-service/            # Main application (Auth + future modules)
-│
-├── archive/                      # Archived Skeleton Services
-│   ├── catalog-service/         # Preserved for future reference
-│   ├── ddmrp-engine-service/    # See archive/README.md for details
-│   ├── execution-service/
-│   ├── analytics-service/
-│   ├── ai-agent-service/
-│   └── README.md               # Why these are archived
+├── services/                     # Microservices
+│   ├── auth-service/            # Authentication, Multi-tenancy, RBAC (80% complete)
+│   ├── catalog-service/         # Products, Suppliers, Buffer Profiles (skeleton)
+│   ├── ddmrp-engine-service/    # Buffer calculations, Replenishment (skeleton)
+│   ├── execution-service/       # Orders, Inventory, ERP integrations (skeleton)
+│   ├── analytics-service/       # KPIs, Reports, Projections (skeleton)
+│   └── ai-agent-service/        # AI Chat, Proactive Analysis (skeleton)
 │
 ├── pkg/                         # Shared Libraries
 │   ├── config/                  # Configuration management (Viper)
@@ -473,18 +461,24 @@ refactor(scope): code refactoring
 
 ## 📊 Project Status
 
-**Phase 1: Foundation (Months 1-3)** - 🚧 In Progress
+**Phase 1: Foundation (Months 1-3)** - 🚧 In Progress (70% Complete)
 
 - [x] Task 1: Setup monorepo structure ✅
 - [x] Task 2: CI/CD pipeline ✅
-- [x] Task 3: Local development environment ✅
-- [ ] Task 4: Shared infrastructure packages
-- [ ] Task 5: Auth/IAM service with multi-tenancy
-- [ ] Task 6: RBAC implementation
-- [ ] Task 7: gRPC server in Auth
-- [ ] Task 8: NATS event system
-- [ ] Task 9: Catalog service skeleton
-- [ ] Task 10: Kubernetes dev cluster
+- [x] Task 3: Local development environment 🟡 (70% - scripts done, need .env files)
+- [x] Task 4: Shared infrastructure packages 🟢 (85% - code done, tests partial)
+- [x] Task 5: Auth/IAM service with multi-tenancy 🟢 (80% - Clean Arch done)
+- [x] Task 6: RBAC implementation 🟢 (90% - domain/use cases complete)
+- [ ] Task 7: gRPC server in Auth 🟡 (60% - need .proto files)
+- [ ] Task 8: NATS event system 🟡 (50% - package exists, streams pending)
+- [ ] Task 9: Catalog service skeleton ⏸️ (Skeleton ready, awaiting implementation)
+- [ ] Task 10: Kubernetes dev cluster ⏸️ (Deferred until deployment needed)
+
+**Legend**: ✅ Complete | 🟢 Advanced | 🟡 Partial | 🔄 Pivoted | ⏸️ Pending
+
+**📝 See [PROJECT_STATUS.md](PROJECT_STATUS.md) for detailed status report**
+**📋 See [specs/](specs/) for specifications and implementation plans**
+**🏗️ Architecture**: Monorepo Microservices - 6 independent services with shared packages
 
 ---
 

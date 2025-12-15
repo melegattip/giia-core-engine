@@ -3,6 +3,7 @@ package errors
 import (
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type CustomError struct {
@@ -115,4 +116,14 @@ func Wrap(err error, message string) *CustomError {
 		HTTPStatus: http.StatusInternalServerError,
 		Cause:      err,
 	}
+}
+
+func IsDuplicateKeyError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errMsg := strings.ToLower(err.Error())
+	return strings.Contains(errMsg, "duplicate") ||
+		strings.Contains(errMsg, "unique") ||
+		strings.Contains(errMsg, "already exists")
 }

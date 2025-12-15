@@ -234,9 +234,10 @@ func TestAssignRoleUseCase_Execute_WhenCacheInvalidationFails_StillReturnsSucces
 	givenAssignedBy := uuid.New()
 
 	givenUser := &domain.User{
-		ID:     givenUserID,
-		Email:  "user@example.com",
-		Status: domain.UserStatusActive,
+		ID:             givenUserID,
+		Email:          "user@example.com",
+		Status:         domain.UserStatusActive,
+		OrganizationID: uuid.New(),
 	}
 
 	givenRole := &domain.Role{
@@ -257,6 +258,8 @@ func TestAssignRoleUseCase_Execute_WhenCacheInvalidationFails_StillReturnsSucces
 	mockRoleRepo.On("GetByID", mock.Anything, givenRoleID).Return(givenRole, nil)
 	mockRoleRepo.On("AssignRoleToUser", mock.Anything, givenUserID, givenRoleID, givenAssignedBy).Return(nil)
 	mockCache.On("InvalidateUserPermissions", mock.Anything, givenUserID.String()).Return(assert.AnError)
+	mockTimeManager.On("Now").Return(time.Now())
+	mockEventPublisher.On("PublishAsync", mock.Anything, "auth.user.role.assigned", mock.Anything).Return(nil)
 	mockLogger.On("Info", mock.Anything, mock.Anything, mock.Anything).Return()
 	mockLogger.On("Error", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
 

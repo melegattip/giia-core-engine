@@ -2,9 +2,20 @@
 
 This directory contains practical examples demonstrating how to use the `pkg/events` package in real-world scenarios.
 
+## Directory Structure
+
+```
+examples/
+├── publisher/     # Example of publishing events
+│   └── main.go
+├── subscriber/    # Example of subscribing to events
+│   └── main.go
+└── README.md      # This file
+```
+
 ## Examples Overview
 
-### 1. Publisher Example ([publisher_example.go](publisher_example.go))
+### 1. Publisher Example ([publisher/main.go](publisher/main.go))
 
 Demonstrates how to publish events from a service using the NATS JetStream publisher.
 
@@ -30,10 +41,11 @@ docker-compose up -d nats
 ./scripts/setup-nats-streams.sh
 
 # Run publisher
-go run pkg/events/examples/publisher_example.go
+cd pkg/events/examples/publisher
+go run main.go
 ```
 
-### 2. Subscriber Example ([subscriber_example.go](subscriber_example.go))
+### 2. Subscriber Example ([subscriber/main.go](subscriber/main.go))
 
 Demonstrates how to consume events using durable subscriptions with proper error handling.
 
@@ -57,19 +69,22 @@ docker-compose up -d nats
 ./scripts/setup-nats-streams.sh
 
 # Run subscriber
-go run pkg/events/examples/subscriber_example.go
+cd pkg/events/examples/subscriber
+go run main.go
 ```
 
 ## Testing the Examples Together
 
 ### Terminal 1 - Start Subscriber
 ```bash
-go run pkg/events/examples/subscriber_example.go
+cd pkg/events/examples/subscriber
+go run main.go
 ```
 
 ### Terminal 2 - Publish Events
 ```bash
-go run pkg/events/examples/publisher_example.go
+cd pkg/events/examples/publisher
+go run main.go
 ```
 
 You should see the subscriber receive and process the events published by the publisher.

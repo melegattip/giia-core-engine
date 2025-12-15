@@ -71,7 +71,10 @@
       "Bash(git mv:*)",
       "Bash(make build:*)",
       "Bash(golangci-lint run:*)",
-      "Bash(~/go/bin/golangci-lint run:*)"
+      "Bash(~/go/bin/golangci-lint run:*)",
+      "Bash(make test:*)",
+      "Bash(go fmt:*)",
+      "Bash(del:*)"
     ],
     "deny": [],
     "ask": []

@@ -9,4 +9,5 @@ use (
 	./pkg/logger
 	// Services
 	./services/auth-service
+	./services/catalog-service
 )

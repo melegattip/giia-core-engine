@@ -38,9 +38,11 @@ func TestLoginUseCase_Execute_WithValidCredentials_ReturnsTokens(t *testing.T) {
 	mockUserRepo := new(providers.MockUserRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
 	mockJWTManager := new(providers.MockJWTManager)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockLogger)
+	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockUserRepo.On("GetByEmail", mock.Anything, givenEmail).Return(givenUser, nil)
 	mockJWTManager.On("GenerateAccessToken", givenUserID, givenOrgID, givenEmail, mock.Anything).Return("access_token", nil)
@@ -49,6 +51,8 @@ func TestLoginUseCase_Execute_WithValidCredentials_ReturnsTokens(t *testing.T) {
 	mockJWTManager.On("GetAccessExpiry").Return(15 * time.Minute)
 	mockTokenRepo.On("StoreRefreshToken", mock.Anything, mock.AnythingOfType("*domain.RefreshToken")).Return(nil)
 	mockUserRepo.On("UpdateLastLogin", mock.Anything, givenUserID).Return(nil)
+	mockTimeManager.On("Now").Return(time.Now())
+	mockEventPublisher.On("PublishAsync", mock.Anything, "auth.user.login.succeeded", mock.Anything).Return(nil)
 	mockLogger.On("Info", mock.Anything, mock.Anything, mock.Anything).Return()
 
 	// When
@@ -75,9 +79,11 @@ func TestLoginUseCase_Execute_WithEmptyEmail_ReturnsBadRequest(t *testing.T) {
 	mockUserRepo := new(providers.MockUserRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
 	mockJWTManager := new(providers.MockJWTManager)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockLogger)
+	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	response, err := useCase.Execute(context.Background(), givenRequest)
@@ -98,9 +104,11 @@ func TestLoginUseCase_Execute_WithEmptyPassword_ReturnsBadRequest(t *testing.T) 
 	mockUserRepo := new(providers.MockUserRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
 	mockJWTManager := new(providers.MockJWTManager)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockLogger)
+	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	response, err := useCase.Execute(context.Background(), givenRequest)
@@ -122,11 +130,15 @@ func TestLoginUseCase_Execute_WithNonExistentUser_ReturnsUnauthorized(t *testing
 	mockUserRepo := new(providers.MockUserRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
 	mockJWTManager := new(providers.MockJWTManager)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockLogger)
+	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockUserRepo.On("GetByEmail", mock.Anything, givenEmail).Return((*domain.User)(nil), assert.AnError)
+	mockTimeManager.On("Now").Return(time.Now())
+	mockEventPublisher.On("PublishAsync", mock.Anything, "auth.user.login.failed", mock.Anything).Return(nil)
 	mockLogger.On("Error", mock.Anything, assert.AnError, mock.Anything, mock.Anything).Return()
 
 	// When
@@ -164,11 +176,15 @@ func TestLoginUseCase_Execute_WithInvalidPassword_ReturnsUnauthorized(t *testing
 	mockUserRepo := new(providers.MockUserRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
 	mockJWTManager := new(providers.MockJWTManager)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockLogger)
+	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockUserRepo.On("GetByEmail", mock.Anything, givenEmail).Return(givenUser, nil)
+	mockTimeManager.On("Now").Return(time.Now())
+	mockEventPublisher.On("PublishAsync", mock.Anything, "auth.user.login.failed", mock.Anything).Return(nil)
 	mockLogger.On("Warn", mock.Anything, mock.Anything, mock.Anything).Return()
 
 	// When
@@ -205,11 +221,15 @@ func TestLoginUseCase_Execute_WithInactiveUser_ReturnsForbidden(t *testing.T) {
 	mockUserRepo := new(providers.MockUserRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
 	mockJWTManager := new(providers.MockJWTManager)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockLogger)
+	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockUserRepo.On("GetByEmail", mock.Anything, givenEmail).Return(givenUser, nil)
+	mockTimeManager.On("Now").Return(time.Now())
+	mockEventPublisher.On("PublishAsync", mock.Anything, "auth.user.login.failed", mock.Anything).Return(nil)
 	mockLogger.On("Warn", mock.Anything, mock.Anything, mock.Anything).Return()
 
 	// When
@@ -246,11 +266,15 @@ func TestLoginUseCase_Execute_WithSuspendedUser_ReturnsForbidden(t *testing.T) {
 	mockUserRepo := new(providers.MockUserRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
 	mockJWTManager := new(providers.MockJWTManager)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockLogger)
+	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockUserRepo.On("GetByEmail", mock.Anything, givenEmail).Return(givenUser, nil)
+	mockTimeManager.On("Now").Return(time.Now())
+	mockEventPublisher.On("PublishAsync", mock.Anything, "auth.user.login.failed", mock.Anything).Return(nil)
 	mockLogger.On("Warn", mock.Anything, mock.Anything, mock.Anything).Return()
 
 	// When
@@ -287,9 +311,11 @@ func TestLoginUseCase_Execute_WhenAccessTokenGenerationFails_ReturnsError(t *tes
 	mockUserRepo := new(providers.MockUserRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
 	mockJWTManager := new(providers.MockJWTManager)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockLogger)
+	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockUserRepo.On("GetByEmail", mock.Anything, givenEmail).Return(givenUser, nil)
 	mockJWTManager.On("GenerateAccessToken", givenUserID, givenOrgID, givenEmail, mock.Anything).Return("", assert.AnError)
@@ -330,9 +356,11 @@ func TestLoginUseCase_Execute_WhenRefreshTokenGenerationFails_ReturnsError(t *te
 	mockUserRepo := new(providers.MockUserRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
 	mockJWTManager := new(providers.MockJWTManager)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockLogger)
+	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockUserRepo.On("GetByEmail", mock.Anything, givenEmail).Return(givenUser, nil)
 	mockJWTManager.On("GenerateAccessToken", givenUserID, givenOrgID, givenEmail, mock.Anything).Return("access_token", nil)
@@ -374,9 +402,11 @@ func TestLoginUseCase_Execute_WhenStoreRefreshTokenFails_ReturnsError(t *testing
 	mockUserRepo := new(providers.MockUserRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
 	mockJWTManager := new(providers.MockJWTManager)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockLogger)
+	useCase := NewLoginUseCase(mockUserRepo, mockTokenRepo, mockJWTManager, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockUserRepo.On("GetByEmail", mock.Anything, givenEmail).Return(givenUser, nil)
 	mockJWTManager.On("GenerateAccessToken", givenUserID, givenOrgID, givenEmail, mock.Anything).Return("access_token", nil)

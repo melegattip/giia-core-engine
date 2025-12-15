@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -33,14 +34,18 @@ func TestRegisterUseCase_Execute_WithValidData_CreatesUser(t *testing.T) {
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockOrgRepo.On("GetByID", mock.Anything, givenOrgID).Return(givenOrganization, nil)
 	mockUserRepo.On("GetByEmailAndOrg", mock.Anything, givenRequest.Email, givenOrgID).Return((*domain.User)(nil), gorm.ErrRecordNotFound)
 	mockUserRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.User")).Return(nil)
 	mockTokenRepo.On("StoreActivationToken", mock.Anything, mock.AnythingOfType("*domain.ActivationToken")).Return(nil)
+	mockTimeManager.On("Now").Return(time.Now())
+	mockEventPublisher.On("PublishAsync", mock.Anything, "auth.user.created", mock.Anything).Return(nil)
 	mockLogger.On("Info", mock.Anything, mock.Anything, mock.Anything).Return()
 
 	// When
@@ -66,9 +71,11 @@ func TestRegisterUseCase_Execute_WithEmptyEmail_ReturnsBadRequest(t *testing.T) 
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), givenRequest)
@@ -91,9 +98,11 @@ func TestRegisterUseCase_Execute_WithEmptyPassword_ReturnsBadRequest(t *testing.
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), givenRequest)
@@ -116,9 +125,11 @@ func TestRegisterUseCase_Execute_WithEmptyFirstName_ReturnsBadRequest(t *testing
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), givenRequest)
@@ -141,9 +152,11 @@ func TestRegisterUseCase_Execute_WithEmptyLastName_ReturnsBadRequest(t *testing.
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), givenRequest)
@@ -166,9 +179,11 @@ func TestRegisterUseCase_Execute_WithEmptyOrganizationID_ReturnsBadRequest(t *te
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), givenRequest)
@@ -191,9 +206,11 @@ func TestRegisterUseCase_Execute_WithInvalidEmailFormat_ReturnsBadRequest(t *tes
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), givenRequest)
@@ -216,9 +233,11 @@ func TestRegisterUseCase_Execute_WithWeakPasswordTooShort_ReturnsBadRequest(t *t
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), givenRequest)
@@ -241,9 +260,11 @@ func TestRegisterUseCase_Execute_WithPasswordMissingUppercase_ReturnsBadRequest(
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), givenRequest)
@@ -266,9 +287,11 @@ func TestRegisterUseCase_Execute_WithPasswordMissingLowercase_ReturnsBadRequest(
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), givenRequest)
@@ -291,9 +314,11 @@ func TestRegisterUseCase_Execute_WithPasswordMissingNumber_ReturnsBadRequest(t *
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), givenRequest)
@@ -316,9 +341,11 @@ func TestRegisterUseCase_Execute_WithPasswordMissingSpecialChar_ReturnsBadReques
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), givenRequest)
@@ -341,9 +368,11 @@ func TestRegisterUseCase_Execute_WithInvalidOrganizationIDFormat_ReturnsBadReque
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	// When
 	err := useCase.Execute(context.Background(), givenRequest)
@@ -367,9 +396,11 @@ func TestRegisterUseCase_Execute_WithNonExistentOrganization_ReturnsBadRequest(t
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockOrgRepo.On("GetByID", mock.Anything, givenOrgID).Return((*domain.Organization)(nil), gorm.ErrRecordNotFound)
 
@@ -408,9 +439,11 @@ func TestRegisterUseCase_Execute_WithDuplicateEmailInOrganization_ReturnsBadRequ
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockOrgRepo.On("GetByID", mock.Anything, givenOrgID).Return(givenOrganization, nil)
 	mockUserRepo.On("GetByEmailAndOrg", mock.Anything, givenEmail, givenOrgID).Return(givenExistingUser, nil)
@@ -444,9 +477,11 @@ func TestRegisterUseCase_Execute_WhenUserCreationFails_ReturnsError(t *testing.T
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockOrgRepo.On("GetByID", mock.Anything, givenOrgID).Return(givenOrganization, nil)
 	mockUserRepo.On("GetByEmailAndOrg", mock.Anything, givenRequest.Email, givenOrgID).Return((*domain.User)(nil), gorm.ErrRecordNotFound)
@@ -481,14 +516,18 @@ func TestRegisterUseCase_Execute_WhenActivationTokenStorageFails_StillSucceeds(t
 	mockUserRepo := new(providers.MockUserRepository)
 	mockOrgRepo := new(providers.MockOrganizationRepository)
 	mockTokenRepo := new(providers.MockTokenRepository)
+	mockEventPublisher := new(providers.MockEventPublisher)
+	mockTimeManager := new(providers.MockTimeManager)
 	mockLogger := new(providers.MockLogger)
 
-	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockLogger)
+	useCase := NewRegisterUseCase(mockUserRepo, mockOrgRepo, mockTokenRepo, mockEventPublisher, mockTimeManager, mockLogger)
 
 	mockOrgRepo.On("GetByID", mock.Anything, givenOrgID).Return(givenOrganization, nil)
 	mockUserRepo.On("GetByEmailAndOrg", mock.Anything, givenRequest.Email, givenOrgID).Return((*domain.User)(nil), gorm.ErrRecordNotFound)
 	mockUserRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.User")).Return(nil)
 	mockTokenRepo.On("StoreActivationToken", mock.Anything, mock.AnythingOfType("*domain.ActivationToken")).Return(assert.AnError)
+	mockTimeManager.On("Now").Return(time.Now())
+	mockEventPublisher.On("PublishAsync", mock.Anything, "auth.user.created", mock.Anything).Return(nil)
 	mockLogger.On("Error", mock.Anything, assert.AnError, mock.Anything, mock.Anything).Return()
 	mockLogger.On("Info", mock.Anything, mock.Anything, mock.Anything).Return()
 
