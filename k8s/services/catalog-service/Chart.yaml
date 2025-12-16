@@ -1,0 +1,14 @@
+apiVersion: v2
+name: catalog-service
+description: GIIA Catalog Service for DDMRP Product Management
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - catalog
+  - products
+  - suppliers
+  - ddmrp
+maintainers:
+  - name: GIIA Team
+    email: dev@giia.io

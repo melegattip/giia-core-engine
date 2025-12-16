@@ -1,0 +1,36 @@
+# Bitnami Redis Helm Chart Values - Development Environment
+# Chart: bitnami/redis
+# Version: 7.x
+
+# Architecture: standalone for development (no sentinel)
+architecture: standalone
+
+# Authentication
+auth:
+  enabled: true
+  password: giia_redis_password
+
+# Master configuration
+master:
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: standard
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+# Metrics for monitoring
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+
+# Disable replicas for development
+replica:
+  replicaCount: 0

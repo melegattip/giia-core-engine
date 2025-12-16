@@ -1,0 +1,24 @@
+# Development environment overrides for auth-service
+
+replicaCount: 1
+
+image:
+  tag: latest
+  pullPolicy: Never  # Use local images loaded with 'minikube image load'
+
+env:
+  LOG_LEVEL: "debug"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false

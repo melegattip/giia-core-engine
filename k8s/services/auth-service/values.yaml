@@ -1,0 +1,95 @@
+# Default values for auth-service Helm chart
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/giia/auth-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  httpPort: 8083
+  grpcPort: 9091
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: auth.giia.local
+      paths:
+        - path: /
+          pathType: Prefix
+          port: 8083
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+# Environment variables specific to this service
+env:
+  PORT: "8083"
+  GRPC_PORT: "9091"
+  LOG_LEVEL: "info"
+  SERVICE_NAME: "auth-service"
+
+# Reference to shared configuration
+envFrom:
+  - configMapRef:
+      name: shared-config
+  - secretRef:
+      name: shared-secrets
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Pod disruption budget for high availability
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# HorizontalPodAutoscaler
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+# Service account
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}

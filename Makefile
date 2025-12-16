@@ -205,19 +205,105 @@ seed-data: ## Load sample data into local database
 	@docker exec -i giia-postgres psql -U giia -d giia_dev < scripts/seed-data.sql
 	@echo "$(COLOR_GREEN)✓ Seed data loaded successfully$(COLOR_RESET)"
 
-##@ Kubernetes
+##@ Kubernetes - Development Cluster
 
-k8s-dev-deploy: ## Deploy to development Kubernetes cluster
-	@echo "$(COLOR_GREEN)Deploying to Kubernetes (dev)...$(COLOR_RESET)"
-	$(KUBECTL) apply -f deployments/dev/
+k8s-setup: ## Setup local Kubernetes cluster with Minikube
+	@echo "$(COLOR_GREEN)Setting up local Kubernetes cluster...$(COLOR_RESET)"
+	@bash scripts/k8s-setup-cluster.sh
 
-k8s-dev-delete: ## Delete from development Kubernetes cluster
-	@echo "$(COLOR_YELLOW)Deleting from Kubernetes (dev)...$(COLOR_RESET)"
-	$(KUBECTL) delete -f deployments/dev/
+k8s-deploy-infra: ## Deploy infrastructure services (PostgreSQL, Redis, NATS)
+	@echo "$(COLOR_GREEN)Deploying infrastructure services...$(COLOR_RESET)"
+	@bash scripts/k8s-deploy-infrastructure.sh
 
-k8s-logs: ## Tail logs from Kubernetes pods
-	@echo "$(COLOR_BLUE)Tailing Kubernetes logs...$(COLOR_RESET)"
-	$(KUBECTL) logs -f -l app=giia --all-containers=true -n giia-dev
+k8s-build-images: ## Build and load Docker images into Minikube
+	@echo "$(COLOR_GREEN)Building and loading Docker images...$(COLOR_RESET)"
+	@bash scripts/k8s-build-images.sh
+
+k8s-deploy-services: ## Deploy all GIIA microservices
+	@echo "$(COLOR_GREEN)Deploying GIIA services...$(COLOR_RESET)"
+	@bash scripts/k8s-deploy-services.sh
+
+k8s-deploy-auth: ## Deploy auth-service only
+	@echo "$(COLOR_BLUE)Deploying auth-service...$(COLOR_RESET)"
+	@helm upgrade --install auth-service k8s/services/auth-service/ \
+		--namespace giia-dev \
+		--values k8s/services/auth-service/values-dev.yaml \
+		--wait
+
+k8s-deploy-catalog: ## Deploy catalog-service only
+	@echo "$(COLOR_BLUE)Deploying catalog-service...$(COLOR_RESET)"
+	@helm upgrade --install catalog-service k8s/services/catalog-service/ \
+		--namespace giia-dev \
+		--values k8s/services/catalog-service/values-dev.yaml \
+		--wait
+
+k8s-status: ## Show Kubernetes cluster status
+	@echo "$(COLOR_BLUE)Kubernetes Cluster Status:$(COLOR_RESET)"
+	@echo ""
+	@kubectl get pods,svc,ingress -n giia-dev
+
+k8s-pods: ## List all pods in giia-dev namespace
+	@kubectl get pods -n giia-dev
+
+k8s-logs: ## Tail logs from a specific service (usage: make k8s-logs SERVICE=auth-service)
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "$(COLOR_RED)Error: SERVICE not specified$(COLOR_RESET)"; \
+		echo "$(COLOR_BLUE)Usage: make k8s-logs SERVICE=auth-service$(COLOR_RESET)"; \
+		exit 1; \
+	fi
+	@kubectl logs -f deployment/$(SERVICE) -n giia-dev --all-containers=true
+
+k8s-describe: ## Describe a specific service pod (usage: make k8s-describe SERVICE=auth-service)
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "$(COLOR_RED)Error: SERVICE not specified$(COLOR_RESET)"; \
+		echo "$(COLOR_BLUE)Usage: make k8s-describe SERVICE=auth-service$(COLOR_RESET)"; \
+		exit 1; \
+	fi
+	@kubectl describe deployment/$(SERVICE) -n giia-dev
+
+k8s-shell: ## Open shell in a service pod (usage: make k8s-shell SERVICE=auth-service)
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "$(COLOR_RED)Error: SERVICE not specified$(COLOR_RESET)"; \
+		echo "$(COLOR_BLUE)Usage: make k8s-shell SERVICE=auth-service$(COLOR_RESET)"; \
+		exit 1; \
+	fi
+	@kubectl exec -it deployment/$(SERVICE) -n giia-dev -- /bin/sh
+
+k8s-restart: ## Restart a specific service (usage: make k8s-restart SERVICE=auth-service)
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "$(COLOR_RED)Error: SERVICE not specified$(COLOR_RESET)"; \
+		echo "$(COLOR_BLUE)Usage: make k8s-restart SERVICE=auth-service$(COLOR_RESET)"; \
+		exit 1; \
+	fi
+	@kubectl rollout restart deployment/$(SERVICE) -n giia-dev
+	@kubectl rollout status deployment/$(SERVICE) -n giia-dev
+
+k8s-tunnel: ## Start Minikube tunnel for accessing services (run in separate terminal)
+	@echo "$(COLOR_YELLOW)Starting Minikube tunnel...$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Keep this terminal open. Press Ctrl+C to stop.$(COLOR_RESET)"
+	@echo ""
+	@minikube tunnel
+
+k8s-dashboard: ## Open Kubernetes dashboard
+	@minikube dashboard
+
+k8s-clean: ## Delete all services and infrastructure (keeps cluster running)
+	@echo "$(COLOR_YELLOW)Deleting all Helm releases...$(COLOR_RESET)"
+	@helm list -n giia-dev --short | xargs -I {} helm uninstall {} -n giia-dev || true
+	@echo "$(COLOR_GREEN)All services deleted$(COLOR_RESET)"
+
+k8s-teardown: ## Destroy local Kubernetes cluster completely
+	@echo "$(COLOR_YELLOW)Tearing down Kubernetes cluster...$(COLOR_RESET)"
+	@bash scripts/k8s-teardown-cluster.sh
+
+k8s-full-deploy: k8s-setup k8s-deploy-infra k8s-build-images k8s-deploy-services ## Complete deployment (setup + infra + build + services)
+	@echo ""
+	@echo "$(COLOR_GREEN)✓ Full deployment complete!$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Run in a separate terminal:$(COLOR_RESET) $(COLOR_GREEN)make k8s-tunnel$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Then add to /etc/hosts:$(COLOR_RESET)"
+	@echo "  $(COLOR_GREEN)127.0.0.1 auth.giia.local catalog.giia.local$(COLOR_RESET)"
+	@echo ""
 
 ##@ Cleanup
 

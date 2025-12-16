@@ -74,7 +74,13 @@
       "Bash(~/go/bin/golangci-lint run:*)",
       "Bash(make test:*)",
       "Bash(go fmt:*)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(kubectl version:*)",
+      "Bash(helm version:*)",
+      "Bash(minikube version:*)",
+      "Bash(wc:*)",
+      "Bash(mv:*)",
+      "Bash(mkdir -p:*)"
     ],
     "deny": [],
     "ask": []

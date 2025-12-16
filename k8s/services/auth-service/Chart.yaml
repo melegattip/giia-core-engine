@@ -1,0 +1,14 @@
+apiVersion: v2
+name: auth-service
+description: GIIA Authentication and Authorization Service
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - authentication
+  - authorization
+  - iam
+  - jwt
+maintainers:
+  - name: GIIA Team
+    email: dev@giia.io

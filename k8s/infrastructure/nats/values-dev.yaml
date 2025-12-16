@@ -1,0 +1,57 @@
+# NATS Helm Chart Values - Development Environment
+# Chart: nats/nats
+# Version: 2.x
+
+nats:
+  # JetStream configuration
+  jetstream:
+    enabled: true
+
+    # Memory storage for JetStream
+    memStorage:
+      enabled: true
+      size: 1Gi
+
+    # File storage for JetStream
+    fileStorage:
+      enabled: true
+      size: 1Gi
+      storageClassName: standard
+
+  # Client port
+  client:
+    port: 4222
+
+# NATS configuration
+config:
+  cluster:
+    enabled: false  # Disable clustering for development
+
+  jetstream:
+    enabled: true
+    maxMemory: 1Gi
+    maxFile: 1Gi
+
+  # Monitoring
+  monitor:
+    enabled: true
+    port: 8222
+
+# Resource limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    client: 4222
+    monitor: 8222
+
+# Single replica for development
+replicaCount: 1

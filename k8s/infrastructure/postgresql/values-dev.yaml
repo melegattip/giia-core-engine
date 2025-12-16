@@ -1,0 +1,59 @@
+# Bitnami PostgreSQL Helm Chart Values - Development Environment
+# Chart: bitnami/postgresql
+# Version: 16.x
+
+global:
+  postgresql:
+    auth:
+      username: giia
+      password: giia_dev_password
+      database: giia_dev
+      postgresPassword: postgres_admin_password
+
+# Primary database configuration
+primary:
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: standard
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  # Initialize database with schemas for each service
+  initdb:
+    scripts:
+      01-create-schemas.sql: |
+        -- Create schemas for each microservice
+        CREATE SCHEMA IF NOT EXISTS auth;
+        CREATE SCHEMA IF NOT EXISTS catalog;
+        CREATE SCHEMA IF NOT EXISTS ddmrp;
+        CREATE SCHEMA IF NOT EXISTS execution;
+        CREATE SCHEMA IF NOT EXISTS analytics;
+        CREATE SCHEMA IF NOT EXISTS ai_agent;
+
+        -- Grant permissions
+        GRANT ALL PRIVILEGES ON SCHEMA auth TO giia;
+        GRANT ALL PRIVILEGES ON SCHEMA catalog TO giia;
+        GRANT ALL PRIVILEGES ON SCHEMA ddmrp TO giia;
+        GRANT ALL PRIVILEGES ON SCHEMA execution TO giia;
+        GRANT ALL PRIVILEGES ON SCHEMA analytics TO giia;
+        GRANT ALL PRIVILEGES ON SCHEMA ai_agent TO giia;
+
+        -- Set default search path
+        ALTER DATABASE giia_dev SET search_path TO auth, catalog, ddmrp, execution, analytics, ai_agent, public;
+
+# Metrics for monitoring
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+
+# Disable read replicas for development
+readReplicas:
+  replicaCount: 0
