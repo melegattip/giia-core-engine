@@ -1,0 +1,306 @@
+syntax = "proto3";
+
+package catalog.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/giia/giia-core-engine/services/catalog-service/api/proto/gen/go/catalog/v1;catalogv1";
+
+service CatalogService {
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+  rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
+  rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+  rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
+  rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse);
+
+  rpc CreateSupplier(CreateSupplierRequest) returns (CreateSupplierResponse);
+  rpc UpdateSupplier(UpdateSupplierRequest) returns (UpdateSupplierResponse);
+  rpc GetSupplier(GetSupplierRequest) returns (GetSupplierResponse);
+  rpc ListSuppliers(ListSuppliersRequest) returns (ListSuppliersResponse);
+  rpc DeleteSupplier(DeleteSupplierRequest) returns (DeleteSupplierResponse);
+
+  rpc CreateBufferProfile(CreateBufferProfileRequest) returns (CreateBufferProfileResponse);
+  rpc UpdateBufferProfile(UpdateBufferProfileRequest) returns (UpdateBufferProfileResponse);
+  rpc GetBufferProfile(GetBufferProfileRequest) returns (GetBufferProfileResponse);
+  rpc ListBufferProfiles(ListBufferProfilesRequest) returns (ListBufferProfilesResponse);
+  rpc DeleteBufferProfile(DeleteBufferProfileRequest) returns (DeleteBufferProfileResponse);
+
+  rpc AssociateSupplier(AssociateSupplierRequest) returns (AssociateSupplierResponse);
+  rpc GetProductSuppliers(GetProductSuppliersRequest) returns (GetProductSuppliersResponse);
+  rpc RemoveSupplierAssociation(RemoveSupplierAssociationRequest) returns (RemoveSupplierAssociationResponse);
+}
+
+message Product {
+  string id = 1;
+  string organization_id = 2;
+  string sku = 3;
+  string name = 4;
+  string description = 5;
+  string category = 6;
+  string unit_of_measure = 7;
+  string buffer_profile_id = 8;
+  string status = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message Supplier {
+  string id = 1;
+  string organization_id = 2;
+  string code = 3;
+  string name = 4;
+  string contact_name = 5;
+  string contact_email = 6;
+  string contact_phone = 7;
+  string status = 8;
+  string address = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message BufferProfile {
+  string id = 1;
+  string organization_id = 2;
+  string name = 3;
+  string description = 4;
+  string adu_method = 5;
+  double lead_time_factor = 6;
+  double variability_factor = 7;
+  string status = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+message ProductSupplier {
+  string product_id = 1;
+  string supplier_id = 2;
+  int32 lead_time_days = 3;
+  bool is_primary = 4;
+}
+
+message CreateProductRequest {
+  string organization_id = 1;
+  string sku = 2;
+  string name = 3;
+  string description = 4;
+  string category = 5;
+  string unit_of_measure = 6;
+  string buffer_profile_id = 7;
+}
+
+message CreateProductResponse {
+  Product product = 1;
+}
+
+message UpdateProductRequest {
+  string id = 1;
+  string organization_id = 2;
+  string name = 3;
+  string description = 4;
+  string category = 5;
+  string unit_of_measure = 6;
+  string buffer_profile_id = 7;
+  string status = 8;
+}
+
+message UpdateProductResponse {
+  Product product = 1;
+}
+
+message GetProductRequest {
+  string id = 1;
+  string organization_id = 2;
+}
+
+message GetProductResponse {
+  Product product = 1;
+}
+
+message ListProductsRequest {
+  string organization_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  string status = 4;
+  string category = 5;
+}
+
+message ListProductsResponse {
+  repeated Product products = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message DeleteProductRequest {
+  string id = 1;
+  string organization_id = 2;
+}
+
+message DeleteProductResponse {
+  bool success = 1;
+}
+
+message SearchProductsRequest {
+  string organization_id = 1;
+  string query = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message SearchProductsResponse {
+  repeated Product products = 1;
+  int32 total = 2;
+}
+
+message CreateSupplierRequest {
+  string organization_id = 1;
+  string code = 2;
+  string name = 3;
+  string contact_name = 4;
+  string contact_email = 5;
+  string contact_phone = 6;
+  string address = 7;
+}
+
+message CreateSupplierResponse {
+  Supplier supplier = 1;
+}
+
+message UpdateSupplierRequest {
+  string id = 1;
+  string organization_id = 2;
+  string name = 3;
+  string contact_name = 4;
+  string contact_email = 5;
+  string contact_phone = 6;
+  string address = 7;
+  string status = 8;
+}
+
+message UpdateSupplierResponse {
+  Supplier supplier = 1;
+}
+
+message GetSupplierRequest {
+  string id = 1;
+  string organization_id = 2;
+}
+
+message GetSupplierResponse {
+  Supplier supplier = 1;
+}
+
+message ListSuppliersRequest {
+  string organization_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  string status = 4;
+}
+
+message ListSuppliersResponse {
+  repeated Supplier suppliers = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message DeleteSupplierRequest {
+  string id = 1;
+  string organization_id = 2;
+}
+
+message DeleteSupplierResponse {
+  bool success = 1;
+}
+
+message CreateBufferProfileRequest {
+  string organization_id = 1;
+  string name = 2;
+  string description = 3;
+  string adu_method = 4;
+  double lead_time_factor = 5;
+  double variability_factor = 6;
+}
+
+message CreateBufferProfileResponse {
+  BufferProfile buffer_profile = 1;
+}
+
+message UpdateBufferProfileRequest {
+  string id = 1;
+  string organization_id = 2;
+  string name = 3;
+  string description = 4;
+  string adu_method = 5;
+  double lead_time_factor = 6;
+  double variability_factor = 7;
+  string status = 8;
+}
+
+message UpdateBufferProfileResponse {
+  BufferProfile buffer_profile = 1;
+}
+
+message GetBufferProfileRequest {
+  string id = 1;
+  string organization_id = 2;
+}
+
+message GetBufferProfileResponse {
+  BufferProfile buffer_profile = 1;
+}
+
+message ListBufferProfilesRequest {
+  string organization_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  string status = 4;
+}
+
+message ListBufferProfilesResponse {
+  repeated BufferProfile buffer_profiles = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message DeleteBufferProfileRequest {
+  string id = 1;
+  string organization_id = 2;
+}
+
+message DeleteBufferProfileResponse {
+  bool success = 1;
+}
+
+message AssociateSupplierRequest {
+  string product_id = 1;
+  string supplier_id = 2;
+  string organization_id = 3;
+  int32 lead_time_days = 4;
+  bool is_primary = 5;
+}
+
+message AssociateSupplierResponse {
+  ProductSupplier product_supplier = 1;
+}
+
+message GetProductSuppliersRequest {
+  string product_id = 1;
+  string organization_id = 2;
+}
+
+message GetProductSuppliersResponse {
+  repeated ProductSupplier product_suppliers = 1;
+}
+
+message RemoveSupplierAssociationRequest {
+  string product_id = 1;
+  string supplier_id = 2;
+  string organization_id = 3;
+}
+
+message RemoveSupplierAssociationResponse {
+  bool success = 1;
+}

@@ -80,7 +80,9 @@
       "Bash(minikube version:*)",
       "Bash(wc:*)",
       "Bash(mv:*)",
-      "Bash(mkdir -p:*)"
+      "Bash(mkdir -p:*)",
+      "Bash(docker compose config:*)",
+      "Bash(gofmt:*)"
     ],
     "deny": [],
     "ask": []

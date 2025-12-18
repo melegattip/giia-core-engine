@@ -127,3 +127,13 @@ func IsDuplicateKeyError(err error) bool {
 		strings.Contains(errMsg, "unique") ||
 		strings.Contains(errMsg, "already exists")
 }
+
+func IsUnauthorized(err error) bool {
+	if err == nil {
+		return false
+	}
+	if customErr, ok := err.(*CustomError); ok {
+		return customErr.HTTPStatus == http.StatusUnauthorized
+	}
+	return false
+}
