@@ -1,402 +1,753 @@
-# Task 17: AI Agent Service - Specification
+# Task 17: AI Intelligence Hub - Specification
 
-**Task ID**: task-17-ai-agent-service
-**Phase**: 2B - New Microservices
-**Priority**: P3 (Low - Advanced Feature)
-**Estimated Duration**: 3-4 weeks
-**Dependencies**: Task 16 (Analytics), External AI APIs
+**Task ID**: task-17-ai-intelligence-hub
+**Phase**: 2B - AI-Powered Intelligence
+**Priority**: P1 (HIGH - Core Value Differentiator)
+**Estimated Duration**: 6-8 weeks
+**Dependencies**: Task 08 (NATS JetStream), All microservices for event streams
 
 ---
 
-## Overview
+## Executive Summary
 
-Implement the AI Agent Service for AI-powered demand forecasting, inventory optimization recommendations, anomaly detection, and intelligent insights. This service leverages machine learning models and external AI APIs to provide predictive and prescriptive analytics for inventory management.
+The **AI Intelligence Hub** is GIIA's core competitive differentiator - an always-on AI system that continuously monitors all platform events, analyzes them using DDMRP expertise and real-time data, and proactively notifies users with intelligent insights, warnings, and recommendations.
+
+**Vision**: Transform GIIA from a "DDMRP tool" into an **"AI-Powered Supply Chain Intelligence Platform"** where AI acts as a 24/7 expert consultant.
+
+**Key Innovation**: Event-driven AI that **PREVENTS** problems instead of just **REPORTING** them.
+
+---
+
+## The Problem
+
+### Traditional DDMRP Tools (Competitors)
+
+```
+User logs in → Views dashboard → Discovers problem → Reacts
+```
+
+**Issues**:
+- ❌ Reactive: Problems discovered too late
+- ❌ Manual: User must actively monitor
+- ❌ Overwhelming: Too much data, no guidance
+- ❌ No intelligence: Just shows numbers, no "why" or "what to do"
+
+### GIIA with AI Intelligence Hub
+
+```
+AI detects event → Analyzes with DDMRP knowledge → Notifies user with solution → User approves
+```
+
+**Benefits**:
+- ✅ **Proactive**: Issues detected in real-time
+- ✅ **Automated**: AI monitors 24/7
+- ✅ **Intelligent**: AI explains WHY and suggests HOW
+- ✅ **Actionable**: Clear next steps, not just alerts
 
 ---
 
 ## User Scenarios
 
-### US1: Demand Forecasting (P1)
+### US1: Proactive Stockout Prevention (P1 - CRITICAL)
+
+**As a** inventory manager
+**I want to** be notified BEFORE stockouts occur
+**So that** I can prevent lost sales and customer dissatisfaction
+
+**Current State (Without AI)**:
+1. User checks dashboard daily
+2. Notices product below red zone
+3. Realizes stockout in 2 days
+4. Too late to order (lead time: 7 days)
+5. Stockout occurs → Lost revenue
+
+**With AI Intelligence Hub**:
+1. AI detects `buffer.below_minimum` event
+2. AI analyzes: product, buffer, pending orders, lead times
+3. AI calculates: Stockout in 3 days, $15K revenue at risk
+4. AI notifies user: "CRITICAL: Stockout imminent for Widget-A"
+5. AI recommends: Emergency order from Supplier B (2-day lead time)
+6. User approves → Stockout prevented
+
+**Success Criteria**:
+- ✅ 85% of stockouts prevented proactively
+- ✅ Notifications sent 72+ hours before stockout
+- ✅ <5 minutes from event to notification
+- ✅ 90%+ notification accuracy (no false alarms)
+
+---
+
+### US2: Intelligent Cost Optimization (P1)
+
+**As a** procurement manager
+**I want to** receive cost-saving suggestions automatically
+**So that** I can reduce costs without manual analysis
+
+**Scenario**: AI detects ordering pattern inefficiency
+
+**AI Analysis**:
+- Event trigger: Weekly analytics aggregation
+- Pattern detected: Product ordered weekly in small batches
+- Cost calculation: High handling costs vs bulk discount opportunity
+- Alternative analysis: Monthly orders with Supplier B saves $1,200/year
+- Risk assessment: Longer lead time requires +15% buffer (+$150 cost)
+- Net savings: $1,050/year
+
+**AI Notification**:
+```
+💰 Cost Optimization Opportunity
+
+Product: Bolt-M12-Stainless
+Current: $2.50/unit, weekly orders, Supplier A
+Opportunity: Switch to Supplier B monthly orders
+Savings: $1,050/year (net)
+
+Trade-offs:
+• Longer lead time (21 vs 14 days)
+• Requires +15% buffer
+• Supplier reliability: 95% vs 98%
+
+Recommendation: 3-month trial with 50% volume split
+
+[Start Trial] [View Analysis] [Dismiss]
+```
+
+**Success Criteria**:
+- ✅ $50K+ annual savings identified per organization
+- ✅ 60%+ suggestion acceptance rate
+- ✅ All suggestions include ROI calculations
+- ✅ Trade-offs clearly presented
+
+---
+
+### US3: Execution Failure Pattern Detection (P1)
+
+**As an** operations manager
+**I want to** identify systemic execution issues
+**So that** I can fix root causes, not just symptoms
+
+**Scenario**: Multiple order execution failures
+
+**Event Pattern**:
+```
+Friday 3:15 PM: order.execution_failed (Supplier: GlobalParts)
+Friday 4:20 PM: order.execution_failed (Supplier: GlobalParts)
+Friday 5:45 PM: order.execution_failed (Supplier: GlobalParts)
+```
+
+**AI Pattern Recognition**:
+- Detects: 3+ failures in 6 hours, same supplier
+- Analyzes: All orders placed Friday afternoon
+- Root cause: Supplier's system locks inventory at 5 PM Friday
+- Impact: Weekend orders fail, Monday delays
+
+**AI Alert**:
+```
+🚨 PATTERN DETECTED: Execution Failures
+
+5 orders failed in 6 hours - Supplier "GlobalParts"
+
+Root Cause Analysis:
+Supplier's system doesn't process weekend orders.
+Inventory locks at 5 PM Friday until Monday 8 AM.
+
+Impact:
+• 5 orders delayed until Monday
+• $12K in pending orders at risk
+• Customer deliveries delayed 2-3 days
+
+Recommendations:
+1. Place Friday orders before 3 PM
+2. Add 48h buffer for this supplier
+3. Switch urgent Friday orders to Supplier "FastParts"
+
+[Apply Schedule Change] [Contact Supplier] [Switch Supplier]
+```
+
+**Success Criteria**:
+- ✅ 90% of patterns detected automatically
+- ✅ Root cause analysis provided
+- ✅ Long-term prevention strategies suggested
+- ✅ <30 minutes from pattern to alert
+
+---
+
+### US4: Seasonal Buffer Management (P2)
 
 **As a** demand planner
-**I want to** AI-powered demand forecasts
-**So that** I can anticipate future demand and plan inventory accordingly
+**I want** AI to automatically adjust buffers for seasonal products
+**So that** I don't miss seasonal demand spikes
 
-**Acceptance Criteria**:
-- Forecast demand for next 7, 30, 90 days
-- Multiple forecasting methods: time series, regression, neural networks
-- Incorporate historical sales, seasonality, trends, promotions
-- Confidence intervals for forecasts
-- Model accuracy tracking (MAPE, RMSE)
-- Model retraining on new data
+**Scenario**: Christmas product seasonality
 
-**Success Metrics**:
-- <20% MAPE (Mean Absolute Percentage Error)
-- Forecasts available daily
-- <5s p95 forecast generation
+**AI Seasonal Analysis**:
+- Analyzes: 3 years of historical demand data
+- Detects: +320% demand spike November-December
+- Current date: September 15
+- Lead time: 6 weeks
+- Current buffer: 50 units (normal season)
 
----
+**AI Proactive Warning**:
+```
+⚠️ SEASONAL PATTERN DETECTED
 
-### US2: Inventory Optimization Recommendations (P1)
+Product: Holiday-Lights-2024
 
-**As an** inventory manager
-**I want to** AI-driven optimization recommendations
-**So that** I can minimize costs while maintaining service levels
+Historical Pattern:
+• October: +150% demand
+• November: +280% demand
+• December: +320% demand
+• January: -90% demand (clearance)
 
-**Acceptance Criteria**:
-- Recommend optimal buffer levels based on cost/service tradeoffs
-- Suggest SKU rationalization (discontinue slow movers)
-- Identify overstocked and understocked items
-- Recommend safety stock adjustments
-- Cost-benefit analysis for recommendations
+Current Status:
+✗ Buffer not adjusted for upcoming season
+✗ 30 days until demand spike
+✗ 6-week lead time = Order NOW
 
-**Success Metrics**:
-- 15% reduction in total inventory costs
-- 10% improvement in service level
-- Actionable recommendations with justification
+Recommendations:
+1. Immediate order: 500 units
+2. Buffer schedule:
+   Oct 1: Min 125 → Max 250
+   Nov 1: Min 190 → Max 380
+   Jan 1: Min 20 → Max 40 (clearance)
 
----
+Projected Impact:
+• Prevent $45K in lost seasonal sales
+• Avoid emergency expedited shipping
+• Optimize post-season inventory
 
-### US3: Anomaly Detection (P2)
+[Apply Seasonal Buffers] [Place Order] [Review Forecast]
+```
 
-**As an** operations analyst
-**I want to** detect anomalies in demand and inventory
-**So that** I can investigate and resolve issues quickly
-
-**Acceptance Criteria**:
-- Detect demand spikes or drops
-- Detect unusual lead time variations
-- Detect inventory discrepancies
-- Root cause analysis suggestions
-- Alert generation for critical anomalies
-
-**Success Metrics**:
-- <5% false positive rate
-- Detect 90%+ of actual anomalies
-- Alerts within 1 hour of occurrence
+**Success Criteria**:
+- ✅ 95% of seasonal products detected
+- ✅ Buffer adjustments recommended 6+ weeks ahead
+- ✅ Automated buffer schedule creation
+- ✅ Post-season clearance optimization
 
 ---
 
-### US4: Intelligent Insights (P2)
+### US5: Daily Intelligence Digest (P2)
 
 **As a** supply chain manager
-**I want to** receive proactive insights
-**So that** I can make informed decisions
+**I want** a morning brief of key insights
+**So that** I know what requires my attention today
 
-**Acceptance Criteria**:
-- Daily/weekly insight summaries
-- Natural language explanations
-- Trend identification (demand increasing, costs rising)
-- Risk alerts (stockout risk, excess inventory risk)
-- Opportunity identification (consolidate orders, switch suppliers)
+**AI Daily Digest** (Generated at 6 AM):
 
-**Success Metrics**:
-- 80%+ user satisfaction with insights
-- 50%+ of insights actionable
+```
+Good Morning, Sarah! 🌅
+
+═══════════════════════════════════════
+📅 Monday, December 22, 2025
+Reading time: 3 minutes
+═══════════════════════════════════════
+
+🎯 TODAY'S PRIORITIES (AI-Ranked)
+
+1. URGENT: 3 emergency orders need approval
+   → 2 stockout risks, 1 price spike
+   [Review Now]
+
+2. MEETING PREP: Supplier "GlobalParts" at 10 AM
+   AI Note: Performance dip detected (-12% on-time)
+   [View Prep Notes]
+
+3. OPPORTUNITY: 5 cost savings ready ($4,200/month)
+   [Review Suggestions]
+
+═══════════════════════════════════════
+
+📊 OVERNIGHT ACTIVITY
+
+✅ System Health: All operational
+📦 Orders Executed: 47 (95% auto-executed)
+⚠️  Alerts Generated: 3 (2 auto-resolved)
+💰 Inventory Value: $1.2M (-2.1% optimized!)
+
+═══════════════════════════════════════
+
+🚨 REQUIRES YOUR ATTENTION (3)
+
+1. Product "Widget-Pro" below min buffer
+   ✓ Auto-order placed with Supplier A
+   ⏱ Confirm by 10 AM
+   [Confirm Order]
+
+2. Lead time increased: "TechSource" (7→10 days)
+   ⚠ Buffer recalculation needed
+   [Adjust Buffers]
+
+3. Demand spike: "Component-X" (+140%)
+   🔍 AI investigating cause...
+   [Monitor]
+
+═══════════════════════════════════════
+
+💡 AI INSIGHT OF THE DAY
+
+"Inventory turns improved 8% this week! The buffer
+adjustments from Dec 15 are working. Consider
+applying same logic to 'Fasteners' category."
+
+[Apply to Fasteners]
+
+═══════════════════════════════════════
+
+📅 THIS WEEK'S EVENTS
+
+• Dec 24-26: Holiday closure ✓ Buffers pre-adjusted
+• Dec 28: Quarterly supplier review (12 suppliers)
+• Jan 2: Annual demand forecast refresh
+
+═══════════════════════════════════════
+
+🎓 LEARNING MOMENT
+
+8 products show seasonal patterns. Want AI to
+auto-manage their buffers year-round?
+
+[Enable Auto-Seasonality] [Learn More]
+
+═══════════════════════════════════════
+
+Have a great day! I'm monitoring everything 24/7.
+
+Your AI Supply Chain Advisor 🧠
+```
+
+**Success Criteria**:
+- ✅ Delivered daily at user-preferred time
+- ✅ Reading time <5 minutes
+- ✅ 80%+ of priorities acted upon
+- ✅ Personalized based on user role
 
 ---
 
-### US5: Chatbot Interface (P3)
+### US6: Strategic Business Insights (P2)
 
-**As a** user
-**I want to** query inventory data via natural language
-**So that** I can get quick answers without complex queries
+**As a** CEO or VP of Operations
+**I want** strategic insights about business trends
+**So that** I can make informed strategic decisions
 
-**Acceptance Criteria**:
-- Natural language understanding
-- Context-aware conversations
-- Query data across all services
-- Provide recommendations
-- Integration with Slack, Teams, or web UI
+**Scenario**: Product line shift detected
 
-**Success Metrics**:
-- 85%+ query understanding accuracy
-- <3s response time
+**AI Monthly Strategic Analysis**:
+
+```
+📊 STRATEGIC INSIGHT: Product Portfolio Shift
+
+Your Premium product line is outpacing Standard:
+
+Trend Analysis (6 months):
+Premium Products:
+• Q2: 30% of revenue
+• Q3: 35% of revenue
+• Q4: 42% of revenue (+40% growth)
+
+Standard Products:
+• Declining -15% quarter-over-quarter
+• Margin pressure from competitors
+
+Strategic Implications:
+
+1. INVENTORY REBALANCING
+   • Reduce Standard buffers -20%
+   • Increase Premium buffers +30%
+   • Free up $125K in working capital
+
+2. SUPPLIER NEGOTIATION
+   • Premium volume +40% = leverage
+   • Request 8-10% volume discount
+   • Potential savings: $35K/year
+
+3. PRODUCT STRATEGY
+   • Phase out slowest 5 Standard SKUs
+   • Invest R&D in Premium innovations
+   • Shift marketing to Premium positioning
+
+90-Day Action Plan:
+Week 1-2: Analyze top Premium products
+Week 3-4: Negotiate supplier contracts
+Week 5-6: Adjust all buffer configurations
+Week 7-8: Phase out bottom Standard SKUs
+
+Expected Annual ROI: $180K
+
+[Generate Detailed Plan] [Export Report] [Schedule Review]
+```
+
+**Success Criteria**:
+- ✅ Strategic insights generated monthly
+- ✅ Multi-month trend analysis
+- ✅ Actionable business recommendations
+- ✅ ROI projections included
 
 ---
 
-## Functional Requirements
+## Intelligence Categories
 
-### FR1: Demand Forecasting Models
-- **Time Series**: ARIMA, Exponential Smoothing
-- **Machine Learning**: Random Forest, Gradient Boosting
-- **Neural Networks**: LSTM, Transformer (optional)
-- Feature engineering: lag features, moving averages, seasonality
-- **Seasonality Detection** [NEW]: Identify monthly/quarterly/yearly patterns
-- **New Product Forecasting** [NEW]: Estimate CPD based on similar products
-- Model training pipeline
-- Model versioning and A/B testing
+### 1. 🚨 CRITICAL ALERTS
+- **Priority**: Highest
+- **Response Time**: Immediate
+- **Examples**: Imminent stockouts, execution failures, system errors
+- **Delivery**: Push notification + SMS + Email
+- **Frequency**: Real-time
 
-### FR2: Optimization Algorithms
-- Multi-objective optimization (cost vs. service level)
-- Constraint satisfaction (MOQ, budget, capacity)
-- Sensitivity analysis
-- What-if scenario simulation
+### 2. ⚠️ WARNINGS
+- **Priority**: High
+- **Response Time**: Within 24 hours
+- **Examples**: Buffer drift, lead time increases, supplier issues
+- **Delivery**: Push notification + Email
+- **Frequency**: As detected
 
-### FR3: Anomaly Detection Methods
-- Statistical methods: Z-score, IQR
-- ML methods: Isolation Forest, Autoencoders
-- Time-series anomaly detection
-- Multivariate anomaly detection
+### 3. ℹ️ INFORMATIONAL
+- **Priority**: Medium
+- **Response Time**: When convenient
+- **Examples**: Order confirmations, successful adjustments
+- **Delivery**: In-app notification
+- **Frequency**: Real-time
 
-### FR4: AI Model Management
-- Model training orchestration
-- Hyperparameter tuning
-- Model evaluation and validation
-- Model deployment and serving
-- Model monitoring and drift detection
+### 4. 💡 SUGGESTIONS
+- **Priority**: Low-Medium
+- **Response Time**: Review weekly
+- **Examples**: Cost optimizations, process improvements
+- **Delivery**: In-app + Weekly digest
+- **Frequency**: As discovered
 
-### FR5: External AI Integration
-- OpenAI API for natural language (GPT-4)
-- AWS SageMaker or Azure ML for model hosting
-- Google Cloud AI for vision/prediction APIs (optional)
-- Model API abstraction layer
+### 5. 🎯 INSIGHTS
+- **Priority**: Strategic
+- **Response Time**: Review monthly
+- **Examples**: Trend analysis, market shifts, portfolio changes
+- **Delivery**: Email + Dashboard
+- **Frequency**: Weekly/Monthly
+
+### 6. 📊 DIGESTS
+- **Priority**: Daily summary
+- **Response Time**: Morning review
+- **Examples**: Daily brief, weekly summary
+- **Delivery**: Email
+- **Frequency**: Daily/Weekly
 
 ---
 
 ## Key Entities
 
-### Forecast
+### AINotification
 ```go
-type Forecast struct {
-    ID              uuid.UUID
-    ProductID       uuid.UUID
-    OrganizationID  uuid.UUID
-    ForecastDate    time.Time
-    HorizonDays     int       // 7, 30, 90
-    Method          string    // "arima", "ml", "ensemble"
-    PredictedValue  float64
-    LowerBound      float64   // 95% confidence interval
-    UpperBound      float64
-    Accuracy        float64   // MAPE from last actuals
-    ModelVersion    string
-    CreatedAt       time.Time
-}
-```
-
-### Recommendation
-```go
-type Recommendation struct {
+type AINotification struct {
     ID              uuid.UUID
     OrganizationID  uuid.UUID
-    Type            RecommendationType // "buffer_adjustment", "sku_rationalization", "supplier_switch"
-    TargetEntity    string             // "product:uuid", "supplier:uuid"
+    UserID          uuid.UUID
+    Type            NotificationType  // alert, warning, info, suggestion, insight, digest
+    Priority        NotificationPriority // critical, high, medium, low
     Title           string
-    Description     string
-    Impact          ImpactEstimate
-    Confidence      float64            // 0-1
-    Status          string             // "pending", "accepted", "rejected"
+    Summary         string
+    FullAnalysis    string            // Detailed AI-generated analysis
+    Reasoning       string            // Why this notification was generated
+    Impact          ImpactAssessment
+    Recommendations []Recommendation
+    SourceEvents    []string          // Event IDs that triggered this
+    Status          NotificationStatus // unread, read, acted_upon, dismissed
     CreatedAt       time.Time
+    ReadAt          *time.Time
+    ActedAt         *time.Time
 }
 
-type ImpactEstimate struct {
-    CostSaving      float64
-    ServiceImprovement float64
-    InventoryReduction float64
+type ImpactAssessment struct {
+    RiskLevel       string    // low, medium, high, critical
+    RevenueImpact   float64   // Estimated revenue impact
+    CostImpact      float64   // Estimated cost impact
+    TimeToImpact    *time.Duration // How soon will this matter
+    AffectedOrders  int       // Number of orders affected
+    AffectedProducts int      // Number of products affected
 }
-```
 
-### Anomaly
-```go
-type Anomaly struct {
-    ID              uuid.UUID
-    OrganizationID  uuid.UUID
-    ProductID       *uuid.UUID
-    SupplierID      *uuid.UUID
-    Type            AnomalyType // "demand_spike", "lead_time_variance", "inventory_discrepancy"
-    Severity        string      // "low", "medium", "high", "critical"
-    DetectedAt      time.Time
-    Description     string
-    SuggestedAction string
-    Resolved        bool
-    ResolvedAt      *time.Time
+type Recommendation struct {
+    Action          string    // What to do
+    Reasoning       string    // Why do it
+    ExpectedOutcome string    // What will happen
+    Effort          string    // low, medium, high
+    Impact          string    // low, medium, high
+    ActionURL       string    // Deep link to execute action
 }
 ```
 
-### AIModel
+### AIAnalysisContext
 ```go
-type AIModel struct {
-    ID              uuid.UUID
-    Name            string
-    Type            string // "forecast", "optimization", "anomaly_detection"
-    Version         string
-    Framework       string // "sklearn", "tensorflow", "pytorch"
-    Hyperparameters map[string]interface{}
-    TrainedAt       time.Time
-    Accuracy        float64
-    Status          string // "training", "active", "archived"
+type AIAnalysisContext struct {
+    Event           *events.Event
+    RelatedEvents   []*events.Event    // Recent related events
+    HistoricalData  map[string]interface{} // From analytics
+    CurrentState    map[string]interface{} // Real-time state
+    DDMRPKnowledge  []string           // RAG-retrieved DDMRP docs
+    SimilarCases    []PastCase         // Similar past situations
+}
+
+type PastCase struct {
+    Situation       string
+    Action          string
+    Outcome         string
+    UserFeedback    string    // Was it helpful?
 }
 ```
 
-### SeasonalityAnalysis [NEW]
+### UserNotificationPreferences
 ```go
-type SeasonalityAnalysis struct {
-    ID                  uuid.UUID
-    ProductID           uuid.UUID
+type UserNotificationPreferences struct {
+    UserID              uuid.UUID
     OrganizationID      uuid.UUID
-    SeasonalPattern     SeasonalPattern  // "monthly", "quarterly", "yearly", "none"
-    DetectedAt          time.Time
-    Confidence          float64          // 0-1 confidence in pattern detection
-    PeakMonths          []int            // Months with highest demand (1-12)
-    LowMonths           []int            // Months with lowest demand
-    PeakMultiplier      float64          // Average multiplier during peak
-    LowMultiplier       float64          // Average multiplier during low season
-    BaselineValue       float64          // Non-seasonal baseline demand
-    SeasonalIndices     map[string]float64 // "Jan": 1.2, "Dec": 1.5, etc.
-    YearOverYearGrowth  float64          // Trend component
-    LastUpdated         time.Time
+
+    // Channel preferences
+    EnableInApp         bool
+    EnableEmail         bool
+    EnableSMS           bool
+    EnableSlack         bool
+
+    // Priority thresholds
+    InAppMinPriority    NotificationPriority
+    EmailMinPriority    NotificationPriority
+    SMSMinPriority      NotificationPriority
+
+    // Timing
+    DigestTime          string    // "06:00"
+    QuietHoursStart     string    // "22:00"
+    QuietHoursEnd       string    // "07:00"
+
+    // Frequency limits
+    MaxAlertsPerHour    int
+    MaxEmailsPerDay     int
+
+    // Content preferences
+    DetailLevel         string    // brief, detailed, comprehensive
+    IncludeCharts       bool
+    IncludeHistorical   bool
+
+    UpdatedAt           time.Time
 }
-
-type SeasonalPattern string
-
-const (
-    SeasonalPatternMonthly    SeasonalPattern = "monthly"
-    SeasonalPatternQuarterly  SeasonalPattern = "quarterly"
-    SeasonalPatternYearly     SeasonalPattern = "yearly"
-    SeasonalPatternNone       SeasonalPattern = "none"
-)
-
-// Used to generate FAD recommendations for seasonal products
-// Example: Christmas products have PeakMultiplier=2.0 in November-December
 ```
 
-### CPDAdjustmentRecommendation [NEW]
-```go
-type CPDAdjustmentRecommendation struct {
-    ID              uuid.UUID
-    ProductID       uuid.UUID
-    OrganizationID  uuid.UUID
-    CurrentCPD      float64
-    RecommendedCPD  float64
-    AdjustmentType  CPDAdjustmentType
-    Reasoning       string          // AI-generated explanation
-    EffectiveFrom   time.Time
-    EffectiveTo     time.Time
-    FADFactor       float64         // Calculated: RecommendedCPD / CurrentCPD
-    Confidence      float64         // 0-1 confidence in recommendation
-    Status          RecommendationStatus // "pending", "accepted", "rejected", "applied"
-    CreatedAt       time.Time
-}
+---
 
-type CPDAdjustmentType string
+## Architecture
 
-const (
-    CPDAdjustmentSeasonal       CPDAdjustmentType = "seasonal"       // Seasonal variation detected
-    CPDAdjustmentTrend          CPDAdjustmentType = "trend"          // Long-term trend (increasing/decreasing)
-    CPDAdjustmentNewProduct     CPDAdjustmentType = "new_product"    // Initial CPD estimate for new product
-    CPDAdjustmentDiscontinue    CPDAdjustmentType = "discontinue"    // Product being phased out
-    CPDAdjustmentPromotion      CPDAdjustmentType = "promotion"      // Promotional period
-    CPDAdjustmentMarketShift    CPDAdjustmentType = "market_shift"   // Market conditions change
-)
+### Event-Driven Intelligence Flow
 
-type RecommendationStatus string
-
-const (
-    RecommendationStatusPending  RecommendationStatus = "pending"
-    RecommendationStatusAccepted RecommendationStatus = "accepted"
-    RecommendationStatusRejected RecommendationStatus = "rejected"
-    RecommendationStatusApplied  RecommendationStatus = "applied"
-)
-
-// AI generates CPD adjustment recommendations that can be automatically
-// converted to DemandAdjustment entities in DDMRP Engine
+```
+┌─────────────────────────────────────────────┐
+│         ALL GIIA MICROSERVICES              │
+│  (Auth, Catalog, DDMRP, Execution, etc.)   │
+└────────────────┬────────────────────────────┘
+                 │ Publish events
+                 ▼
+┌─────────────────────────────────────────────┐
+│         NATS JetStream Event Bus            │
+│  Subjects: auth.>, catalog.>, ddmrp.>, ...  │
+└────────────────┬────────────────────────────┘
+                 │ Subscribe to all
+                 ▼
+┌─────────────────────────────────────────────┐
+│       AI INTELLIGENCE HUB SERVICE           │
+│                                             │
+│  ┌─────────────────────────────────────┐   │
+│  │   Event Processor                   │   │
+│  │   • Buffer events                   │   │
+│  │   • Execution events                │   │
+│  │   • User events                     │   │
+│  │   • Analytics events                │   │
+│  └──────────────┬──────────────────────┘   │
+│                 │                           │
+│                 ▼                           │
+│  ┌─────────────────────────────────────┐   │
+│  │   AI Analysis Engine                │   │
+│  │   ┌──────────────────────────────┐  │   │
+│  │   │ Pattern Detector             │  │   │
+│  │   │ • Failure patterns           │  │   │
+│  │   │ • Seasonal patterns          │  │   │
+│  │   │ • Cost opportunities         │  │   │
+│  │   └──────────────────────────────┘  │   │
+│  │   ┌──────────────────────────────┐  │   │
+│  │   │ Context Builder              │  │   │
+│  │   │ • Fetch related data         │  │   │
+│  │   │ • Get historical context     │  │   │
+│  │   │ • Retrieve DDMRP knowledge   │  │   │
+│  │   └──────────────────────────────┘  │   │
+│  │   ┌──────────────────────────────┐  │   │
+│  │   │ AI Reasoning (Claude API)    │  │   │
+│  │   │ • Generate analysis          │  │   │
+│  │   │ • Create recommendations     │  │   │
+│  │   │ • Explain reasoning          │  │   │
+│  │   └──────────────────────────────┘  │   │
+│  └──────────────┬──────────────────────┘   │
+│                 │                           │
+│                 ▼                           │
+│  ┌─────────────────────────────────────┐   │
+│  │   Notification Generator            │   │
+│  │   • Priority assignment             │   │
+│  │   • Template selection              │   │
+│  │   • Channel routing                 │   │
+│  └──────────────┬──────────────────────┘   │
+│                 │                           │
+└─────────────────┼───────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────┐
+│       NOTIFICATION DELIVERY SERVICE         │
+│                                             │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐   │
+│  │  In-App  │ │  Email   │ │  Slack   │   │
+│  └──────────┘ └──────────┘ └──────────┘   │
+│  ┌──────────┐ ┌──────────┐                 │
+│  │   SMS    │ │Dashboard │                 │
+│  └──────────┘ └──────────┘                 │
+└─────────────────────────────────────────────┘
 ```
 
-### NewProductForecast [NEW]
-```go
-type NewProductForecast struct {
-    ID                  uuid.UUID
-    ProductID           uuid.UUID   // The new product
-    OrganizationID      uuid.UUID
-    SimilarProductsIDs  []uuid.UUID // Products with similar characteristics used for estimation
-    EstimatedCPD        float64     // Estimated average daily consumption
-    ConfidenceLevel     float64     // 0-1 confidence in estimate
-    RecommendedFAD      float64     // Suggested adjustment factor
-    ForecastedDemand    []DailyDemandEstimate
-    SeasonalityFactors  map[string]float64 // Month -> multiplier
-    EstimationMethod    string      // "similar_products", "market_analysis", "expert_input"
-    Assumptions         []string    // List of assumptions made
-    CreatedAt           time.Time
-}
+### RAG Knowledge Base Structure
 
-type DailyDemandEstimate struct {
-    Date            time.Time
-    EstimatedDemand float64
-    LowerBound      float64
-    UpperBound      float64
-}
-
-// For new products without historical data:
-// 1. Find similar products (same category, similar price point, etc.)
-// 2. Calculate average CPD from similar products
-// 3. Apply market-specific adjustments
-// 4. Generate initial demand forecast with wide confidence intervals
-// 5. Recommend conservative buffer levels (higher variability factor)
 ```
+knowledge_base/
+├── ddmrp_methodology/
+│   ├── buffer_calculation.md
+│   ├── demand_planning.md
+│   ├── execution_best_practices.md
+│   └── lead_time_management.md
+│
+├── industry_best_practices/
+│   ├── inventory_optimization.md
+│   ├── supplier_management.md
+│   └── cost_reduction_strategies.md
+│
+├── giia_specific/
+│   ├── platform_features.md
+│   ├── integration_guides.md
+│   └── troubleshooting.md
+│
+└── historical_patterns/
+    ├── successful_resolutions/
+    ├── common_issues/
+    └── seasonal_patterns/
+```
+
+---
+
+## Functional Requirements
+
+### FR1: Real-Time Event Processing
+- Subscribe to ALL NATS JetStream subjects
+- Process events in <1 second
+- Pattern detection across multiple events
+- De-duplication of similar events
+
+### FR2: Intelligent Analysis
+- Context gathering from multiple sources
+- RAG-based DDMRP knowledge retrieval
+- Claude API integration for reasoning
+- Impact assessment and risk scoring
+
+### FR3: Notification Generation
+- Priority-based routing
+- Template-based formatting
+- Actionable recommendations
+- Deep links to relevant UI
+
+### FR4: Multi-Channel Delivery
+- In-app notifications (WebSocket push)
+- Email (templated HTML)
+- Slack/Teams integration
+- SMS for critical alerts
+
+### FR5: User Preferences
+- Channel selection
+- Priority thresholds
+- Quiet hours
+- Frequency limits
+
+### FR6: Analytics & Learning
+- Track notification effectiveness
+- User feedback loop
+- A/B testing recommendations
+- Continuous improvement
 
 ---
 
 ## Non-Functional Requirements
 
 ### Performance
-- Forecast generation: <5s p95
-- Recommendation generation: <10s p95
-- Anomaly detection: Real-time streaming (<1min lag)
-- Model inference: <100ms p95
+- Event processing: <1s p95
+- AI analysis: <5s p95
+- Notification delivery: <10s p95
+- Handle 1000+ events/minute
 
 ### Accuracy
-- Demand forecast MAPE: <20%
-- Anomaly detection F1-score: >0.85
-- Recommendation acceptance rate: >50%
+- False positive rate: <10%
+- Pattern detection accuracy: >85%
+- Recommendation acceptance: >60%
 
-### Scalability
-- Support 10,000+ product forecasts daily
-- Support 1,000+ concurrent model inferences
-- GPU acceleration for neural networks (optional)
+### Availability
+- 99.9% uptime
+- Graceful degradation if AI unavailable
+- Event replay on service restart
 
 ### Cost Management
-- Track API costs (OpenAI, AWS SageMaker)
-- Cache predictions to reduce API calls
+- Claude API cost monitoring
+- Caching of common analyses
 - Batch processing where possible
+- Budget alerts at 80% threshold
 
 ---
 
 ## Success Criteria
 
 ### Mandatory (Must Have)
-- ✅ Demand forecasting with >80% accuracy
-- ✅ Inventory optimization recommendations
-- ✅ Anomaly detection with <10% false positives
-- ✅ gRPC API for all AI operations
-- ✅ Model training pipeline
-- ✅ Integration with Analytics service for historical data
-- ✅ Multi-tenancy support
+- ✅ Real-time event processing from NATS
+- ✅ Critical alert generation (stockouts, failures)
+- ✅ AI-powered analysis with Claude
+- ✅ RAG knowledge base for DDMRP expertise
+- ✅ Multi-channel notification delivery
+- ✅ User preference management
+- ✅ Daily digest generation
 - ✅ 80%+ test coverage
+- ✅ Multi-tenancy support
 
 ### Optional (Nice to Have)
-- ⚪ Chatbot interface with NLU
-- ⚪ Deep learning models (LSTM, Transformers)
-- ⚪ Reinforcement learning for optimization
-- ⚪ Real-time model retraining
+- ⚪ Slack bot for conversational queries
+- ⚪ Voice notifications (Alexa integration)
+- ⚪ Predictive analytics with ML models
+- ⚪ Auto-resolution of simple issues
+- ⚪ Mobile app notifications
 
 ---
 
-## Out of Scope
+## Out of Scope (Future Phases)
 
-- ❌ Custom ML model training UI - Use notebooks/scripts
-- ❌ Computer vision for warehouse automation - Future task
-- ❌ Advanced NLP for unstructured data - Future task
-- ❌ Federated learning - Future task
+- ❌ Custom ML model training (use external AI only)
+- ❌ Video/multimedia notifications
+- ❌ Multi-language support (English only MVP)
+- ❌ Federated learning
+- ❌ Blockchain integration
 
 ---
 
 ## Dependencies
 
-- **Task 16**: Analytics service (for historical data)
-- **All Services**: For current operational data
-- **External**: OpenAI API, AWS SageMaker, or Azure ML
-- **Shared Packages**: pkg/events, pkg/database, pkg/logger
-- **ML Libraries**: scikit-learn, pandas, numpy (Python) or gonum (Go)
+- **Task 08**: NATS JetStream (✅ Complete)
+- **All Services**: Event publishing
+- **External**: Claude API (Anthropic), ChromaDB (RAG)
+- **Shared**: pkg/events, pkg/logger, pkg/database
+
+---
+
+## Competitive Advantage
+
+| Aspect | Competitors | GIIA Intelligence Hub |
+|--------|-------------|----------------------|
+| **Monitoring** | Manual dashboard checks | **AI monitors 24/7** |
+| **Detection** | Reactive alerts | **Proactive prevention** |
+| **Analysis** | Just shows data | **AI explains WHY** |
+| **Recommendations** | None | **AI suggests HOW** |
+| **Learning** | Static rules | **AI learns patterns** |
+| **Communication** | Technical jargon | **Natural language** |
 
 ---
 
@@ -404,24 +755,24 @@ type DailyDemandEstimate struct {
 
 | Risk | Impact | Probability | Mitigation |
 |------|--------|-------------|------------|
-| Model accuracy insufficient | High | Medium | Multiple models, ensemble methods, continuous retraining |
-| External AI API costs | Medium | High | Caching, batching, cost monitoring, budget alerts |
-| Model training time | Medium | Medium | GPU acceleration, distributed training, scheduled training |
-| Data quality issues | High | High | Data validation, cleaning, preprocessing pipelines |
-| Cold start (new products) | Medium | High | Fallback to rule-based methods, similar product models |
+| Claude API costs high | High | Medium | Caching, batching, budget alerts |
+| False positive alerts | Medium | High | ML confidence thresholds, user feedback loop |
+| Event processing lag | High | Low | Horizontal scaling, load balancing |
+| User notification fatigue | Medium | Medium | Smart frequency limits, priority tuning |
+| RAG knowledge outdated | Low | Medium | Monthly knowledge base updates |
 
 ---
 
 ## References
 
-- **Forecasting**: "Forecasting: Principles and Practice" by Hyndman & Athanasopoulos
-- **ML**: "Hands-On Machine Learning" by Aurélien Géron
-- **OpenAI API**: https://platform.openai.com/docs
-- **AWS SageMaker**: https://aws.amazon.com/sagemaker/
+- **NATS JetStream**: https://docs.nats.io/nats-concepts/jetstream
+- **Claude API**: https://docs.anthropic.com/claude/reference/getting-started-with-the-api
+- **RAG Pattern**: https://docs.anthropic.com/claude/docs/retrieval-augmented-generation
+- **DDMRP**: Demand Driven Institute
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-12-16
-**Status**: Ready for Planning
+**Document Version**: 2.0 (Complete Rewrite)
+**Last Updated**: 2025-12-22
+**Status**: Ready for Implementation
 **Next Step**: Create implementation plan (plan.md)

@@ -1,9 +1,9 @@
 # Phase 2: Task Overview
 
 **Phase**: 2 - Complete Foundation and New Microservices
-**Total Tasks**: 7 tasks
+**Total Tasks**: 8 tasks
 **Current Phase 1 Status**: 93% complete
-**Phase 2 Goal**: Bring Phase 1 to 100%, then implement remaining 4 microservices
+**Phase 2 Goal**: Bring Phase 1 to 100%, then implement remaining 4 microservices + admin feedback chat
 
 ---
 
@@ -80,6 +80,15 @@ These tasks implement the remaining 4 microservices:
 - **Dependencies**: Task 16 (Analytics), External AI APIs
 - **Folder**: [task-17-ai-agent-service/](task-17-ai-agent-service/)
 
+### Task 20: Admin Feedback Chat with Claude AI
+- **Status**: Spec ✅ | Plan ✅ | Implementation ⏸️
+- **Completion**: Extension to AI Agent Service (0% → 90%)
+- **Duration**: 2-3 weeks
+- **Priority**: P2 (Medium)
+- **Description**: Chat interface for admins to report bugs, suggest improvements, submit feedback with screenshots. Claude AI extracts multiple topics, generates structured markdown files in `issue-reports/`, and provides search/reference capabilities.
+- **Dependencies**: Task 17 (AI Agent Service), Task 5 (Auth Service - RBAC)
+- **Folder**: [task-20-admin-feedback-chat/](task-20-admin-feedback-chat/)
+
 ---
 
 ## Implementation Sequence
@@ -107,12 +116,17 @@ These tasks implement the remaining 4 microservices:
    - Advanced feature requiring historical data
    - Can be deferred if timeline constrained
 
+6. **Week 17-19**: Implement Admin Feedback Chat (Task 20)
+   - Extends AI Agent Service with chat interface
+   - Requires Claude API integration
+   - Can run in parallel with other tasks after Task 17 foundation
+
 ### Critical Path
 
 ```
 Phase 1 (93%)
     ↓
-Task 11 (Auth) → Task 12 (Catalog) → Task 14 (DDMRP) → Task 15 (Execution) → Task 16 (Analytics) → Task 17 (AI Agent)
+Task 11 (Auth) → Task 12 (Catalog) → Task 14 (DDMRP) → Task 15 (Execution) → Task 16 (Analytics) → Task 17 (AI Agent) → Task 20 (Admin Chat)
     ↓                                       ↓
 Task 13 (Testing) ────────────────────────┘
 ```
@@ -128,10 +142,10 @@ Task 13 (Testing) ────────────────────�
 - **Deliverable**: Phase 1 at 100% completion
 
 ### Phase 2B (New Microservices)
-- **Duration**: 12-16 weeks
+- **Duration**: 12-19 weeks
 - **Resources**: 2-4 developers
-- **Effort**: ~800-1000 hours
-- **Deliverable**: All 6 microservices operational
+- **Effort**: ~900-1100 hours
+- **Deliverable**: All 6 microservices operational + admin feedback chat
 
 ---
 
@@ -150,6 +164,7 @@ Task 13 (Testing) ────────────────────�
 - ✅ Execution service managing orders and inventory
 - ✅ Analytics service generating reports
 - ✅ AI Agent providing forecasts and recommendations
+- ✅ Admin feedback chat with Claude AI generating structured issue reports
 - ✅ All services integrated via gRPC and NATS
 - ✅ End-to-end flows working (order → buffer → fulfill → analyze)
 
@@ -179,8 +194,8 @@ Task 13 (Testing) ────────────────────�
 ## Next Actions
 
 1. **Immediate** (This week):
-   - ✅ Complete Phase 2 spec documents (Tasks 11-17)
-   - ✅ Complete Phase 2 plan documents (Tasks 11-17)
+   - ✅ Complete Phase 2 spec documents (Tasks 11-17, 20)
+   - ✅ Complete Phase 2 plan documents (Tasks 11-17, 20)
    - ⏸️ Review and approve specs/plans with stakeholders
 
 2. **Week 1** (Next week):
@@ -209,7 +224,7 @@ Each task folder contains:
 
 ---
 
-**Document Version**: 1.0
+**Document Version**: 1.1
 **Last Updated**: 2025-12-16
 **Phase**: 2 - Complete Foundation and New Microservices
-**Status**: Planning Complete, Ready for Implementation
+**Status**: Planning Complete (including Task 20), Ready for Implementation

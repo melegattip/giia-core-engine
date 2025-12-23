@@ -42,8 +42,11 @@ func (uc *ListProductsUseCase) Execute(ctx context.Context, req *ListProductsReq
 	if req.Page < 1 {
 		req.Page = 1
 	}
-	if req.PageSize < 1 || req.PageSize > 100 {
+	if req.PageSize < 1 {
 		req.PageSize = 20
+	}
+	if req.PageSize > 100 {
+		req.PageSize = 100
 	}
 
 	filters := make(map[string]interface{})

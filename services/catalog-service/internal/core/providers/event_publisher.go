@@ -13,5 +13,8 @@ type EventPublisher interface {
 	PublishSupplierCreated(ctx context.Context, supplier *domain.Supplier) error
 	PublishSupplierUpdated(ctx context.Context, supplier *domain.Supplier) error
 	PublishSupplierDeleted(ctx context.Context, supplier *domain.Supplier) error
+	PublishBufferProfileCreated(ctx context.Context, profile *domain.BufferProfile) error
+	PublishBufferProfileUpdated(ctx context.Context, profile *domain.BufferProfile) error
+	PublishBufferProfileDeleted(ctx context.Context, profile *domain.BufferProfile) error
 	PublishBufferProfileAssigned(ctx context.Context, product *domain.Product, profile *domain.BufferProfile) error
 }

@@ -13,18 +13,30 @@ import (
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	catalogv1 "github.com/giia/giia-core-engine/services/catalog-service/api/proto/gen/go/catalog/v1"
 	"github.com/giia/giia-core-engine/services/catalog-service/internal/core/domain"
+	bufferProfile "github.com/giia/giia-core-engine/services/catalog-service/internal/core/usecases/buffer_profile"
 	"github.com/giia/giia-core-engine/services/catalog-service/internal/core/usecases/product"
+	"github.com/giia/giia-core-engine/services/catalog-service/internal/core/usecases/supplier"
 )
 
 type CatalogServer struct {
 	catalogv1.UnimplementedCatalogServiceServer
-	createProductUC *product.CreateProductUseCase
-	getProductUC    *product.GetProductUseCase
-	updateProductUC *product.UpdateProductUseCase
-	listProductsUC  *product.ListProductsUseCase
-	deleteProductUC *product.DeleteProductUseCase
-	searchProductsUC *product.SearchProductsUseCase
-	logger          pkgLogger.Logger
+	createProductUC       *product.CreateProductUseCase
+	getProductUC          *product.GetProductUseCase
+	updateProductUC       *product.UpdateProductUseCase
+	listProductsUC        *product.ListProductsUseCase
+	deleteProductUC       *product.DeleteProductUseCase
+	searchProductsUC      *product.SearchProductsUseCase
+	createSupplierUC      *supplier.CreateSupplierUseCase
+	updateSupplierUC      *supplier.UpdateSupplierUseCase
+	getSupplierUC         *supplier.GetSupplierUseCase
+	listSuppliersUC       *supplier.ListSuppliersUseCase
+	deleteSupplierUC      *supplier.DeleteSupplierUseCase
+	createBufferProfileUC *bufferProfile.CreateBufferProfileUseCase
+	updateBufferProfileUC *bufferProfile.UpdateBufferProfileUseCase
+	getBufferProfileUC    *bufferProfile.GetBufferProfileUseCase
+	listBufferProfilesUC  *bufferProfile.ListBufferProfilesUseCase
+	deleteBufferProfileUC *bufferProfile.DeleteBufferProfileUseCase
+	logger                pkgLogger.Logger
 }
 
 func NewCatalogServer(
@@ -34,16 +46,36 @@ func NewCatalogServer(
 	listProductsUC *product.ListProductsUseCase,
 	deleteProductUC *product.DeleteProductUseCase,
 	searchProductsUC *product.SearchProductsUseCase,
+	createSupplierUC *supplier.CreateSupplierUseCase,
+	updateSupplierUC *supplier.UpdateSupplierUseCase,
+	getSupplierUC *supplier.GetSupplierUseCase,
+	listSuppliersUC *supplier.ListSuppliersUseCase,
+	deleteSupplierUC *supplier.DeleteSupplierUseCase,
+	createBufferProfileUC *bufferProfile.CreateBufferProfileUseCase,
+	updateBufferProfileUC *bufferProfile.UpdateBufferProfileUseCase,
+	getBufferProfileUC *bufferProfile.GetBufferProfileUseCase,
+	listBufferProfilesUC *bufferProfile.ListBufferProfilesUseCase,
+	deleteBufferProfileUC *bufferProfile.DeleteBufferProfileUseCase,
 	logger pkgLogger.Logger,
 ) *CatalogServer {
 	return &CatalogServer{
-		createProductUC:  createProductUC,
-		getProductUC:     getProductUC,
-		updateProductUC:  updateProductUC,
-		listProductsUC:   listProductsUC,
-		deleteProductUC:  deleteProductUC,
-		searchProductsUC: searchProductsUC,
-		logger:           logger,
+		createProductUC:       createProductUC,
+		getProductUC:          getProductUC,
+		updateProductUC:       updateProductUC,
+		listProductsUC:        listProductsUC,
+		deleteProductUC:       deleteProductUC,
+		searchProductsUC:      searchProductsUC,
+		createSupplierUC:      createSupplierUC,
+		updateSupplierUC:      updateSupplierUC,
+		getSupplierUC:         getSupplierUC,
+		listSuppliersUC:       listSuppliersUC,
+		deleteSupplierUC:      deleteSupplierUC,
+		createBufferProfileUC: createBufferProfileUC,
+		updateBufferProfileUC: updateBufferProfileUC,
+		getBufferProfileUC:    getBufferProfileUC,
+		listBufferProfilesUC:  listBufferProfilesUC,
+		deleteBufferProfileUC: deleteBufferProfileUC,
+		logger:                logger,
 	}
 }
 
@@ -321,20 +353,123 @@ func (s *CatalogServer) SearchProducts(ctx context.Context, req *catalogv1.Searc
 	}, nil
 }
 
+func (s *CatalogServer) GetSupplier(ctx context.Context, req *catalogv1.GetSupplierRequest) (*catalogv1.GetSupplierResponse, error) {
+	if req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "id is required")
+	}
+
+	supplierID, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid supplier ID format")
+	}
+
+	result, err := s.getSupplierUC.Execute(ctx, supplierID)
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	return &catalogv1.GetSupplierResponse{
+		Supplier: toProtoSupplier(result),
+	}, nil
+}
+
+func (s *CatalogServer) ListSuppliers(ctx context.Context, req *catalogv1.ListSuppliersRequest) (*catalogv1.ListSuppliersResponse, error) {
+	page := req.Page
+	if page <= 0 {
+		page = 1
+	}
+
+	pageSize := req.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	result, err := s.listSuppliersUC.Execute(ctx, &supplier.ListSuppliersRequest{
+		Status:   req.Status,
+		Page:     int(page),
+		PageSize: int(pageSize),
+	})
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	suppliers := make([]*catalogv1.Supplier, len(result.Suppliers))
+	for i, sup := range result.Suppliers {
+		suppliers[i] = toProtoSupplier(sup)
+	}
+
+	return &catalogv1.ListSuppliersResponse{
+		Suppliers: suppliers,
+		Total:     int32(result.Total),
+		Page:      page,
+		PageSize:  pageSize,
+	}, nil
+}
+
+func (s *CatalogServer) GetBufferProfile(ctx context.Context, req *catalogv1.GetBufferProfileRequest) (*catalogv1.GetBufferProfileResponse, error) {
+	if req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "id is required")
+	}
+
+	profileID, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid buffer profile ID format")
+	}
+
+	result, err := s.getBufferProfileUC.Execute(ctx, profileID)
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	return &catalogv1.GetBufferProfileResponse{
+		BufferProfile: toProtoBufferProfile(result),
+	}, nil
+}
+
+func (s *CatalogServer) ListBufferProfiles(ctx context.Context, req *catalogv1.ListBufferProfilesRequest) (*catalogv1.ListBufferProfilesResponse, error) {
+	page := req.Page
+	if page <= 0 {
+		page = 1
+	}
+
+	pageSize := req.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	result, err := s.listBufferProfilesUC.Execute(ctx, &bufferProfile.ListBufferProfilesRequest{
+		Page:     int(page),
+		PageSize: int(pageSize),
+	})
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	profiles := make([]*catalogv1.BufferProfile, len(result.BufferProfiles))
+	for i, prof := range result.BufferProfiles {
+		profiles[i] = toProtoBufferProfile(prof)
+	}
+
+	return &catalogv1.ListBufferProfilesResponse{
+		BufferProfiles: profiles,
+		Total:          int32(result.Total),
+		Page:           page,
+		PageSize:       pageSize,
+	}, nil
+}
+
 func (s *CatalogServer) CreateSupplier(ctx context.Context, req *catalogv1.CreateSupplierRequest) (*catalogv1.CreateSupplierResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateSupplier not implemented")
 }
 
 func (s *CatalogServer) UpdateSupplier(ctx context.Context, req *catalogv1.UpdateSupplierRequest) (*catalogv1.UpdateSupplierResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateSupplier not implemented")
-}
-
-func (s *CatalogServer) GetSupplier(ctx context.Context, req *catalogv1.GetSupplierRequest) (*catalogv1.GetSupplierResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetSupplier not implemented")
-}
-
-func (s *CatalogServer) ListSuppliers(ctx context.Context, req *catalogv1.ListSuppliersRequest) (*catalogv1.ListSuppliersResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListSuppliers not implemented")
 }
 
 func (s *CatalogServer) DeleteSupplier(ctx context.Context, req *catalogv1.DeleteSupplierRequest) (*catalogv1.DeleteSupplierResponse, error) {
@@ -347,14 +482,6 @@ func (s *CatalogServer) CreateBufferProfile(ctx context.Context, req *catalogv1.
 
 func (s *CatalogServer) UpdateBufferProfile(ctx context.Context, req *catalogv1.UpdateBufferProfileRequest) (*catalogv1.UpdateBufferProfileResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateBufferProfile not implemented")
-}
-
-func (s *CatalogServer) GetBufferProfile(ctx context.Context, req *catalogv1.GetBufferProfileRequest) (*catalogv1.GetBufferProfileResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetBufferProfile not implemented")
-}
-
-func (s *CatalogServer) ListBufferProfiles(ctx context.Context, req *catalogv1.ListBufferProfilesRequest) (*catalogv1.ListBufferProfilesResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListBufferProfiles not implemented")
 }
 
 func (s *CatalogServer) DeleteBufferProfile(ctx context.Context, req *catalogv1.DeleteBufferProfileRequest) (*catalogv1.DeleteBufferProfileResponse, error) {
@@ -392,6 +519,31 @@ func toProtoProduct(p *domain.Product) *catalogv1.Product {
 	}
 
 	return proto
+}
+
+func toProtoSupplier(s *domain.Supplier) *catalogv1.Supplier {
+	return &catalogv1.Supplier{
+		Id:             s.ID.String(),
+		OrganizationId: s.OrganizationID.String(),
+		Code:           s.Code,
+		Name:           s.Name,
+		Status:         string(s.Status),
+		CreatedAt:      timestamppb.New(s.CreatedAt),
+		UpdatedAt:      timestamppb.New(s.UpdatedAt),
+	}
+}
+
+func toProtoBufferProfile(bp *domain.BufferProfile) *catalogv1.BufferProfile {
+	return &catalogv1.BufferProfile{
+		Id:                bp.ID.String(),
+		OrganizationId:    bp.OrganizationID.String(),
+		Name:              bp.Name,
+		Description:       bp.Description,
+		LeadTimeFactor:    bp.LeadTimeFactor,
+		VariabilityFactor: bp.VariabilityFactor,
+		CreatedAt:         timestamppb.New(bp.CreatedAt),
+		UpdatedAt:         timestamppb.New(bp.UpdatedAt),
+	}
 }
 
 func mapDomainError(err error) error {

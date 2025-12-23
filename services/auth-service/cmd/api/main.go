@@ -18,7 +18,9 @@ import (
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
 	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/config"
 	grpcInit "github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/grpc/initialization"
+	httpInit "github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/http/initialization"
 	"github.com/giia/giia-core-engine/services/auth-service/pkg/database"
+	"github.com/nats-io/nats.go"
 )
 
 func main() {
@@ -103,10 +105,24 @@ func main() {
 		}
 	}()
 
+	// Initialize NATS connection (optional for event publishing)
+	var natsConn *nats.Conn
+	natsURL := getEnvOrDefault("NATS_URL", "")
+	if natsURL != "" {
+		natsConn, err = nats.Connect(natsURL)
+		if err != nil {
+			log.Printf("⚠️  [NATS] Warning: Failed to connect to NATS: %v", err)
+			log.Printf("⚠️  [NATS] Event publishing will be disabled")
+		} else {
+			log.Printf("✅ [NATS] Connected successfully to %s", natsURL)
+			defer natsConn.Close()
+		}
+	}
+
 	// Initialize gRPC server
-	grpcPort := fmt.Sprintf(":%s", getEnvOrDefault("GRPC_PORT", "9091"))
+	grpcPort := getEnvOrDefault("GRPC_PORT", "9091")
 	grpcContainer, err := grpcInit.InitializeGRPCServer(&grpcInit.GRPCConfig{
-		Port:             grpcPort,
+		Port:             fmt.Sprintf(":%s", grpcPort),
 		JWTSecretKey:     cfg.JWT.SecretKey,
 		JWTAccessExpiry:  cfg.JWT.AccessExpiry,
 		JWTRefreshExpiry: cfg.JWT.RefreshExpiry,
@@ -119,11 +135,43 @@ func main() {
 		log.Fatalf("Failed to initialize gRPC server: %v", err)
 	}
 
+	// Initialize HTTP server
+	httpPort := getEnvOrDefault("HTTP_PORT", "8080")
+	baseURL := getEnvOrDefault("BASE_URL", fmt.Sprintf("http://localhost:%s", httpPort))
+	httpContainer, err := httpInit.InitializeHTTPServer(&httpInit.HTTPConfig{
+		Port:             httpPort,
+		JWTSecretKey:     cfg.JWT.SecretKey,
+		JWTAccessExpiry:  cfg.JWT.AccessExpiry,
+		JWTRefreshExpiry: cfg.JWT.RefreshExpiry,
+		JWTIssuer:        cfg.JWT.Issuer,
+		SMTPHost:         cfg.Email.SMTPHost,
+		SMTPPort:         fmt.Sprintf("%d", cfg.Email.SMTPPort),
+		SMTPUsername:     cfg.Email.SMTPUser,
+		SMTPPassword:     cfg.Email.SMTPPassword,
+		SMTPFrom:         cfg.Email.FromEmail,
+		BaseURL:          baseURL,
+		DB:               gormDB,
+		RedisClient:      redisClient,
+		NATSConn:         natsConn,
+		Logger:           logger,
+	})
+	if err != nil {
+		log.Fatalf("Failed to initialize HTTP server: %v", err)
+	}
+
 	// Start gRPC server in a goroutine
 	go func() {
-		log.Printf("🚀 [gRPC Server] Starting on %s", grpcPort)
+		log.Printf("🚀 [gRPC Server] Starting on :%s", grpcPort)
 		if err := grpcContainer.Server.Start(); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
+		}
+	}()
+
+	// Start HTTP server in a goroutine
+	go func() {
+		log.Printf("🚀 [HTTP Server] Starting on :%s", httpPort)
+		if err := httpContainer.Server.Start(); err != nil {
+			log.Fatalf("Failed to start HTTP server: %v", err)
 		}
 	}()
 
@@ -132,11 +180,28 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("🛑 [Auth Service] Shutting down server...")
+	log.Println("🛑 [Auth Service] Shutting down servers...")
+
+	// Create shutdown context with timeout
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Shutdown HTTP server
+	if err := httpContainer.Server.Stop(shutdownCtx); err != nil {
+		log.Printf("⚠️  [HTTP Server] Error during shutdown: %v", err)
+	} else {
+		log.Println("✅ [HTTP Server] Server shutdown gracefully")
+	}
 
 	// Shutdown gRPC server
 	grpcContainer.Server.Stop()
 	log.Println("✅ [gRPC Server] Server shutdown gracefully")
+
+	// Close NATS connection
+	if natsConn != nil {
+		natsConn.Close()
+		log.Println("✅ [NATS] Connection closed")
+	}
 
 	// Close Redis connection
 	if err := redisClient.Close(); err != nil {

@@ -1,0 +1,158 @@
+syntax = "proto3";
+
+package ddmrp.v1;
+
+option go_package = "github.com/giia/giia-core-engine/services/ddmrp-engine-service/api/proto/ddmrp/v1;ddmrpv1";
+
+import "google/protobuf/timestamp.proto";
+
+service DDMRPService {
+  rpc CalculateBuffer(CalculateBufferRequest) returns (CalculateBufferResponse);
+  rpc GetBuffer(GetBufferRequest) returns (GetBufferResponse);
+  rpc ListBuffers(ListBuffersRequest) returns (ListBuffersResponse);
+
+  rpc CreateFAD(CreateFADRequest) returns (CreateFADResponse);
+  rpc UpdateFAD(UpdateFADRequest) returns (UpdateFADResponse);
+  rpc DeleteFAD(DeleteFADRequest) returns (DeleteFADResponse);
+  rpc ListFADs(ListFADsRequest) returns (ListFADsResponse);
+
+  rpc UpdateNFP(UpdateNFPRequest) returns (UpdateNFPResponse);
+  rpc CheckReplenishment(CheckReplenishmentRequest) returns (CheckReplenishmentResponse);
+}
+
+message Buffer {
+  string id = 1;
+  string product_id = 2;
+  string organization_id = 3;
+  string buffer_profile_id = 4;
+  double cpd = 5;
+  int32 ltd = 6;
+  double red_base = 7;
+  double red_safe = 8;
+  double red_zone = 9;
+  double yellow_zone = 10;
+  double green_zone = 11;
+  double top_of_red = 12;
+  double top_of_yellow = 13;
+  double top_of_green = 14;
+  double on_hand = 15;
+  double on_order = 16;
+  double qualified_demand = 17;
+  double net_flow_position = 18;
+  double buffer_penetration = 19;
+  string zone = 20;
+  string alert_level = 21;
+  google.protobuf.Timestamp last_recalculated_at = 22;
+  google.protobuf.Timestamp created_at = 23;
+  google.protobuf.Timestamp updated_at = 24;
+}
+
+message DemandAdjustment {
+  string id = 1;
+  string product_id = 2;
+  string organization_id = 3;
+  google.protobuf.Timestamp start_date = 4;
+  google.protobuf.Timestamp end_date = 5;
+  string adjustment_type = 6;
+  double factor = 7;
+  string reason = 8;
+  google.protobuf.Timestamp created_at = 9;
+  string created_by = 10;
+}
+
+message CalculateBufferRequest {
+  string product_id = 1;
+  string organization_id = 2;
+}
+
+message CalculateBufferResponse {
+  Buffer buffer = 1;
+}
+
+message GetBufferRequest {
+  string product_id = 1;
+  string organization_id = 2;
+}
+
+message GetBufferResponse {
+  Buffer buffer = 1;
+}
+
+message ListBuffersRequest {
+  string organization_id = 1;
+  string zone = 2;
+  string alert_level = 3;
+  int32 limit = 4;
+  int32 offset = 5;
+}
+
+message ListBuffersResponse {
+  repeated Buffer buffers = 1;
+}
+
+message CreateFADRequest {
+  string product_id = 1;
+  string organization_id = 2;
+  google.protobuf.Timestamp start_date = 3;
+  google.protobuf.Timestamp end_date = 4;
+  string adjustment_type = 5;
+  double factor = 6;
+  string reason = 7;
+  string created_by = 8;
+}
+
+message CreateFADResponse {
+  DemandAdjustment demand_adjustment = 1;
+}
+
+message UpdateFADRequest {
+  string id = 1;
+  google.protobuf.Timestamp start_date = 2;
+  google.protobuf.Timestamp end_date = 3;
+  string adjustment_type = 4;
+  double factor = 5;
+  string reason = 6;
+}
+
+message UpdateFADResponse {
+  DemandAdjustment demand_adjustment = 1;
+}
+
+message DeleteFADRequest {
+  string id = 1;
+}
+
+message DeleteFADResponse {
+  bool success = 1;
+}
+
+message ListFADsRequest {
+  string product_id = 1;
+  string organization_id = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+message ListFADsResponse {
+  repeated DemandAdjustment demand_adjustments = 1;
+}
+
+message UpdateNFPRequest {
+  string product_id = 1;
+  string organization_id = 2;
+  double on_hand = 3;
+  double on_order = 4;
+  double qualified_demand = 5;
+}
+
+message UpdateNFPResponse {
+  Buffer buffer = 1;
+}
+
+message CheckReplenishmentRequest {
+  string organization_id = 1;
+}
+
+message CheckReplenishmentResponse {
+  repeated Buffer buffers = 1;
+}

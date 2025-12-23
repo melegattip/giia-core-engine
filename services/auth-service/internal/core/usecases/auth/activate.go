@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"time"
 
 	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
@@ -68,6 +69,8 @@ func (uc *ActivateAccountUseCase) Execute(ctx context.Context, token string) err
 	}
 
 	user.Status = domain.UserStatusActive
+	now := time.Now()
+	user.VerifiedAt = &now
 	if err := uc.userRepo.Update(ctx, user); err != nil {
 		uc.logger.Error(ctx, err, "Failed to update user status", pkgLogger.Tags{
 			"user_id": user.ID.String(),

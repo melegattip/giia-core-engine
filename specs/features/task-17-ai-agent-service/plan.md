@@ -1,37 +1,45 @@
-# Task 17: AI Agent Service - Implementation Plan
+# Task 17: AI Intelligence Hub - Implementation Plan
 
-**Task ID**: task-17-ai-agent-service
-**Phase**: 2B - New Microservices
-**Priority**: P3 (Low - Advanced Feature)
-**Estimated Duration**: 3-4 weeks
-**Dependencies**: Task 16 (Analytics), External AI APIs
+**Task ID**: task-17-ai-intelligence-hub
+**Phase**: 2B - AI-Powered Intelligence
+**Priority**: P1 (HIGH - Core Value Differentiator)
+**Estimated Duration**: 6-8 weeks
+**Dependencies**: Task 08 (NATS JetStream - ✅ Complete)
 
 ---
 
 ## 1. Technical Context
 
 ### Current State
-- **AI Agent Service**: Not yet implemented (new service)
-- **Analytics Service**: Complete with historical data aggregation
-- **External APIs**: OpenAI API for NLU, AWS SageMaker/Azure ML for model hosting
+- **NATS JetStream**: ✅ Implemented and operational (Task 08 complete)
+- **Event Publishing**: ✅ Auth service publishing user events
+- **Event Infrastructure**: ✅ Streams configured, retry logic in place
+- **AI Integration**: ❌ Not yet implemented
+- **RAG System**: ❌ Not yet implemented
+- **Notification System**: ❌ Not yet implemented
 
 ### Technology Stack
-- **Language**: Go 1.23.4 + Python 3.11 (for ML models)
-- **Architecture**: Clean Architecture (Domain, Use Cases, Infrastructure)
-- **Database**: PostgreSQL 16 for forecasts, recommendations, and model metadata
-- **gRPC**: Protocol Buffers v3
-- **ML Framework**: scikit-learn, pandas, numpy (Python microservice)
-- **Model Serving**: gRPC bridge between Go service and Python ML service
-- **External AI**: OpenAI API (GPT-4) for natural language processing
-- **Testing**: testify, pytest
+- **Language**: Go 1.23.4
+- **Architecture**: Clean Architecture + Event-Driven
+- **Database**: PostgreSQL 16 for notifications, preferences
+- **Event Bus**: NATS JetStream (already configured)
+- **AI**: Claude API (Anthropic)
+- **RAG**: ChromaDB for vector embeddings
+- **Notifications**:
+  - In-app: WebSocket (Gorilla WebSocket)
+  - Email: SendGrid or AWS SES
+  - Slack: Slack Web API
+  - SMS: Twilio (critical alerts only)
+- **Testing**: testify, gomock
 
 ### Key Design Decisions
-- **Hybrid Architecture**: Go main service + Python ML microservice
-- **gRPC Communication**: Go ↔ Python for model inference
-- **Model Versioning**: Track model versions and A/B test
-- **Caching**: Cache predictions to reduce API costs
-- **Batch Processing**: Process forecasts in batches for efficiency
-- **Multi-tenancy**: organization_id filtering
+1. **Event-Driven**: Subscribe to all NATS streams for comprehensive monitoring
+2. **Microservice**: Standalone service subscribed to all events
+3. **RAG Pattern**: Combine real-time data + DDMRP knowledge for analysis
+4. **Asynchronous**: Non-blocking event processing with goroutines
+5. **Multi-tenancy**: organization_id filtering throughout
+6. **Caching**: Redis for AI response caching (reduce costs)
+7. **User Preferences**: Flexible notification channel configuration
 
 ---
 
@@ -41,712 +49,1189 @@
 
 ```
 giia-core-engine/
-├── services/ai-agent-service/           # Main Go service
-│   ├── api/proto/ai_agent/v1/
-│   │   ├── ai_agent.proto                [NEW]
-│   │   ├── ai_agent.pb.go                [GENERATED]
-│   │   └── ai_agent_grpc.pb.go           [GENERATED]
+├── services/ai-intelligence-hub/                [NEW SERVICE]
+│   │
+│   ├── api/proto/intelligence/v1/
+│   │   ├── intelligence.proto                   [NEW] gRPC API definition
+│   │   ├── intelligence.pb.go                   [GENERATED]
+│   │   └── intelligence_grpc.pb.go              [GENERATED]
+│   │
+│   ├── cmd/
+│   │   └── api/
+│   │       └── main.go                          [NEW] Service entry point
 │   │
 │   ├── internal/
 │   │   ├── core/
 │   │   │   ├── domain/
-│   │   │   │   ├── seasonality_analysis.go       [NEW]
-│   │   │   │   ├── cpd_adjustment_recommendation.go [NEW]
-│   │   │   │   ├── new_product_forecast.go       [NEW]
-│   │   │   │   ├── forecast.go                   [NEW]
-│   │   │   │   ├── recommendation.go             [NEW]
-│   │   │   │   └── anomaly.go                    [NEW]
+│   │   │   │   ├── notification.go              [NEW] Core notification entity
+│   │   │   │   ├── analysis_context.go          [NEW] AI analysis context
+│   │   │   │   ├── user_preferences.go          [NEW] Notification preferences
+│   │   │   │   ├── impact_assessment.go         [NEW] Impact calculation
+│   │   │   │   └── recommendation.go            [NEW] AI recommendation
 │   │   │   │
 │   │   │   ├── providers/
-│   │   │   │   ├── ml_service_client.go          [NEW]
-│   │   │   │   ├── openai_client.go              [NEW]
-│   │   │   │   ├── analytics_client.go           [NEW]
-│   │   │   │   └── ddmrp_client.go               [NEW]
+│   │   │   │   ├── event_subscriber.go          [NEW] Interface for NATS
+│   │   │   │   ├── ai_analyzer.go               [NEW] Interface for Claude
+│   │   │   │   ├── rag_knowledge.go             [NEW] Interface for RAG
+│   │   │   │   ├── notification_sender.go       [NEW] Interface for delivery
+│   │   │   │   ├── service_client.go            [NEW] Interface for GIIA services
+│   │   │   │   └── mocks.go                     [NEW] Test mocks
 │   │   │   │
 │   │   │   └── usecases/
-│   │   │       ├── seasonality/
-│   │   │       │   ├── detect_seasonality.go     [NEW]
-│   │   │       │   └── generate_fad_recommendation.go [NEW]
+│   │   │       ├── event_processing/
+│   │   │       │   ├── process_buffer_event.go  [NEW] Handle buffer events
+│   │   │       │   ├── process_execution_event.go [NEW] Handle execution events
+│   │   │       │   ├── process_user_event.go    [NEW] Handle user events
+│   │   │       │   └── detect_patterns.go       [NEW] Pattern detection
 │   │   │       │
-│   │   │       ├── cpd_adjustment/
-│   │   │       │   ├── recommend_cpd_adjustment.go [NEW]
-│   │   │       │   └── apply_recommendation.go    [NEW]
+│   │   │       ├── analysis/
+│   │   │       │   ├── analyze_stockout_risk.go [NEW] Stockout analysis
+│   │   │       │   ├── analyze_cost_opportunity.go [NEW] Cost analysis
+│   │   │       │   ├── analyze_seasonal_pattern.go [NEW] Seasonality
+│   │   │       │   └── generate_daily_digest.go [NEW] Daily summary
 │   │   │       │
-│   │   │       ├── new_product/
-│   │   │       │   ├── estimate_cpd.go           [NEW]
-│   │   │       │   └── find_similar_products.go  [NEW]
-│   │   │       │
-│   │   │       ├── forecast/
-│   │   │       │   └── generate_forecast.go       [NEW]
-│   │   │       │
-│   │   │       └── anomaly/
-│   │   │           └── detect_anomalies.go        [NEW]
+│   │   │       └── notification/
+│   │   │           ├── create_notification.go    [NEW] Generate notification
+│   │   │           ├── route_notification.go     [NEW] Channel routing
+│   │   │           └── manage_preferences.go     [NEW] User preferences
 │   │   │
 │   │   └── infrastructure/
-│   │       ├── repositories/
-│   │       │   ├── seasonality_repository.go      [NEW]
-│   │       │   ├── cpd_adjustment_repository.go   [NEW]
-│   │       │   ├── forecast_repository.go         [NEW]
-│   │       │   └── recommendation_repository.go   [NEW]
+│   │       ├── adapters/
+│   │       │   ├── nats/
+│   │       │   │   ├── event_subscriber.go      [NEW] NATS subscriber
+│   │       │   │   └── event_processor.go       [NEW] Event handler
+│   │       │   │
+│   │       │   ├── ai/
+│   │       │   │   ├── claude_client.go         [NEW] Claude API client
+│   │       │   │   └── response_cache.go        [NEW] Redis cache
+│   │       │   │
+│   │       │   ├── rag/
+│   │       │   │   ├── chromadb_client.go       [NEW] ChromaDB client
+│   │       │   │   └── knowledge_retriever.go   [NEW] Knowledge search
+│   │       │   │
+│   │       │   ├── notifications/
+│   │       │   │   ├── email_sender.go          [NEW] Email via SendGrid
+│   │       │   │   ├── websocket_push.go        [NEW] In-app push
+│   │       │   │   ├── slack_sender.go          [NEW] Slack integration
+│   │       │   │   └── sms_sender.go            [NEW] Twilio SMS
+│   │       │   │
+│   │       │   └── services/
+│   │       │       ├── ddmrp_client.go          [NEW] DDMRP service gRPC
+│   │       │       ├── catalog_client.go        [NEW] Catalog service gRPC
+│   │       │       ├── execution_client.go      [NEW] Execution service gRPC
+│   │       │       └── analytics_client.go      [NEW] Analytics service gRPC
 │   │       │
-│   │       └── adapters/
-│   │           ├── ml_grpc_client.go              [NEW]
-│   │           ├── openai_client.go               [NEW]
-│   │           └── analytics_grpc_client.go       [NEW]
+│   │       ├── repositories/
+│   │       │   ├── notification_repository.go   [NEW] Notifications CRUD
+│   │       │   └── preferences_repository.go    [NEW] Preferences CRUD
+│   │       │
+│   │       └── entrypoints/
+│   │           ├── grpc/
+│   │           │   └── intelligence_server.go   [NEW] gRPC server
+│   │           │
+│   │           └── http/
+│   │               ├── handlers/
+│   │               │   └── notification_handler.go [NEW] REST API
+│   │               │
+│   │               └── middleware/
+│   │                   └── websocket.go          [NEW] WebSocket handler
 │   │
 │   ├── migrations/
-│   │   ├── 000001_create_seasonality_analysis.up.sql  [NEW]
-│   │   ├── 000002_create_cpd_adjustments.up.sql       [NEW]
-│   │   ├── 000003_create_new_product_forecasts.up.sql [NEW]
-│   │   └── 000004_create_forecasts.up.sql             [NEW]
+│   │   ├── 000001_create_notifications.up.sql   [NEW]
+│   │   ├── 000002_create_user_preferences.up.sql [NEW]
+│   │   └── 000003_create_notification_history.up.sql [NEW]
 │   │
-│   └── cmd/main.go                        [NEW]
+│   ├── knowledge_base/                           [NEW] RAG documents
+│   │   ├── ddmrp_methodology/
+│   │   │   ├── buffer_calculation.md            [NEW]
+│   │   │   ├── buffer_zones.md                  [NEW]
+│   │   │   ├── demand_planning.md               [NEW]
+│   │   │   └── execution_best_practices.md      [NEW]
+│   │   │
+│   │   └── giia_platform/
+│   │       ├── platform_overview.md             [NEW]
+│   │       └── troubleshooting.md               [NEW]
+│   │
+│   ├── .env.example                             [NEW]
+│   ├── Dockerfile                               [NEW]
+│   ├── Makefile                                 [NEW]
+│   └── README.md                                [NEW]
 │
-└── services/ml-service/                   # Python ML microservice
-    ├── api/
-    │   └── grpc/
-    │       ├── ml_service.proto            [NEW]
-    │       ├── ml_service_pb2.py           [GENERATED]
-    │       ├── ml_service_pb2_grpc.py      [GENERATED]
-    │       └── server.py                   [NEW]
-    │
-    ├── models/
-    │   ├── seasonality_detector.py         [NEW]
-    │   ├── demand_forecaster.py            [NEW]
-    │   └── similarity_matcher.py           [NEW]
-    │
-    ├── requirements.txt                    [NEW]
-    ├── Dockerfile                          [NEW]
-    └── main.py                             [NEW]
+└── docker-compose.yml                            [UPDATE] Add intelligence hub
 ```
 
 ---
 
-## 3. Implementation Steps
+## 3. Implementation Phases
 
-### Phase 1: Database Schema & Domain Entities (Week 1)
+### Phase 1: Foundation & Database (Week 1)
 
-#### Migrations
-
-**File**: `services/ai-agent-service/migrations/000001_create_seasonality_analysis.up.sql`
-
-```sql
--- Seasonality Analysis table
-CREATE TABLE IF NOT EXISTS seasonality_analysis (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id UUID NOT NULL,
-    organization_id UUID NOT NULL,
-    seasonal_pattern VARCHAR(20) NOT NULL,
-    detected_at TIMESTAMP NOT NULL,
-    confidence DECIMAL(3,2) NOT NULL,
-    peak_months INTEGER[],
-    low_months INTEGER[],
-    peak_multiplier DECIMAL(5,2) NOT NULL,
-    low_multiplier DECIMAL(5,2) NOT NULL,
-    baseline_value DECIMAL(15,2) NOT NULL,
-    seasonal_indices JSONB NOT NULL,
-    year_over_year_growth DECIMAL(5,2),
-    last_updated TIMESTAMP NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_seasonality_product UNIQUE (product_id, organization_id),
-    CONSTRAINT chk_seasonal_pattern CHECK (seasonal_pattern IN ('monthly', 'quarterly', 'yearly', 'none')),
-    CONSTRAINT chk_confidence CHECK (confidence >= 0 AND confidence <= 1)
-);
-
-CREATE INDEX idx_seasonality_product ON seasonality_analysis(product_id, organization_id);
-CREATE INDEX idx_seasonality_pattern ON seasonality_analysis(seasonal_pattern);
-```
-
-**File**: `services/ai-agent-service/migrations/000002_create_cpd_adjustments.up.sql`
+#### T001: Database Schema Design
+**File**: `services/ai-intelligence-hub/migrations/000001_create_notifications.up.sql`
 
 ```sql
--- CPD Adjustment Recommendations table
-CREATE TABLE IF NOT EXISTS cpd_adjustment_recommendations (
+-- AI Notifications table
+CREATE TABLE IF NOT EXISTS ai_notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id UUID NOT NULL,
     organization_id UUID NOT NULL,
-    current_cpd DECIMAL(15,2) NOT NULL,
-    recommended_cpd DECIMAL(15,2) NOT NULL,
-    adjustment_type VARCHAR(30) NOT NULL,
-    reasoning TEXT NOT NULL,
-    effective_from DATE NOT NULL,
-    effective_to DATE NOT NULL,
-    fad_factor DECIMAL(5,2) NOT NULL,
-    confidence DECIMAL(3,2) NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    user_id UUID NOT NULL,
+
+    type VARCHAR(20) NOT NULL,  -- alert, warning, info, suggestion, insight, digest
+    priority VARCHAR(20) NOT NULL,  -- critical, high, medium, low
+
+    title VARCHAR(255) NOT NULL,
+    summary TEXT NOT NULL,
+    full_analysis TEXT,
+    reasoning TEXT,
+
+    -- Impact assessment
+    risk_level VARCHAR(20),
+    revenue_impact DECIMAL(15,2),
+    cost_impact DECIMAL(15,2),
+    time_to_impact_seconds INTEGER,
+    affected_orders INTEGER,
+    affected_products INTEGER,
+
+    -- Source tracking
+    source_events JSONB,  -- Array of event IDs
+    related_entities JSONB,  -- product_ids, supplier_ids, etc.
+
+    -- Status
+    status VARCHAR(20) NOT NULL DEFAULT 'unread',  -- unread, read, acted_upon, dismissed
+
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    CONSTRAINT chk_cpd_adjustment_type CHECK (adjustment_type IN (
-        'seasonal', 'trend', 'new_product', 'discontinue', 'promotion', 'market_shift'
+    read_at TIMESTAMP,
+    acted_at TIMESTAMP,
+    dismissed_at TIMESTAMP,
+
+    CONSTRAINT chk_notification_type CHECK (type IN (
+        'alert', 'warning', 'info', 'suggestion', 'insight', 'digest'
     )),
-    CONSTRAINT chk_cpd_status CHECK (status IN ('pending', 'accepted', 'rejected', 'applied')),
-    CONSTRAINT chk_cpd_confidence CHECK (confidence >= 0 AND confidence <= 1)
+    CONSTRAINT chk_notification_priority CHECK (priority IN (
+        'critical', 'high', 'medium', 'low'
+    )),
+    CONSTRAINT chk_notification_status CHECK (status IN (
+        'unread', 'read', 'acted_upon', 'dismissed'
+    ))
 );
 
-CREATE INDEX idx_cpd_adj_product ON cpd_adjustment_recommendations(product_id, organization_id);
-CREATE INDEX idx_cpd_adj_status ON cpd_adjustment_recommendations(status);
-CREATE INDEX idx_cpd_adj_dates ON cpd_adjustment_recommendations(effective_from, effective_to);
+CREATE INDEX idx_notifications_user ON ai_notifications(user_id, organization_id);
+CREATE INDEX idx_notifications_status ON ai_notifications(status, created_at);
+CREATE INDEX idx_notifications_priority ON ai_notifications(priority, created_at);
+CREATE INDEX idx_notifications_type ON ai_notifications(type);
+
+-- Recommendations sub-table
+CREATE TABLE IF NOT EXISTS ai_recommendations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    notification_id UUID NOT NULL REFERENCES ai_notifications(id) ON DELETE CASCADE,
+
+    action TEXT NOT NULL,
+    reasoning TEXT NOT NULL,
+    expected_outcome TEXT,
+    effort VARCHAR(20),  -- low, medium, high
+    impact VARCHAR(20),  -- low, medium, high
+    action_url TEXT,
+
+    priority_order INTEGER NOT NULL,
+
+    CONSTRAINT chk_recommendation_effort CHECK (effort IN ('low', 'medium', 'high')),
+    CONSTRAINT chk_recommendation_impact CHECK (impact IN ('low', 'medium', 'high'))
+);
+
+CREATE INDEX idx_recommendations_notification ON ai_recommendations(notification_id);
 ```
 
-**File**: `services/ai-agent-service/migrations/000003_create_new_product_forecasts.up.sql`
+**File**: `services/ai-intelligence-hub/migrations/000002_create_user_preferences.up.sql`
 
 ```sql
--- New Product Forecasts table
-CREATE TABLE IF NOT EXISTS new_product_forecasts (
+-- User Notification Preferences
+CREATE TABLE IF NOT EXISTS user_notification_preferences (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id UUID NOT NULL,
+    user_id UUID NOT NULL,
     organization_id UUID NOT NULL,
-    similar_products_ids UUID[],
-    estimated_cpd DECIMAL(15,2) NOT NULL,
-    confidence_level DECIMAL(3,2) NOT NULL,
-    recommended_fad DECIMAL(5,2) NOT NULL,
-    seasonality_factors JSONB,
-    estimation_method VARCHAR(50) NOT NULL,
-    assumptions TEXT[],
+
+    -- Channel preferences
+    enable_in_app BOOLEAN NOT NULL DEFAULT true,
+    enable_email BOOLEAN NOT NULL DEFAULT true,
+    enable_sms BOOLEAN NOT NULL DEFAULT false,
+    enable_slack BOOLEAN NOT NULL DEFAULT false,
+    slack_webhook_url TEXT,
+
+    -- Priority thresholds
+    in_app_min_priority VARCHAR(20) NOT NULL DEFAULT 'low',
+    email_min_priority VARCHAR(20) NOT NULL DEFAULT 'medium',
+    sms_min_priority VARCHAR(20) NOT NULL DEFAULT 'critical',
+
+    -- Timing preferences
+    digest_time TIME NOT NULL DEFAULT '06:00:00',
+    quiet_hours_start TIME,
+    quiet_hours_end TIME,
+    timezone VARCHAR(50) NOT NULL DEFAULT 'UTC',
+
+    -- Frequency limits
+    max_alerts_per_hour INTEGER NOT NULL DEFAULT 10,
+    max_emails_per_day INTEGER NOT NULL DEFAULT 50,
+
+    -- Content preferences
+    detail_level VARCHAR(20) NOT NULL DEFAULT 'detailed',  -- brief, detailed, comprehensive
+    include_charts BOOLEAN NOT NULL DEFAULT true,
+    include_historical BOOLEAN NOT NULL DEFAULT true,
+
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_new_product_forecast UNIQUE (product_id, organization_id),
-    CONSTRAINT chk_npf_confidence CHECK (confidence_level >= 0 AND confidence_level <= 1)
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT uq_user_preferences UNIQUE (user_id, organization_id),
+    CONSTRAINT chk_detail_level CHECK (detail_level IN ('brief', 'detailed', 'comprehensive'))
 );
 
-CREATE INDEX idx_npf_product ON new_product_forecasts(product_id, organization_id);
+CREATE INDEX idx_user_prefs_user ON user_notification_preferences(user_id, organization_id);
+```
 
--- Daily Demand Estimates for New Products
-CREATE TABLE IF NOT EXISTS daily_demand_estimates (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    forecast_id UUID NOT NULL REFERENCES new_product_forecasts(id) ON DELETE CASCADE,
-    estimate_date DATE NOT NULL,
-    estimated_demand DECIMAL(15,2) NOT NULL,
-    lower_bound DECIMAL(15,2) NOT NULL,
-    upper_bound DECIMAL(15,2) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
+#### T002: Domain Entities
 
-CREATE INDEX idx_daily_estimates_forecast ON daily_demand_estimates(forecast_id);
-CREATE INDEX idx_daily_estimates_date ON daily_demand_estimates(estimate_date);
+**File**: `services/ai-intelligence-hub/internal/core/domain/notification.go`
+
+```go
+package domain
+
+import (
+    "time"
+    "github.com/google/uuid"
+)
+
+type NotificationType string
+
+const (
+    NotificationTypeAlert      NotificationType = "alert"
+    NotificationTypeWarning    NotificationType = "warning"
+    NotificationTypeInfo       NotificationType = "info"
+    NotificationTypeSuggestion NotificationType = "suggestion"
+    NotificationTypeInsight    NotificationType = "insight"
+    NotificationTypeDigest     NotificationType = "digest"
+)
+
+type NotificationPriority string
+
+const (
+    NotificationPriorityCritical NotificationPriority = "critical"
+    NotificationPriorityHigh     NotificationPriority = "high"
+    NotificationPriorityMedium   NotificationPriority = "medium"
+    NotificationPriorityLow      NotificationPriority = "low"
+)
+
+type NotificationStatus string
+
+const (
+    NotificationStatusUnread     NotificationStatus = "unread"
+    NotificationStatusRead       NotificationStatus = "read"
+    NotificationStatusActedUpon  NotificationStatus = "acted_upon"
+    NotificationStatusDismissed  NotificationStatus = "dismissed"
+)
+
+type AINotification struct {
+    ID              uuid.UUID
+    OrganizationID  uuid.UUID
+    UserID          uuid.UUID
+
+    Type            NotificationType
+    Priority        NotificationPriority
+
+    Title           string
+    Summary         string
+    FullAnalysis    string
+    Reasoning       string
+
+    Impact          ImpactAssessment
+    Recommendations []Recommendation
+
+    SourceEvents    []string  // Event IDs
+    RelatedEntities map[string][]string  // "product_ids": ["uuid1", "uuid2"]
+
+    Status          NotificationStatus
+
+    CreatedAt       time.Time
+    ReadAt          *time.Time
+    ActedAt         *time.Time
+    DismissedAt     *time.Time
+}
+
+type ImpactAssessment struct {
+    RiskLevel        string  // low, medium, high, critical
+    RevenueImpact    float64
+    CostImpact       float64
+    TimeToImpact     *time.Duration
+    AffectedOrders   int
+    AffectedProducts int
+}
+
+type Recommendation struct {
+    Action          string
+    Reasoning       string
+    ExpectedOutcome string
+    Effort          string  // low, medium, high
+    Impact          string  // low, medium, high
+    ActionURL       string
+    PriorityOrder   int
+}
+
+func (n *AINotification) MarkAsRead() {
+    now := time.Now()
+    n.ReadAt = &now
+    n.Status = NotificationStatusRead
+}
+
+func (n *AINotification) MarkAsActedUpon() {
+    now := time.Now()
+    n.ActedAt = &now
+    n.Status = NotificationStatusActedUpon
+}
+
+func (n *AINotification) Dismiss() {
+    now := time.Now()
+    n.DismissedAt = &now
+    n.Status = NotificationStatusDismissed
+}
+```
+
+#### T003: Service Scaffold
+
+**File**: `services/ai-intelligence-hub/cmd/api/main.go`
+
+```go
+package main
+
+import (
+    "context"
+    "log"
+    "os"
+    "os/signal"
+    "syscall"
+
+    "github.com/giia/giia-core-engine/pkg/config"
+    "github.com/giia/giia-core-engine/pkg/database"
+    "github.com/giia/giia-core-engine/pkg/events"
+    "github.com/giia/giia-core-engine/pkg/logger"
+)
+
+func main() {
+    ctx := context.Background()
+
+    // Load configuration
+    cfg, err := config.Load()
+    if err != nil {
+        log.Fatalf("Failed to load config: %v", err)
+    }
+
+    // Initialize logger
+    logger := logger.NewLogger(cfg.LogLevel)
+
+    // Initialize database
+    db, err := database.NewPostgresConnection(cfg.DatabaseURL)
+    if err != nil {
+        logger.Fatal(ctx, err, "Failed to connect to database", nil)
+    }
+    defer db.Close()
+
+    // Initialize NATS connection
+    natsConn, err := events.Connect(cfg.NATSServers)
+    if err != nil {
+        logger.Fatal(ctx, err, "Failed to connect to NATS", nil)
+    }
+    defer natsConn.Close()
+
+    // Initialize event subscriber
+    subscriber, err := events.NewSubscriber(natsConn)
+    if err != nil {
+        logger.Fatal(ctx, err, "Failed to create subscriber", nil)
+    }
+
+    // TODO: Initialize AI Intelligence Hub service
+
+    logger.Info(ctx, "AI Intelligence Hub started successfully", nil)
+
+    // Graceful shutdown
+    sigChan := make(chan os.Signal, 1)
+    signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+    <-sigChan
+
+    logger.Info(ctx, "Shutting down gracefully...", nil)
+}
 ```
 
 ---
 
-### Phase 2: Python ML Service (Week 1 Day 4 - Week 2)
+### Phase 2: Event Processing (Week 2)
 
-#### ML Service gRPC Server
+#### T004: NATS Event Subscriber
 
-**File**: `services/ml-service/api/grpc/ml_service.proto`
+**File**: `services/ai-intelligence-hub/internal/infrastructure/adapters/nats/event_subscriber.go`
 
-```protobuf
-syntax = "proto3";
+```go
+package nats
 
-package ml.v1;
+import (
+    "context"
+    "github.com/giia/giia-core-engine/pkg/events"
+    "github.com/giia/giia-core-engine/pkg/logger"
+)
 
-option go_package = "giia-core-engine/services/ml-service/api/proto/ml/v1;mlv1";
-
-service MLService {
-  rpc DetectSeasonality(DetectSeasonalityRequest) returns (DetectSeasonalityResponse);
-  rpc FindSimilarProducts(FindSimilarProductsRequest) returns (FindSimilarProductsResponse);
-  rpc ForecastDemand(ForecastDemandRequest) returns (ForecastDemandResponse);
-  rpc DetectAnomalies(DetectAnomaliesRequest) returns (DetectAnomaliesResponse);
+type EventSubscriber struct {
+    subscriber      *events.Subscriber
+    eventProcessor  EventProcessor
+    logger          logger.Logger
 }
 
-message DetectSeasonalityRequest {
-  string product_id = 1;
-  repeated DemandDataPoint demand_history = 2;
+type EventProcessor interface {
+    ProcessEvent(ctx context.Context, event *events.Event) error
 }
 
-message DemandDataPoint {
-  string date = 1;
-  double demand = 2;
+func NewEventSubscriber(
+    subscriber *events.Subscriber,
+    processor EventProcessor,
+    logger logger.Logger,
+) *EventSubscriber {
+    return &EventSubscriber{
+        subscriber:     subscriber,
+        eventProcessor: processor,
+        logger:         logger,
+    }
 }
 
-message DetectSeasonalityResponse {
-  string seasonal_pattern = 1;
-  double confidence = 2;
-  repeated int32 peak_months = 3;
-  repeated int32 low_months = 4;
-  double peak_multiplier = 5;
-  double low_multiplier = 6;
-  double baseline_value = 7;
-  map<string, double> seasonal_indices = 8;
-  double year_over_year_growth = 9;
-}
+func (es *EventSubscriber) Start(ctx context.Context) error {
+    // Subscribe to all event subjects
+    subjects := []string{
+        "auth.>",
+        "catalog.>",
+        "ddmrp.>",
+        "execution.>",
+        "analytics.>",
+    }
 
-// ... (other messages)
-```
-
-**File**: `services/ml-service/models/seasonality_detector.py`
-
-```python
-import numpy as np
-import pandas as pd
-from statsmodels.tsa.seasonal import seasonal_decompose
-from scipy import stats
-
-class SeasonalityDetector:
-    def __init__(self):
-        self.min_data_points = 24  # Minimum 2 years of monthly data
-
-    def detect(self, demand_history: pd.DataFrame):
-        """
-        Detect seasonality pattern in demand history.
-
-        Args:
-            demand_history: DataFrame with 'date' and 'demand' columns
-
-        Returns:
-            dict with seasonality analysis
-        """
-        if len(demand_history) < self.min_data_points:
-            return {
-                'seasonal_pattern': 'none',
-                'confidence': 0.0,
-                'reason': 'insufficient data'
-            }
-
-        # Convert to time series
-        ts = demand_history.set_index('date')['demand']
-        ts.index = pd.to_datetime(ts.index)
-        ts = ts.asfreq('MS')  # Monthly start frequency
-
-        # Decompose time series
-        try:
-            decomposition = seasonal_decompose(ts, model='multiplicative', period=12)
-        except:
-            return {
-                'seasonal_pattern': 'none',
-                'confidence': 0.0,
-                'reason': 'decomposition failed'
-            }
-
-        seasonal_component = decomposition.seasonal
-
-        # Calculate seasonal indices
-        seasonal_indices = {}
-        for month in range(1, 13):
-            month_name = pd.Timestamp(2000, month, 1).strftime('%b')
-            month_data = seasonal_component[seasonal_component.index.month == month]
-            seasonal_indices[month_name] = float(month_data.mean())
-
-        # Detect peak and low months
-        peak_months = []
-        low_months = []
-
-        for month, index in seasonal_indices.items():
-            if index > 1.2:  # 20% above baseline
-                peak_months.append(pd.to_datetime(month, format='%b').month)
-            elif index < 0.8:  # 20% below baseline
-                low_months.append(pd.to_datetime(month, format='%b').month)
-
-        # Calculate multipliers
-        peak_multiplier = max(seasonal_indices.values()) if seasonal_indices else 1.0
-        low_multiplier = min(seasonal_indices.values()) if seasonal_indices else 1.0
-
-        # Determine pattern type and confidence
-        if len(peak_months) > 0:
-            seasonal_pattern = 'monthly'
-
-            # Calculate confidence based on variance explained
-            variance_seasonal = seasonal_component.var()
-            variance_total = ts.var()
-            confidence = min(variance_seasonal / variance_total, 1.0)
-        else:
-            seasonal_pattern = 'none'
-            confidence = 0.0
-
-        # Calculate trend (year-over-year growth)
-        trend_component = decomposition.trend.dropna()
-        if len(trend_component) > 1:
-            yoy_growth = (trend_component.iloc[-1] / trend_component.iloc[0]) - 1
-        else:
-            yoy_growth = 0.0
-
-        return {
-            'seasonal_pattern': seasonal_pattern,
-            'confidence': float(confidence),
-            'peak_months': peak_months,
-            'low_months': low_months,
-            'peak_multiplier': float(peak_multiplier),
-            'low_multiplier': float(low_multiplier),
-            'baseline_value': float(decomposition.trend.mean()),
-            'seasonal_indices': seasonal_indices,
-            'year_over_year_growth': float(yoy_growth)
+    for _, subject := range subjects {
+        if err := es.subscribeToSubject(ctx, subject); err != nil {
+            return err
         }
-```
+    }
 
-**File**: `services/ml-service/models/similarity_matcher.py`
+    es.logger.Info(ctx, "Event subscriber started", logger.Tags{
+        "subjects": subjects,
+    })
 
-```python
-import numpy as np
-import pandas as pd
-from sklearn.metrics.pairwise import cosine_similarity
+    return nil
+}
 
-class SimilarityMatcher:
-    def find_similar_products(self, new_product_features, all_products_features, top_k=5):
-        """
-        Find products similar to a new product based on features.
+func (es *EventSubscriber) subscribeToSubject(ctx context.Context, subject string) error {
+    config := &events.SubscriberConfig{
+        MaxDeliver: 5,
+        AckWait:    30 * time.Second,
+    }
 
-        Args:
-            new_product_features: Feature vector for new product
-            all_products_features: Feature vectors for all existing products
-            top_k: Number of similar products to return
+    return es.subscriber.SubscribeDurableWithConfig(
+        ctx,
+        subject,
+        "ai-intelligence-hub-consumer",
+        config,
+        es.handleEvent,
+    )
+}
 
-        Returns:
-            list of similar product IDs with similarity scores
-        """
-        # Features: [category_encoded, price_range, supplier_reliability, lead_time_category]
+func (es *EventSubscriber) handleEvent(ctx context.Context, event *events.Event) error {
+    es.logger.Debug(ctx, "Received event", logger.Tags{
+        "event_type": event.Type,
+        "event_id":   event.ID,
+        "source":     event.Source,
+    })
 
-        # Calculate cosine similarity
-        similarities = cosine_similarity(
-            new_product_features.reshape(1, -1),
-            all_products_features
-        )[0]
-
-        # Get top K similar products
-        top_indices = np.argsort(similarities)[-top_k:][::-1]
-
-        similar_products = []
-        for idx in top_indices:
-            similar_products.append({
-                'product_id': all_products_features.index[idx],
-                'similarity_score': float(similarities[idx])
+    // Process event asynchronously
+    go func() {
+        if err := es.eventProcessor.ProcessEvent(ctx, event); err != nil {
+            es.logger.Error(ctx, err, "Failed to process event", logger.Tags{
+                "event_type": event.Type,
+                "event_id":   event.ID,
             })
+        }
+    }()
 
-        return similar_products
+    return nil
+}
 ```
 
----
+#### T005: Event Router and Processor
 
-### Phase 3: Go Use Cases (Week 2)
-
-#### Seasonality Detection Use Case
-
-**File**: `services/ai-agent-service/internal/core/usecases/seasonality/detect_seasonality.go`
+**File**: `services/ai-intelligence-hub/internal/infrastructure/adapters/nats/event_processor.go`
 
 ```go
-package seasonality
+package nats
 
 import (
-	"context"
+    "context"
+    "strings"
 
-	"github.com/google/uuid"
-	"giia-core-engine/services/ai-agent-service/internal/core/domain"
-	"giia-core-engine/services/ai-agent-service/internal/core/providers"
+    "github.com/giia/giia-core-engine/pkg/events"
+    "github.com/giia/giia-core-engine/pkg/logger"
+    "github.com/giia/giia-core-engine/services/ai-intelligence-hub/internal/core/providers"
 )
 
-type DetectSeasonalityUseCase struct {
-	seasonalityRepo  providers.SeasonalityRepository
-	analyticsClient  providers.AnalyticsServiceClient
-	mlClient         providers.MLServiceClient
+type EventProcessorImpl struct {
+    bufferEventHandler    providers.BufferEventHandler
+    executionEventHandler providers.ExecutionEventHandler
+    userEventHandler      providers.UserEventHandler
+    patternDetector       providers.PatternDetector
+    logger                logger.Logger
 }
 
-func (uc *DetectSeasonalityUseCase) Execute(ctx context.Context, productID, orgID uuid.UUID) (*domain.SeasonalityAnalysis, error) {
-	// 1. Get historical demand data from Analytics service
-	demandHistory, err := uc.analyticsClient.GetDemandHistory(ctx, productID, orgID, 24) // 24 months
-	if err != nil {
-		return nil, err
-	}
+func (ep *EventProcessorImpl) ProcessEvent(ctx context.Context, event *events.Event) error {
+    // Route event to appropriate handler
+    switch {
+    case strings.HasPrefix(event.Type, "buffer."):
+        return ep.bufferEventHandler.Handle(ctx, event)
 
-	// 2. Call ML service to detect seasonality
-	mlResult, err := uc.mlClient.DetectSeasonality(ctx, productID.String(), demandHistory)
-	if err != nil {
-		return nil, err
-	}
+    case strings.HasPrefix(event.Type, "order.execution"):
+        return ep.executionEventHandler.Handle(ctx, event)
 
-	// 3. Create SeasonalityAnalysis entity
-	analysis := &domain.SeasonalityAnalysis{
-		ID:                 uuid.New(),
-		ProductID:          productID,
-		OrganizationID:     orgID,
-		SeasonalPattern:    domain.SeasonalPattern(mlResult.SeasonalPattern),
-		Confidence:         mlResult.Confidence,
-		PeakMonths:         mlResult.PeakMonths,
-		LowMonths:          mlResult.LowMonths,
-		PeakMultiplier:     mlResult.PeakMultiplier,
-		LowMultiplier:      mlResult.LowMultiplier,
-		BaselineValue:      mlResult.BaselineValue,
-		SeasonalIndices:    mlResult.SeasonalIndices,
-		YearOverYearGrowth: mlResult.YearOverYearGrowth,
-	}
+    case strings.HasPrefix(event.Type, "user."):
+        return ep.userEventHandler.Handle(ctx, event)
 
-	// 4. Save analysis
-	if err := uc.seasonalityRepo.Save(ctx, analysis); err != nil {
-		return nil, err
-	}
-
-	return analysis, nil
+    default:
+        ep.logger.Debug(ctx, "No handler for event type", logger.Tags{
+            "event_type": event.Type,
+        })
+        return nil
+    }
 }
 ```
 
-#### CPD Adjustment Recommendation
+---
 
-**File**: `services/ai-agent-service/internal/core/usecases/cpd_adjustment/recommend_cpd_adjustment.go`
+### Phase 3: AI Analysis Engine (Week 3-4)
+
+#### T006: Claude API Integration
+
+**File**: `services/ai-intelligence-hub/internal/infrastructure/adapters/ai/claude_client.go`
 
 ```go
-package cpd_adjustment
+package ai
 
 import (
-	"context"
-	"fmt"
-	"time"
+    "context"
+    "encoding/json"
+    "fmt"
 
-	"github.com/google/uuid"
-	"giia-core-engine/services/ai-agent-service/internal/core/domain"
-	"giia-core-engine/services/ai-agent-service/internal/core/providers"
+    anthropic "github.com/anthropics/anthropic-sdk-go"
+    "github.com/giia/giia-core-engine/pkg/logger"
 )
 
-type RecommendCPDAdjustmentUseCase struct {
-	cpdAdjRepo       providers.CPDAdjustmentRepository
-	seasonalityRepo  providers.SeasonalityRepository
-	ddmrpClient      providers.DDMRPServiceClient
-	openAIClient     providers.OpenAIClient
+type ClaudeClient struct {
+    client  *anthropic.Client
+    cache   ResponseCache
+    logger  logger.Logger
 }
 
-func (uc *RecommendCPDAdjustmentUseCase) Execute(ctx context.Context, productID, orgID uuid.UUID) (*domain.CPDAdjustmentRecommendation, error) {
-	// 1. Get current buffer and CPD
-	buffer, err := uc.ddmrpClient.GetBuffer(ctx, productID, orgID)
-	if err != nil {
-		return nil, err
-	}
+type AIAnalysisRequest struct {
+    Event           *events.Event
+    Context         map[string]interface{}
+    DDMRPKnowledge  []string
+    Prompt          string
+}
 
-	currentCPD := buffer.CPD
+type AIAnalysisResponse struct {
+    Summary             string
+    FullAnalysis        string
+    Reasoning           string
+    Recommendations     []string
+    ImpactAssessment    map[string]interface{}
+    Confidence          float64
+}
 
-	// 2. Get seasonality analysis
-	seasonality, err := uc.seasonalityRepo.GetByProduct(ctx, productID, orgID)
-	if err != nil || seasonality.SeasonalPattern == domain.SeasonalPatternNone {
-		return nil, domain.NewValidationError("no seasonality detected for product")
-	}
+func NewClaudeClient(apiKey string, cache ResponseCache, logger logger.Logger) *ClaudeClient {
+    client := anthropic.NewClient(
+        anthropic.WithAPIKey(apiKey),
+    )
 
-	// 3. Determine current month and calculate recommended CPD
-	currentMonth := time.Now().Month()
-	seasonalIndex := seasonality.SeasonalIndices[currentMonth.String()]
+    return &ClaudeClient{
+        client: client,
+        cache:  cache,
+        logger: logger,
+    }
+}
 
-	recommendedCPD := seasonality.BaselineValue * seasonalIndex
-	fadFactor := recommendedCPD / currentCPD
+func (c *ClaudeClient) Analyze(ctx context.Context, req *AIAnalysisRequest) (*AIAnalysisResponse, error) {
+    // Check cache first
+    cacheKey := c.generateCacheKey(req)
+    if cached, found := c.cache.Get(ctx, cacheKey); found {
+        c.logger.Debug(ctx, "Cache hit for AI analysis", logger.Tags{
+            "cache_key": cacheKey,
+        })
+        return cached, nil
+    }
 
-	// 4. Generate AI reasoning using OpenAI
-	reasoning, err := uc.openAIClient.GenerateCPDAdjustmentReasoning(ctx, productID.String(), currentCPD, recommendedCPD, seasonality)
-	if err != nil {
-		reasoning = fmt.Sprintf("Seasonal adjustment based on detected %s pattern", seasonality.SeasonalPattern)
-	}
+    // Build comprehensive prompt
+    prompt := c.buildPrompt(req)
 
-	// 5. Determine effective date range (current month)
-	effectiveFrom := time.Date(time.Now().Year(), currentMonth, 1, 0, 0, 0, 0, time.UTC)
-	effectiveTo := effectiveFrom.AddDate(0, 1, -1)
+    // Call Claude API
+    message, err := c.client.Messages.New(ctx, anthropic.MessageNewParams{
+        Model: anthropic.F(anthropic.ModelClaude3_5SonnetLatest),
+        Messages: anthropic.F([]anthropic.MessageParam{
+            anthropic.NewUserMessage(anthropic.NewTextBlock(prompt)),
+        }),
+        MaxTokens: anthropic.F(int64(2000)),
+    })
 
-	// 6. Create recommendation
-	recommendation := &domain.CPDAdjustmentRecommendation{
-		ID:             uuid.New(),
-		ProductID:      productID,
-		OrganizationID: orgID,
-		CurrentCPD:     currentCPD,
-		RecommendedCPD: recommendedCPD,
-		AdjustmentType: domain.CPDAdjustmentSeasonal,
-		Reasoning:      reasoning,
-		EffectiveFrom:  effectiveFrom,
-		EffectiveTo:    effectiveTo,
-		FADFactor:      fadFactor,
-		Confidence:     seasonality.Confidence,
-		Status:         domain.RecommendationStatusPending,
-		CreatedAt:      time.Now(),
-	}
+    if err != nil {
+        return nil, fmt.Errorf("claude API error: %w", err)
+    }
 
-	// 7. Save recommendation
-	if err := uc.cpdAdjRepo.Save(ctx, recommendation); err != nil {
-		return nil, err
-	}
+    // Parse response
+    response, err := c.parseResponse(message)
+    if err != nil {
+        return nil, err
+    }
 
-	return recommendation, nil
+    // Cache response
+    c.cache.Set(ctx, cacheKey, response, 1*time.Hour)
+
+    c.logger.Info(ctx, "AI analysis completed", logger.Tags{
+        "event_type": req.Event.Type,
+        "confidence": response.Confidence,
+    })
+
+    return response, nil
+}
+
+func (c *ClaudeClient) buildPrompt(req *AIAnalysisRequest) string {
+    return fmt.Sprintf(`
+You are an expert DDMRP supply chain advisor analyzing a real-time event.
+
+DDMRP KNOWLEDGE BASE:
+%s
+
+CURRENT EVENT:
+Type: %s
+Source: %s
+Data: %s
+
+RELATED CONTEXT:
+%s
+
+ANALYSIS REQUEST:
+%s
+
+Provide your analysis in the following JSON format:
+{
+  "summary": "Brief 1-2 sentence summary",
+  "full_analysis": "Detailed analysis with reasoning",
+  "reasoning": "Why this matters and root cause",
+  "recommendations": ["Action 1", "Action 2", "Action 3"],
+  "impact_assessment": {
+    "risk_level": "low|medium|high|critical",
+    "revenue_impact": 0.0,
+    "cost_impact": 0.0,
+    "time_to_impact_hours": 0,
+    "affected_orders": 0,
+    "affected_products": 0
+  },
+  "confidence": 0.0  // 0-1 confidence score
+}
+
+Be specific, actionable, and use natural conversational language.
+`,
+        strings.Join(req.DDMRPKnowledge, "\n\n"),
+        req.Event.Type,
+        req.Event.Source,
+        c.formatEventData(req.Event.Data),
+        c.formatContext(req.Context),
+        req.Prompt,
+    )
 }
 ```
 
-#### New Product CPD Estimation
+#### T007: RAG Knowledge Base
 
-**File**: `services/ai-agent-service/internal/core/usecases/new_product/estimate_cpd.go`
+**File**: `services/ai-intelligence-hub/internal/infrastructure/adapters/rag/chromadb_client.go`
 
 ```go
-package new_product
+package rag
 
 import (
-	"context"
+    "context"
 
-	"github.com/google/uuid"
-	"giia-core-engine/services/ai-agent-service/internal/core/domain"
-	"giia-core-engine/services/ai-agent-service/internal/core/providers"
+    chroma "github.com/amikos-tech/chroma-go"
+    "github.com/giia/giia-core-engine/pkg/logger"
 )
 
-type EstimateCPDUseCase struct {
-	forecastRepo     providers.ForecastRepository
-	catalogClient    providers.CatalogServiceClient
-	analyticsClient  providers.AnalyticsServiceClient
-	mlClient         providers.MLServiceClient
+type ChromaDBClient struct {
+    client     *chroma.Client
+    collection *chroma.Collection
+    logger     logger.Logger
 }
 
-func (uc *EstimateCPDUseCase) Execute(ctx context.Context, productID, orgID uuid.UUID) (*domain.NewProductForecast, error) {
-	// 1. Get new product details
-	product, err := uc.catalogClient.GetProduct(ctx, productID)
-	if err != nil {
-		return nil, err
-	}
+func NewChromaDBClient(host string, port int, logger logger.Logger) (*ChromaDBClient, error) {
+    client, err := chroma.NewClient(chroma.WithHost(host), chroma.WithPort(port))
+    if err != nil {
+        return nil, err
+    }
 
-	// 2. Find similar products using ML service
-	productFeatures := extractProductFeatures(product)
-	similarProducts, err := uc.mlClient.FindSimilarProducts(ctx, productFeatures)
-	if err != nil {
-		return nil, err
-	}
+    // Get or create collection
+    collection, err := client.GetOrCreateCollection(
+        context.Background(),
+        "ddmrp_knowledge",
+        map[string]interface{}{
+            "description": "DDMRP methodology and best practices",
+        },
+        true,
+        chroma.NewOpenAIEmbeddingFunction("text-embedding-ada-002"),
+    )
 
-	// 3. Get CPD of similar products
-	similarCPDs := []float64{}
-	for _, simProduct := range similarProducts {
-		buffer, err := uc.catalogClient.GetBuffer(ctx, simProduct.ProductID, orgID)
-		if err == nil {
-			similarCPDs = append(similarCPDs, buffer.CPD)
-		}
-	}
+    if err != nil {
+        return nil, err
+    }
 
-	// 4. Calculate estimated CPD (average of similar products)
-	estimatedCPD := calculateAverage(similarCPDs)
+    return &ChromaDBClient{
+        client:     client,
+        collection: collection,
+        logger:     logger,
+    }, nil
+}
 
-	// 5. Get seasonality from similar products
-	seasonalityFactors := uc.estimateSeasonalityFactors(ctx, similarProducts, orgID)
+func (c *ChromaDBClient) RetrieveRelevantKnowledge(ctx context.Context, query string, topK int) ([]string, error) {
+    results, err := c.collection.Query(
+        context.Background(),
+        []string{query},
+        topK,
+        nil,
+        nil,
+        nil,
+    )
 
-	// 6. Create forecast
-	forecast := &domain.NewProductForecast{
-		ID:                 uuid.New(),
-		ProductID:          productID,
-		OrganizationID:     orgID,
-		SimilarProductsIDs: extractProductIDs(similarProducts),
-		EstimatedCPD:       estimatedCPD,
-		ConfidenceLevel:    calculateConfidence(similarProducts),
-		RecommendedFAD:     1.0, // Conservative initial FAD
-		SeasonalityFactors: seasonalityFactors,
-		EstimationMethod:   "similar_products",
-		Assumptions:        generateAssumptions(product, similarProducts),
-		CreatedAt:          time.Now(),
-	}
+    if err != nil {
+        return nil, err
+    }
 
-	// 7. Save forecast
-	if err := uc.forecastRepo.SaveNewProductForecast(ctx, forecast); err != nil {
-		return nil, err
-	}
+    // Extract documents
+    var docs []string
+    for _, doc := range results.Documents[0] {
+        docs = append(docs, doc)
+    }
 
-	return forecast, nil
+    c.logger.Debug(ctx, "Retrieved knowledge from RAG", logger.Tags{
+        "query":        query,
+        "results_count": len(docs),
+    })
+
+    return docs, nil
 }
 ```
 
 ---
 
-### Phase 4: Testing & Integration (Week 3-4)
+### Phase 4: Notification System (Week 5)
 
-#### Unit Tests
+#### T008: Multi-Channel Notification Delivery
 
-**File**: `services/ai-agent-service/internal/core/usecases/seasonality/detect_seasonality_test.go`
+**File**: `services/ai-intelligence-hub/internal/infrastructure/adapters/notifications/email_sender.go`
 
 ```go
-package seasonality_test
+package notifications
 
 import (
-	"context"
-	"testing"
+    "context"
+    "fmt"
 
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-
-	"giia-core-engine/services/ai-agent-service/internal/core/domain"
-	"giia-core-engine/services/ai-agent-service/internal/core/usecases/seasonality"
+    "github.com/sendgrid/sendgrid-go"
+    "github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-func TestDetectSeasonality_Success_MonthlyPattern(t *testing.T) {
-	// Given
-	mockSeasonalityRepo := new(MockSeasonalityRepository)
-	mockAnalyticsClient := new(MockAnalyticsClient)
-	mockMLClient := new(MockMLClient)
+type EmailSender struct {
+    client  *sendgrid.Client
+    fromEmail string
+    fromName  string
+}
 
-	useCase := seasonality.NewDetectSeasonalityUseCase(
-		mockSeasonalityRepo,
-		mockAnalyticsClient,
-		mockMLClient,
-	)
+func NewEmailSender(apiKey, fromEmail, fromName string) *EmailSender {
+    return &EmailSender{
+        client:    sendgrid.NewSendClient(apiKey),
+        fromEmail: fromEmail,
+        fromName:  fromName,
+    }
+}
 
-	givenProductID := uuid.New()
-	givenOrgID := uuid.New()
-	givenDemandHistory := []DemandDataPoint{
-		{Date: "2023-01", Demand: 100},
-		{Date: "2023-02", Demand: 95},
-		// ... (24 months of data)
-		{Date: "2024-12", Demand: 150}, // December peak
-	}
+func (es *EmailSender) SendNotification(ctx context.Context, notification *domain.AINotification, userEmail string) error {
+    from := mail.NewEmail(es.fromName, es.fromEmail)
+    to := mail.NewEmail("", userEmail)
 
-	mockAnalyticsClient.On("GetDemandHistory", mock.Anything, givenProductID, givenOrgID, 24).
-		Return(givenDemandHistory, nil)
+    subject := fmt.Sprintf("[%s] %s", notification.Priority, notification.Title)
 
-	mockMLClient.On("DetectSeasonality", mock.Anything, givenProductID.String(), givenDemandHistory).
-		Return(&MLSeasonalityResult{
-			SeasonalPattern:    "monthly",
-			Confidence:         0.85,
-			PeakMonths:         []int{11, 12},
-			LowMonths:          []int{2, 3},
-			PeakMultiplier:     1.5,
-			LowMultiplier:      0.7,
-			BaselineValue:      100,
-			YearOverYearGrowth: 0.1,
-		}, nil)
+    htmlContent := es.buildHTMLContent(notification)
+    textContent := es.buildTextContent(notification)
 
-	mockSeasonalityRepo.On("Save", mock.Anything, mock.AnythingOfType("*domain.SeasonalityAnalysis")).
-		Return(nil)
+    message := mail.NewSingleEmail(from, subject, to, textContent, htmlContent)
 
-	// When
-	result, err := useCase.Execute(context.Background(), givenProductID, givenOrgID)
+    response, err := es.client.Send(message)
+    if err != nil {
+        return fmt.Errorf("sendgrid error: %w", err)
+    }
 
-	// Then
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	assert.Equal(t, domain.SeasonalPatternMonthly, result.SeasonalPattern)
-	assert.Equal(t, 0.85, result.Confidence)
-	assert.Equal(t, []int{11, 12}, result.PeakMonths)
-	mockSeasonalityRepo.AssertExpectations(t)
+    if response.StatusCode >= 400 {
+        return fmt.Errorf("sendgrid returned %d: %s", response.StatusCode, response.Body)
+    }
+
+    return nil
+}
+
+func (es *EmailSender) buildHTMLContent(notification *domain.AINotification) string {
+    // Build beautiful HTML email template
+    return fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .priority-%s { border-left: 4px solid #%s; }
+        .recommendations { background: #f5f5f5; padding: 15px; }
+    </style>
+</head>
+<body>
+    <div class="priority-%s">
+        <h2>%s</h2>
+        <p>%s</p>
+        <div class="recommendations">
+            <h3>Recommended Actions:</h3>
+            <ol>
+                %s
+            </ol>
+        </div>
+    </div>
+</body>
+</html>
+    `,
+        notification.Priority,
+        es.getPriorityColor(notification.Priority),
+        notification.Priority,
+        notification.Title,
+        notification.Summary,
+        es.formatRecommendations(notification.Recommendations),
+    )
 }
 ```
 
 ---
 
-## 4. Success Criteria
+### Phase 5: Use Case Implementation (Week 6)
 
-### Mandatory
-- ✅ Seasonality detection for products
-- ✅ CPD adjustment recommendations based on seasonality
-- ✅ New product CPD estimation
-- ✅ Python ML microservice with gRPC
-- ✅ Integration with Analytics service for historical data
-- ✅ Integration with DDMRP Engine for CPD application
-- ✅ OpenAI API integration for reasoning generation
-- ✅ 80%+ test coverage (Go) + 80%+ (Python)
-- ✅ Multi-tenancy support
+#### T009: Stockout Risk Analysis
 
-### Optional (Nice to Have)
-- ⚪ Deep learning models (LSTM, Transformers)
-- ⚪ Real-time model retraining
-- ⚪ Chatbot interface with NLU
+**File**: `services/ai-intelligence-hub/internal/core/usecases/analysis/analyze_stockout_risk.go`
+
+```go
+package analysis
+
+import (
+    "context"
+    "fmt"
+    "time"
+
+    "github.com/giia/giia-core-engine/pkg/events"
+    "github.com/giia/giia-core-engine/services/ai-intelligence-hub/internal/core/domain"
+    "github.com/giia/giia-core-engine/services/ai-intelligence-hub/internal/core/providers"
+)
+
+type AnalyzeStockoutRiskUseCase struct {
+    aiAnalyzer      providers.AIAnalyzer
+    ragKnowledge    providers.RAGKnowledge
+    ddmrpClient     providers.DDMRPServiceClient
+    catalogClient   providers.CatalogServiceClient
+    executionClient providers.ExecutionServiceClient
+}
+
+func (uc *AnalyzeStockoutRiskUseCase) Execute(ctx context.Context, event *events.Event) (*domain.AINotification, error) {
+    // 1. Extract product ID from event
+    productID := event.Data["product_id"].(string)
+    orgID := event.OrganizationID
+
+    // 2. Gather context from multiple services
+    buffer, err := uc.ddmrpClient.GetBuffer(ctx, productID, orgID)
+    if err != nil {
+        return nil, err
+    }
+
+    product, err := uc.catalogClient.GetProduct(ctx, productID)
+    if err != nil {
+        return nil, err
+    }
+
+    pendingOrders, err := uc.executionClient.GetPendingOrders(ctx, productID, orgID)
+    if err != nil {
+        return nil, err
+    }
+
+    // 3. Calculate days until stockout
+    daysUntilStockout := buffer.CurrentStock / buffer.DailyConsumption
+
+    // 4. Retrieve DDMRP knowledge
+    knowledge, err := uc.ragKnowledge.Retrieve(ctx, "buffer below minimum stockout prevention", 5)
+    if err != nil {
+        return nil, err
+    }
+
+    // 5. Build AI analysis request
+    aiReq := &providers.AIAnalysisRequest{
+        Event: event,
+        Context: map[string]interface{}{
+            "buffer":         buffer,
+            "product":        product,
+            "pending_orders": pendingOrders,
+            "days_to_stockout": daysUntilStockout,
+        },
+        DDMRPKnowledge: knowledge,
+        Prompt: fmt.Sprintf(`
+Analyze this buffer below minimum situation for product "%s".
+
+Current State:
+- On-hand stock: %.2f units
+- Daily consumption: %.2f units/day
+- Days until stockout: %.1f days
+- Min buffer: %.2f units
+- Pending orders: %d
+
+Provide:
+1. Risk assessment (is stockout imminent?)
+2. Revenue impact estimation (pending orders × product price)
+3. Root cause analysis (why below minimum?)
+4. Immediate action recommendations (emergency order? supplier switch?)
+5. Long-term prevention (buffer recalculation?)
+
+Use DDMRP best practices from the provided knowledge.
+        `,
+            product.Name,
+            buffer.CurrentStock,
+            buffer.DailyConsumption,
+            daysUntilStockout,
+            buffer.MinBuffer,
+            len(pendingOrders),
+        ),
+    }
+
+    // 6. Get AI analysis
+    aiResponse, err := uc.aiAnalyzer.Analyze(ctx, aiReq)
+    if err != nil {
+        return nil, err
+    }
+
+    // 7. Build notification
+    notification := &domain.AINotification{
+        OrganizationID: orgID,
+        UserID:         // TODO: Get relevant users
+        Type:           domain.NotificationTypeAlert,
+        Priority:       uc.determinePriority(daysUntilStockout),
+        Title:          fmt.Sprintf("Imminent Stockout: %s", product.Name),
+        Summary:        aiResponse.Summary,
+        FullAnalysis:   aiResponse.FullAnalysis,
+        Reasoning:      aiResponse.Reasoning,
+        Impact:         uc.buildImpact(aiResponse.ImpactAssessment),
+        Recommendations: uc.buildRecommendations(aiResponse.Recommendations),
+        SourceEvents:   []string{event.ID},
+        RelatedEntities: map[string][]string{
+            "product_ids": {productID},
+        },
+        Status:    domain.NotificationStatusUnread,
+        CreatedAt: time.Now(),
+    }
+
+    return notification, nil
+}
+
+func (uc *AnalyzeStockoutRiskUseCase) determinePriority(daysUntilStockout float64) domain.NotificationPriority {
+    switch {
+    case daysUntilStockout < 2:
+        return domain.NotificationPriorityCritical
+    case daysUntilStockout < 5:
+        return domain.NotificationPriorityHigh
+    case daysUntilStockout < 10:
+        return domain.NotificationPriorityMedium
+    default:
+        return domain.NotificationPriorityLow
+    }
+}
+```
 
 ---
 
-## 5. Dependencies
+### Phase 6: Testing & Integration (Week 7-8)
 
-- **Task 16**: Analytics service (for historical data)
-- **Task 14**: DDMRP Engine (for applying recommendations)
-- **External**: OpenAI API, scikit-learn, pandas, numpy
-- **Shared packages**: pkg/events, pkg/database, pkg/logger
+#### T010: Integration Tests
+
+**File**: `services/ai-intelligence-hub/internal/core/usecases/analysis/analyze_stockout_risk_test.go`
+
+```go
+package analysis_test
+
+import (
+    "context"
+    "testing"
+    "time"
+
+    "github.com/google/uuid"
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/mock"
+
+    "github.com/giia/giia-core-engine/pkg/events"
+    "github.com/giia/giia-core-engine/services/ai-intelligence-hub/internal/core/domain"
+    "github.com/giia/giia-core-engine/services/ai-intelligence-hub/internal/core/usecases/analysis"
+)
+
+func TestAnalyzeStockoutRisk_Critical_Success(t *testing.T) {
+    // Given
+    mockAIAnalyzer := new(MockAIAnalyzer)
+    mockRAG := new(MockRAGKnowledge)
+    mockDDMRPClient := new(MockDDMRPServiceClient)
+    mockCatalogClient := new(MockCatalogServiceClient)
+    mockExecutionClient := new(MockExecutionServiceClient)
+
+    useCase := analysis.NewAnalyzeStockoutRiskUseCase(
+        mockAIAnalyzer,
+        mockRAG,
+        mockDDMRPClient,
+        mockCatalogClient,
+        mockExecutionClient,
+    )
+
+    givenProductID := uuid.New().String()
+    givenOrgID := uuid.New().String()
+    givenEvent := &events.Event{
+        ID:             uuid.New().String(),
+        Type:           "buffer.below_minimum",
+        OrganizationID: givenOrgID,
+        Data: map[string]interface{}{
+            "product_id": givenProductID,
+        },
+    }
+
+    givenBuffer := &Buffer{
+        CurrentStock:      15.0,
+        DailyConsumption:  10.0,  // 1.5 days until stockout!
+        MinBuffer:         50.0,
+    }
+
+    mockDDMRPClient.On("GetBuffer", mock.Anything, givenProductID, givenOrgID).
+        Return(givenBuffer, nil)
+
+    mockCatalogClient.On("GetProduct", mock.Anything, givenProductID).
+        Return(&Product{Name: "Widget-A", Price: 50.0}, nil)
+
+    mockExecutionClient.On("GetPendingOrders", mock.Anything, givenProductID, givenOrgID).
+        Return([]Order{{Amount: 100}}, nil)
+
+    mockRAG.On("Retrieve", mock.Anything, mock.Anything, 5).
+        Return([]string{"DDMRP knowledge..."}, nil)
+
+    mockAIAnalyzer.On("Analyze", mock.Anything, mock.Anything).
+        Return(&AIAnalysisResponse{
+            Summary:      "Critical stockout in 1.5 days",
+            FullAnalysis: "Detailed analysis...",
+            Reasoning:    "Daily consumption exceeds stock",
+            Recommendations: []string{
+                "Place emergency order",
+                "Contact Supplier B",
+            },
+            ImpactAssessment: map[string]interface{}{
+                "risk_level":      "critical",
+                "revenue_impact":  5000.0,
+            },
+            Confidence: 0.95,
+        }, nil)
+
+    // When
+    notification, err := useCase.Execute(context.Background(), givenEvent)
+
+    // Then
+    assert.NoError(t, err)
+    assert.NotNil(t, notification)
+    assert.Equal(t, domain.NotificationTypeAlert, notification.Type)
+    assert.Equal(t, domain.NotificationPriorityCritical, notification.Priority)
+    assert.Contains(t, notification.Title, "Widget-A")
+    assert.Equal(t, 2, len(notification.Recommendations))
+
+    mockAIAnalyzer.AssertExpectations(t)
+    mockDDMRPClient.AssertExpectations(t)
+}
+```
 
 ---
 
-## 6. Risk Mitigation
+## 4. Success Criteria Checklist
 
-| Risk | Mitigation |
-|------|------------|
-| Model accuracy insufficient | Multiple models, ensemble methods, human review |
-| External AI API costs | Caching, batching, cost monitoring |
-| Python-Go integration complexity | Well-defined gRPC contracts, integration tests |
-| Cold start (new products) | Conservative estimates, wide confidence intervals |
+### Mandatory Features
+- [ ] Real-time event processing from NATS (<1s p95)
+- [ ] Critical alert generation (stockouts, execution failures)
+- [ ] AI-powered analysis with Claude API
+- [ ] RAG knowledge base with ChromaDB
+- [ ] Multi-channel notification delivery
+- [ ] User preference management
+- [ ] Daily digest generation
+- [ ] Pattern detection (3+ related events)
+- [ ] 80%+ test coverage
+- [ ] Multi-tenancy support
+
+### Performance Metrics
+- [ ] Event processing: <1s p95
+- [ ] AI analysis: <5s p95
+- [ ] Notification delivery: <10s p95
+- [ ] Handle 1000+ events/minute
+- [ ] False positive rate: <10%
+
+### Quality Metrics
+- [ ] 90%+ notification accuracy
+- [ ] 60%+ recommendation acceptance rate
+- [ ] 85%+ pattern detection accuracy
+- [ ] User satisfaction: 4+/5
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-12-16
+## 5. Dependencies & Timeline
+
+```
+Week 1: Foundation & Database
+Week 2: Event Processing
+Week 3: AI Analysis Engine (Part 1)
+Week 4: AI Analysis Engine (Part 2) + RAG
+Week 5: Notification System
+Week 6: Use Case Implementation
+Week 7: Integration Testing
+Week 8: Polish, Performance, Documentation
+```
+
+---
+
+## 6. Cost Estimation
+
+### Claude API Costs (Monthly per org)
+- ~1000 events/day analyzed
+- ~500 tokens/analysis avg
+- ~$30-50/month per organization
+
+### Infrastructure
+- ChromaDB: $0 (self-hosted)
+- Redis cache: $20/month
+- SendGrid: $15/month (up to 40K emails)
+- Twilio SMS: Pay-as-you-go
+
+**Total**: ~$65-85/month per org
+
+---
+
+## 7. Risk Mitigation
+
+| Risk | Mitigation Strategy |
+|------|---------------------|
+| High Claude API costs | Aggressive caching (1-hour TTL), batch analysis |
+| False positive fatigue | User feedback loop, confidence thresholds, A/B testing |
+| Event processing lag | Horizontal scaling, async processing, priority queues |
+| RAG knowledge drift | Monthly updates, version control |
+
+---
+
+**Document Version**: 2.0 (Complete Rewrite)
+**Last Updated**: 2025-12-22
 **Status**: Ready for Implementation
+**Estimated Start Date**: TBD
+**Estimated Completion**: 6-8 weeks from start

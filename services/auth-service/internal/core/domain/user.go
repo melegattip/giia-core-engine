@@ -16,6 +16,7 @@ type User struct {
 	Avatar         string       `json:"avatar,omitempty" gorm:"type:varchar(500)"`
 	Status         UserStatus   `json:"status" gorm:"type:varchar(20);not null;default:'inactive'"`
 	OrganizationID uuid.UUID    `json:"organization_id" gorm:"type:uuid;not null;index:idx_users_organization_id,idx_users_email_org"`
+	VerifiedAt     *time.Time   `json:"verified_at,omitempty" gorm:"type:timestamp"`
 	LastLoginAt    *time.Time   `json:"last_login_at,omitempty" gorm:"type:timestamp"`
 	CreatedAt      time.Time    `json:"created_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
 	UpdatedAt      time.Time    `json:"updated_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
@@ -43,6 +44,7 @@ type UserResponse struct {
 	Avatar         string     `json:"avatar,omitempty"`
 	Status         UserStatus `json:"status"`
 	OrganizationID uuid.UUID  `json:"organization_id"`
+	VerifiedAt     *time.Time `json:"verified_at,omitempty"`
 	LastLoginAt    *time.Time `json:"last_login_at,omitempty"`
 	CreatedAt      time.Time  `json:"created_at"`
 }
@@ -57,6 +59,7 @@ func (u *User) ToResponse() *UserResponse {
 		Avatar:         u.Avatar,
 		Status:         u.Status,
 		OrganizationID: u.OrganizationID,
+		VerifiedAt:     u.VerifiedAt,
 		LastLoginAt:    u.LastLoginAt,
 		CreatedAt:      u.CreatedAt,
 	}

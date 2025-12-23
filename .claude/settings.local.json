@@ -82,7 +82,19 @@
       "Bash(mv:*)",
       "Bash(mkdir -p:*)",
       "Bash(docker compose config:*)",
-      "Bash(gofmt:*)"
+      "Bash(gofmt:*)",
+      "Bash(go mod edit:*)",
+      "Bash(go run:*)",
+      "Bash(GOWORK=off go test:*)",
+      "Bash(go list:*)",
+      "Bash(go mod verify:*)",
+      "Bash(go work use:*)",
+      "Bash(GOWORK=off go build:*)",
+      "Bash(GOWORK=off go mod tidy:*)",
+      "Bash(if [ -f go.mod ])",
+      "Bash(then cat go.mod)",
+      "Bash(else echo \"No go.mod found\")",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": []

@@ -122,6 +122,21 @@ func (m *MockEventPublisher) PublishSupplierDeleted(ctx context.Context, supplie
 	return args.Error(0)
 }
 
+func (m *MockEventPublisher) PublishBufferProfileCreated(ctx context.Context, profile *domain.BufferProfile) error {
+	args := m.Called(ctx, profile)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishBufferProfileUpdated(ctx context.Context, profile *domain.BufferProfile) error {
+	args := m.Called(ctx, profile)
+	return args.Error(0)
+}
+
+func (m *MockEventPublisher) PublishBufferProfileDeleted(ctx context.Context, profile *domain.BufferProfile) error {
+	args := m.Called(ctx, profile)
+	return args.Error(0)
+}
+
 func (m *MockEventPublisher) PublishBufferProfileAssigned(ctx context.Context, product *domain.Product, profile *domain.BufferProfile) error {
 	args := m.Called(ctx, product, profile)
 	return args.Error(0)

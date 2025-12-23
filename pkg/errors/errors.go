@@ -137,3 +137,23 @@ func IsUnauthorized(err error) bool {
 	}
 	return false
 }
+
+func IsBadRequest(err error) bool {
+	if err == nil {
+		return false
+	}
+	if customErr, ok := err.(*CustomError); ok {
+		return customErr.HTTPStatus == http.StatusBadRequest
+	}
+	return false
+}
+
+func IsNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	if customErr, ok := err.(*CustomError); ok {
+		return customErr.HTTPStatus == http.StatusNotFound
+	}
+	return false
+}

@@ -18,6 +18,9 @@ const (
 	supplierCreatedSubject       = "catalog.supplier.created"
 	supplierUpdatedSubject       = "catalog.supplier.updated"
 	supplierDeletedSubject       = "catalog.supplier.deleted"
+	bufferProfileCreatedSubject  = "catalog.buffer_profile.created"
+	bufferProfileUpdatedSubject  = "catalog.buffer_profile.updated"
+	bufferProfileDeletedSubject  = "catalog.buffer_profile.deleted"
 	bufferProfileAssignedSubject = "catalog.buffer_profile.assigned"
 )
 
@@ -169,6 +172,74 @@ func (p *catalogEventPublisher) PublishSupplierDeleted(ctx context.Context, supp
 	if err := p.publisher.Publish(ctx, streamName, event); err != nil {
 		p.logger.Error(ctx, err, "Failed to publish supplier deleted event", logger.Tags{
 			"supplier_id": supplier.ID.String(),
+		})
+		return err
+	}
+
+	return nil
+}
+
+func (p *catalogEventPublisher) PublishBufferProfileCreated(ctx context.Context, profile *domain.BufferProfile) error {
+	event := events.NewEvent(
+		"buffer_profile.created",
+		"catalog-service",
+		profile.OrganizationID.String(),
+		time.Now(),
+		map[string]interface{}{
+			"buffer_profile_id": profile.ID.String(),
+			"name":              profile.Name,
+			"lead_time_factor":  profile.LeadTimeFactor,
+		},
+	)
+
+	if err := p.publisher.Publish(ctx, streamName, event); err != nil {
+		p.logger.Error(ctx, err, "Failed to publish buffer profile created event", logger.Tags{
+			"buffer_profile_id": profile.ID.String(),
+		})
+		return err
+	}
+
+	return nil
+}
+
+func (p *catalogEventPublisher) PublishBufferProfileUpdated(ctx context.Context, profile *domain.BufferProfile) error {
+	event := events.NewEvent(
+		"buffer_profile.updated",
+		"catalog-service",
+		profile.OrganizationID.String(),
+		time.Now(),
+		map[string]interface{}{
+			"buffer_profile_id": profile.ID.String(),
+			"name":              profile.Name,
+			"lead_time_factor":  profile.LeadTimeFactor,
+		},
+	)
+
+	if err := p.publisher.Publish(ctx, streamName, event); err != nil {
+		p.logger.Error(ctx, err, "Failed to publish buffer profile updated event", logger.Tags{
+			"buffer_profile_id": profile.ID.String(),
+		})
+		return err
+	}
+
+	return nil
+}
+
+func (p *catalogEventPublisher) PublishBufferProfileDeleted(ctx context.Context, profile *domain.BufferProfile) error {
+	event := events.NewEvent(
+		"buffer_profile.deleted",
+		"catalog-service",
+		profile.OrganizationID.String(),
+		time.Now(),
+		map[string]interface{}{
+			"buffer_profile_id": profile.ID.String(),
+			"name":              profile.Name,
+		},
+	)
+
+	if err := p.publisher.Publish(ctx, streamName, event); err != nil {
+		p.logger.Error(ctx, err, "Failed to publish buffer profile deleted event", logger.Tags{
+			"buffer_profile_id": profile.ID.String(),
 		})
 		return err
 	}

@@ -14,12 +14,14 @@ import (
 )
 
 type AuthHandler struct {
-	loginUseCase           *auth.LoginUseCase
-	registerUseCase        *auth.RegisterUseCase
-	refreshTokenUseCase    *auth.RefreshTokenUseCase
-	logoutUseCase          *auth.LogoutUseCase
-	activateAccountUseCase *auth.ActivateAccountUseCase
-	logger                 pkgLogger.Logger
+	loginUseCase                  *auth.LoginUseCase
+	registerUseCase               *auth.RegisterUseCase
+	refreshTokenUseCase           *auth.RefreshTokenUseCase
+	logoutUseCase                 *auth.LogoutUseCase
+	activateAccountUseCase        *auth.ActivateAccountUseCase
+	requestPasswordResetUseCase   *auth.RequestPasswordResetUseCase
+	confirmPasswordResetUseCase   *auth.ConfirmPasswordResetUseCase
+	logger                        pkgLogger.Logger
 }
 
 func NewAuthHandler(
@@ -28,15 +30,19 @@ func NewAuthHandler(
 	refreshTokenUseCase *auth.RefreshTokenUseCase,
 	logoutUseCase *auth.LogoutUseCase,
 	activateAccountUseCase *auth.ActivateAccountUseCase,
+	requestPasswordResetUseCase *auth.RequestPasswordResetUseCase,
+	confirmPasswordResetUseCase *auth.ConfirmPasswordResetUseCase,
 	logger pkgLogger.Logger,
 ) *AuthHandler {
 	return &AuthHandler{
-		loginUseCase:           loginUseCase,
-		registerUseCase:        registerUseCase,
-		refreshTokenUseCase:    refreshTokenUseCase,
-		logoutUseCase:          logoutUseCase,
-		activateAccountUseCase: activateAccountUseCase,
-		logger:                 logger,
+		loginUseCase:                  loginUseCase,
+		registerUseCase:               registerUseCase,
+		refreshTokenUseCase:           refreshTokenUseCase,
+		logoutUseCase:                 logoutUseCase,
+		activateAccountUseCase:        activateAccountUseCase,
+		requestPasswordResetUseCase:   requestPasswordResetUseCase,
+		confirmPasswordResetUseCase:   confirmPasswordResetUseCase,
+		logger:                        logger,
 	}
 }
 
@@ -205,5 +211,63 @@ func (h *AuthHandler) Activate(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Account activated successfully. You can now log in.",
+	})
+}
+
+func (h *AuthHandler) RequestPasswordReset(c *gin.Context) {
+	var req domain.PasswordResetRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, pkgErrors.ToHTTPResponse(
+			pkgErrors.NewBadRequest("invalid request body"),
+		))
+		return
+	}
+
+	orgID, err := middleware.GetOrganizationID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, pkgErrors.ToHTTPResponse(
+			pkgErrors.NewBadRequest("organization ID is required"),
+		))
+		return
+	}
+
+	if err := h.requestPasswordResetUseCase.Execute(c.Request.Context(), req.Email, orgID); err != nil {
+		if customErr, ok := err.(*pkgErrors.CustomError); ok {
+			c.JSON(customErr.HTTPStatus, pkgErrors.ToHTTPResponse(err))
+		} else {
+			c.JSON(http.StatusInternalServerError, pkgErrors.ToHTTPResponse(
+				pkgErrors.NewInternalServerError("internal server error"),
+			))
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "If the email exists, a password reset link has been sent.",
+	})
+}
+
+func (h *AuthHandler) ConfirmPasswordReset(c *gin.Context) {
+	var req domain.PasswordResetComplete
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, pkgErrors.ToHTTPResponse(
+			pkgErrors.NewBadRequest("invalid request body"),
+		))
+		return
+	}
+
+	if err := h.confirmPasswordResetUseCase.Execute(c.Request.Context(), req.Token, req.NewPassword); err != nil {
+		if customErr, ok := err.(*pkgErrors.CustomError); ok {
+			c.JSON(customErr.HTTPStatus, pkgErrors.ToHTTPResponse(err))
+		} else {
+			c.JSON(http.StatusInternalServerError, pkgErrors.ToHTTPResponse(
+				pkgErrors.NewInternalServerError("internal server error"),
+			))
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Password has been reset successfully. You can now log in with your new password.",
 	})
 }
