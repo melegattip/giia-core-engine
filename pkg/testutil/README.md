@@ -15,7 +15,7 @@ This package provides Docker container management and helper functions for integ
 Manages lifecycle of test containers using testcontainers-go:
 
 ```go
-import "github.com/giia/giia-core-engine/pkg/testutil"
+import "github.com/melegattip/giia-core-engine/pkg/testutil"
 
 ctx := context.Background()
 cm := testutil.NewContainerManager()
@@ -96,7 +96,7 @@ import (
     "context"
     "testing"
 
-    "github.com/giia/giia-core-engine/pkg/testutil"
+    "github.com/melegattip/giia-core-engine/pkg/testutil"
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/require"
 )

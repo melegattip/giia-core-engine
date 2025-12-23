@@ -9,6 +9,7 @@ use (
 	./pkg/logger
 	./pkg/testutil
 	// Services
+	./services/ai-intelligence-hub
 	./services/analytics-service
 	./services/auth-service
 	./services/catalog-service

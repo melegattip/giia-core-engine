@@ -3,7 +3,7 @@ package catalog
 import (
 	"context"
 
-	"github.com/giia/giia-core-engine/services/ddmrp-engine-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/services/ddmrp-engine-service/internal/core/providers"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 )

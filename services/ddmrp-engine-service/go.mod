@@ -1,9 +1,9 @@
-module github.com/giia/giia-core-engine/services/ddmrp-engine-service
+module github.com/melegattip/giia-core-engine/services/ddmrp-engine-service
 
 go 1.24.0
 
 require (
-	github.com/giia/giia-core-engine/pkg/errors v0.0.0
+	github.com/melegattip/giia-core-engine/pkg/errors v0.0.0
 	github.com/google/uuid v1.6.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.11.1
@@ -35,9 +35,9 @@ require (
 )
 
 replace (
-	github.com/giia/giia-core-engine/pkg/config => ../../pkg/config
-	github.com/giia/giia-core-engine/pkg/database => ../../pkg/database
-	github.com/giia/giia-core-engine/pkg/errors => ../../pkg/errors
-	github.com/giia/giia-core-engine/pkg/events => ../../pkg/events
-	github.com/giia/giia-core-engine/pkg/logger => ../../pkg/logger
+	github.com/melegattip/giia-core-engine/pkg/config => ../../pkg/config
+	github.com/melegattip/giia-core-engine/pkg/database => ../../pkg/database
+	github.com/melegattip/giia-core-engine/pkg/errors => ../../pkg/errors
+	github.com/melegattip/giia-core-engine/pkg/events => ../../pkg/events
+	github.com/melegattip/giia-core-engine/pkg/logger => ../../pkg/logger
 )

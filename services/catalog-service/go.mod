@@ -1,20 +1,20 @@
-module github.com/giia/giia-core-engine/services/catalog-service
+module github.com/melegattip/giia-core-engine/services/catalog-service
 
 go 1.24.0
 
 replace (
-	github.com/giia/giia-core-engine/pkg/config => ../../pkg/config
-	github.com/giia/giia-core-engine/pkg/database => ../../pkg/database
-	github.com/giia/giia-core-engine/pkg/errors => ../../pkg/errors
-	github.com/giia/giia-core-engine/pkg/events => ../../pkg/events
-	github.com/giia/giia-core-engine/pkg/logger => ../../pkg/logger
+	github.com/melegattip/giia-core-engine/pkg/config => ../../pkg/config
+	github.com/melegattip/giia-core-engine/pkg/database => ../../pkg/database
+	github.com/melegattip/giia-core-engine/pkg/errors => ../../pkg/errors
+	github.com/melegattip/giia-core-engine/pkg/events => ../../pkg/events
+	github.com/melegattip/giia-core-engine/pkg/logger => ../../pkg/logger
 )
 
 require (
-	github.com/giia/giia-core-engine/pkg/errors v0.0.0-00010101000000-000000000000
-	github.com/giia/giia-core-engine/pkg/events v0.0.0-00010101000000-000000000000
-	github.com/giia/giia-core-engine/pkg/logger v0.0.0-00010101000000-000000000000
-	github.com/giia/giia-core-engine/services/auth-service v0.0.0-00010101000000-000000000000
+	github.com/melegattip/giia-core-engine/pkg/errors v0.0.0-00010101000000-000000000000
+	github.com/melegattip/giia-core-engine/pkg/events v0.0.0-00010101000000-000000000000
+	github.com/melegattip/giia-core-engine/pkg/logger v0.0.0-00010101000000-000000000000
+	github.com/melegattip/giia-core-engine/services/auth-service v0.0.0-00010101000000-000000000000
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
@@ -56,4 +56,4 @@ require (
 	gorm.io/driver/mysql v1.5.6 // indirect
 )
 
-replace github.com/giia/giia-core-engine/services/auth-service => ../auth-service
+replace github.com/melegattip/giia-core-engine/services/auth-service => ../auth-service

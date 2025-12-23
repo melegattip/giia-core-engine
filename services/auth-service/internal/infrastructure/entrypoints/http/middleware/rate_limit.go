@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
+	pkgErrors "github.com/melegattip/giia-core-engine/pkg/errors"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/providers"
 )
 
 type RateLimitMiddleware struct {

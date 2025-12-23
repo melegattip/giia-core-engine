@@ -3,7 +3,7 @@ package providers
 import (
 	"context"
 
-	"github.com/giia/giia-core-engine/services/ddmrp-engine-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/ddmrp-engine-service/internal/core/domain"
 	"github.com/google/uuid"
 )
 

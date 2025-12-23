@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/giia/giia-core-engine/services/catalog-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/pkg/logger"
+	"github.com/melegattip/giia-core-engine/services/catalog-service/internal/core/providers"
 )
 
 type AuthInterceptor struct {

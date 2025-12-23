@@ -3,17 +3,17 @@ package events
 import (
 	"time"
 
-	"github.com/giia/giia-core-engine/pkg/errors"
+	"github.com/melegattip/giia-core-engine/pkg/errors"
 	"github.com/nats-io/nats.go"
 )
 
 type ConnectionConfig struct {
-	URL             string
-	MaxReconnects   int
-	ReconnectWait   time.Duration
-	ConnectionName  string
+	URL               string
+	MaxReconnects     int
+	ReconnectWait     time.Duration
+	ConnectionName    string
 	DisconnectHandler func(*nats.Conn, error)
-	ReconnectHandler func(*nats.Conn)
+	ReconnectHandler  func(*nats.Conn)
 }
 
 func Connect(config *ConnectionConfig) (*nats.Conn, error) {
@@ -49,10 +49,10 @@ func Connect(config *ConnectionConfig) (*nats.Conn, error) {
 
 func ConnectWithDefaults(url string) (*nats.Conn, error) {
 	config := &ConnectionConfig{
-		URL:             url,
-		MaxReconnects:   10,
-		ReconnectWait:   2 * time.Second,
-		ConnectionName:  "giia-service",
+		URL:            url,
+		MaxReconnects:  10,
+		ReconnectWait:  2 * time.Second,
+		ConnectionName: "giia-service",
 	}
 
 	return Connect(config)

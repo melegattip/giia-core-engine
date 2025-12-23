@@ -8,9 +8,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/giia/giia-core-engine/pkg/events"
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/pkg/events"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/domain"
 )
 
 // MockUserRepository is a mock implementation of UserRepository

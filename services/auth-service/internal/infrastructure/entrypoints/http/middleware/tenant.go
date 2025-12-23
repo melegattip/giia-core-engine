@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/adapters/jwt"
+	pkgErrors "github.com/melegattip/giia-core-engine/pkg/errors"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/adapters/jwt"
 )
 
 type contextKey string

@@ -11,7 +11,7 @@ import (
 
 	"github.com/disintegration/imaging"
 
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
+	pkgErrors "github.com/melegattip/giia-core-engine/pkg/errors"
 )
 
 // Config contiene la configuración para el procesamiento de imágenes

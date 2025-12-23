@@ -6,10 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/rbac"
+	pkgErrors "github.com/melegattip/giia-core-engine/pkg/errors"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/usecases/rbac"
 )
 
 type PermissionHandler struct {

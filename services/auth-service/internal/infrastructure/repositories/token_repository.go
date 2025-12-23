@@ -12,8 +12,8 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/providers"
 )
 
 type tokenRepository struct {

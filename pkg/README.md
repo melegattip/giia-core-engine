@@ -119,11 +119,11 @@ All packages are part of the GIIA Core Engine Go workspace:
 ```go
 // In your service's go.mod
 require (
-    github.com/giia/giia-core-engine/pkg/config v0.1.0
-    github.com/giia/giia-core-engine/pkg/logger v0.1.0
-    github.com/giia/giia-core-engine/pkg/database v0.1.0
-    github.com/giia/giia-core-engine/pkg/errors v0.1.0
-    github.com/giia/giia-core-engine/pkg/events v0.1.0
+    github.com/melegattip/giia-core-engine/pkg/config v0.1.0
+    github.com/melegattip/giia-core-engine/pkg/logger v0.1.0
+    github.com/melegattip/giia-core-engine/pkg/database v0.1.0
+    github.com/melegattip/giia-core-engine/pkg/errors v0.1.0
+    github.com/melegattip/giia-core-engine/pkg/events v0.1.0
 )
 ```
 
@@ -138,10 +138,10 @@ import (
     "context"
     "log"
 
-    "github.com/giia/giia-core-engine/pkg/config"
-    "github.com/giia/giia-core-engine/pkg/logger"
-    "github.com/giia/giia-core-engine/pkg/database"
-    "github.com/giia/giia-core-engine/pkg/events"
+    "github.com/melegattip/giia-core-engine/pkg/config"
+    "github.com/melegattip/giia-core-engine/pkg/logger"
+    "github.com/melegattip/giia-core-engine/pkg/database"
+    "github.com/melegattip/giia-core-engine/pkg/events"
 )
 
 func main() {
@@ -206,9 +206,9 @@ All packages include mock implementations for testing:
 
 ```go
 import (
-    "github.com/giia/giia-core-engine/pkg/logger"
-    "github.com/giia/giia-core-engine/pkg/database"
-    "github.com/giia/giia-core-engine/pkg/events"
+    "github.com/melegattip/giia-core-engine/pkg/logger"
+    "github.com/melegattip/giia-core-engine/pkg/database"
+    "github.com/melegattip/giia-core-engine/pkg/events"
 )
 
 func TestUserService(t *testing.T) {

@@ -12,7 +12,7 @@ Typed error system with HTTP status code mapping for consistent API error respon
 ## Installation
 
 ```go
-import "github.com/giia/giia-core-engine/pkg/errors"
+import "github.com/melegattip/giia-core-engine/pkg/errors"
 ```
 
 ## Usage

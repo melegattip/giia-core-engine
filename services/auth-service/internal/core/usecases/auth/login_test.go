@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/providers"
 )
 
 func TestLoginUseCase_Execute_WithValidCredentials_ReturnsTokens(t *testing.T) {

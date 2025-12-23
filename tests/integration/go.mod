@@ -1,4 +1,4 @@
-module github.com/giia/giia-core-engine/tests/integration
+module github.com/melegattip/giia-core-engine/tests/integration
 
 go 1.23
 

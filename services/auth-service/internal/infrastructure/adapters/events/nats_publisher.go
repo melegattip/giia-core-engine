@@ -3,8 +3,8 @@ package events
 import (
 	"context"
 
-	pkgEvents "github.com/giia/giia-core-engine/pkg/events"
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
+	pkgEvents "github.com/melegattip/giia-core-engine/pkg/events"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
 	"github.com/nats-io/nats.go"
 )
 

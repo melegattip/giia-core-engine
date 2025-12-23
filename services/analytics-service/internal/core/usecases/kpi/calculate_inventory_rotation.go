@@ -5,8 +5,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/giia/giia-core-engine/services/analytics-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/analytics-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/services/analytics-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/analytics-service/internal/core/providers"
 	"github.com/google/uuid"
 )
 

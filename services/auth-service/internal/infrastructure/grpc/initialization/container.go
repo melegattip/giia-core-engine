@@ -6,13 +6,13 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/auth"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/rbac"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/adapters/cache"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/adapters/jwt"
-	grpcServer "github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/grpc/server"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/repositories"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/usecases/auth"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/usecases/rbac"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/adapters/cache"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/adapters/jwt"
+	grpcServer "github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/grpc/server"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/repositories"
 )
 
 type GRPCContainer struct {

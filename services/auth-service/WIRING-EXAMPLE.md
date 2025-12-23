@@ -22,20 +22,20 @@ import (
 	"gorm.io/gorm"
 
 	// Shared packages
-	pkgConfig "github.com/giia/giia-core-engine/pkg/config"
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
+	pkgConfig "github.com/melegattip/giia-core-engine/pkg/config"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
 
 	// Domain
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/domain"
 
 	// Use cases
-	authUseCases "github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/auth"
+	authUseCases "github.com/melegattip/giia-core-engine/services/auth-service/internal/core/usecases/auth"
 
 	// Infrastructure
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/adapters/jwt"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/entrypoints/http/handlers"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/entrypoints/http/middleware"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/repositories"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/adapters/jwt"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/entrypoints/http/handlers"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/entrypoints/http/middleware"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/repositories"
 )
 
 func main() {

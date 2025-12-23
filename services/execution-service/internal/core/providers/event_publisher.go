@@ -3,7 +3,7 @@ package providers
 import (
 	"context"
 
-	"github.com/giia/giia-core-engine/services/execution-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/execution-service/internal/core/domain"
 )
 
 type EventPublisher interface {

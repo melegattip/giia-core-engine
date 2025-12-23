@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/giia/giia-core-engine/pkg/logger"
+	"github.com/melegattip/giia-core-engine/pkg/logger"
 	"github.com/go-chi/chi/v5/middleware"
 )
 

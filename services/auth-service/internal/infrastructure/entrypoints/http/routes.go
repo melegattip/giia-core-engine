@@ -3,9 +3,9 @@ package http
 import (
 	"github.com/gin-gonic/gin"
 
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/entrypoints/http/handlers"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/entrypoints/http/middleware"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/entrypoints/http/handlers"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/entrypoints/http/middleware"
 )
 
 type RouteConfig struct {

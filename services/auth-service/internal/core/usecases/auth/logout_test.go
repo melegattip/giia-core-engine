@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/providers"
 )
 
 func TestLogoutUseCase_Execute_WithValidToken_LogsOutSuccessfully(t *testing.T) {

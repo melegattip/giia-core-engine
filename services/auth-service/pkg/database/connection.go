@@ -8,7 +8,7 @@ import (
 
 	_ "github.com/lib/pq"
 
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
+	pkgErrors "github.com/melegattip/giia-core-engine/pkg/errors"
 )
 
 type DB struct {

@@ -14,7 +14,7 @@ Structured JSON logging using Zerolog with context support and log level filteri
 ## Installation
 
 ```go
-import "github.com/giia/giia-core-engine/pkg/logger"
+import "github.com/melegattip/giia-core-engine/pkg/logger"
 ```
 
 ## Usage

@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"gorm.io/gorm"
 
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
 )
 
 type HealthServiceServer struct {

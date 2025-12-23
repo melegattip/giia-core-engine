@@ -13,7 +13,7 @@ Configuration management using Viper with support for environment variables, .en
 ## Installation
 
 ```go
-import "github.com/giia/giia-core-engine/pkg/config"
+import "github.com/melegattip/giia-core-engine/pkg/config"
 ```
 
 ## Usage

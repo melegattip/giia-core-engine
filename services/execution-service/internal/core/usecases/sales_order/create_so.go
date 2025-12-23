@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/giia/giia-core-engine/services/execution-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/execution-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/services/execution-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/execution-service/internal/core/providers"
 	"github.com/google/uuid"
 )
 

@@ -255,7 +255,7 @@ $ go test -v ./internal/core/usecases/auth/... ./internal/core/usecases/user/...
 --- PASS: TestRequestPasswordResetUseCase_Execute_EmailSendFails_StillReturnsSuccess (0.00s)
 
 PASS
-ok      github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/auth     2.661s
+ok      github.com/melegattip/giia-core-engine/services/auth-service/internal/core/usecases/auth     2.661s
 
 === RUN   TestActivateUserUseCase_Execute_Success
 --- PASS: TestActivateUserUseCase_Execute_Success (0.00s)
@@ -296,7 +296,7 @@ ok      github.com/giia/giia-core-engine/services/auth-service/internal/core/use
 --- PASS: TestDeactivateUserUseCase_Execute_EventPublishFails_StillReturnsSuccess (0.00s)
 
 PASS
-ok      github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/user     1.855s
+ok      github.com/melegattip/giia-core-engine/services/auth-service/internal/core/usecases/user     1.855s
 ```
 
 **Result:** ✅ **All 34 tests PASSED**

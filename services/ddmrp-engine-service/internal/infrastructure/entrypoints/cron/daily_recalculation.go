@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/giia/giia-core-engine/services/ddmrp-engine-service/internal/core/usecases/buffer"
+	"github.com/melegattip/giia-core-engine/services/ddmrp-engine-service/internal/core/usecases/buffer"
 	"github.com/google/uuid"
 	"github.com/robfig/cron/v3"
 )

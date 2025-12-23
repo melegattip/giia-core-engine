@@ -7,7 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
+	pkgErrors "github.com/melegattip/giia-core-engine/pkg/errors"
 )
 
 type JWTService interface {

@@ -1,4 +1,4 @@
-module github.com/giia/giia-core-engine/services/auth-service
+module github.com/melegattip/giia-core-engine/services/auth-service
 
 go 1.24.0
 

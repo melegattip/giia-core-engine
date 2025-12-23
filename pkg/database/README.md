@@ -14,7 +14,7 @@ PostgreSQL database connection management using GORM with connection pooling, re
 ## Installation
 
 ```go
-import "github.com/giia/giia-core-engine/pkg/database"
+import "github.com/melegattip/giia-core-engine/pkg/database"
 ```
 
 ## Usage
@@ -129,8 +129,8 @@ export DATABASE_CONN_MAX_LIFETIME=5m
 
 ```go
 import (
-    "github.com/giia/giia-core-engine/pkg/config"
-    "github.com/giia/giia-core-engine/pkg/database"
+    "github.com/melegattip/giia-core-engine/pkg/config"
+    "github.com/melegattip/giia-core-engine/pkg/database"
 )
 
 cfg, _ := config.New("GIIA")

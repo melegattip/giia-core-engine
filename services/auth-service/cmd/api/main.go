@@ -13,13 +13,13 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
-	pkgDatabase "github.com/giia/giia-core-engine/pkg/database"
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/config"
-	grpcInit "github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/grpc/initialization"
-	httpInit "github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/http/initialization"
-	"github.com/giia/giia-core-engine/services/auth-service/pkg/database"
+	pkgDatabase "github.com/melegattip/giia-core-engine/pkg/database"
+	pkgErrors "github.com/melegattip/giia-core-engine/pkg/errors"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/config"
+	grpcInit "github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/grpc/initialization"
+	httpInit "github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/http/initialization"
+	"github.com/melegattip/giia-core-engine/services/auth-service/pkg/database"
 	"github.com/nats-io/nats.go"
 )
 

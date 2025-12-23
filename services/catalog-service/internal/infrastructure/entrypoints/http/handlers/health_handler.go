@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/giia/giia-core-engine/services/catalog-service/internal/infrastructure/entrypoints/http/dto"
+	"github.com/melegattip/giia-core-engine/pkg/logger"
+	"github.com/melegattip/giia-core-engine/services/catalog-service/internal/infrastructure/entrypoints/http/dto"
 	"gorm.io/gorm"
 )
 

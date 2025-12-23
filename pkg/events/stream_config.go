@@ -8,20 +8,20 @@ import (
 )
 
 type StreamConfig struct {
-	Name       string
-	Subjects   []string
-	MaxAge     time.Duration
-	MaxBytes   int64
-	Replicas   int
+	Name     string
+	Subjects []string
+	MaxAge   time.Duration
+	MaxBytes int64
+	Replicas int
 }
 
 func NewStreamConfig(name string, subjects []string) *StreamConfig {
 	return &StreamConfig{
-		Name:       name,
-		Subjects:   subjects,
-		MaxAge:     7 * 24 * time.Hour,
-		MaxBytes:   1024 * 1024 * 1024,
-		Replicas:   1,
+		Name:     name,
+		Subjects: subjects,
+		MaxAge:   7 * 24 * time.Hour,
+		MaxBytes: 1024 * 1024 * 1024,
+		Replicas: 1,
 	}
 }
 

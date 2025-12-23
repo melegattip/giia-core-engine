@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/giia/giia-core-engine/services/ddmrp-engine-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/ddmrp-engine-service/internal/core/domain"
 )
 
 type NATSPublisher struct {

@@ -1,9 +1,9 @@
 package http
 
 import (
-	"github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/giia/giia-core-engine/services/catalog-service/internal/infrastructure/entrypoints/http/handlers"
-	"github.com/giia/giia-core-engine/services/catalog-service/internal/infrastructure/entrypoints/http/middleware"
+	"github.com/melegattip/giia-core-engine/pkg/logger"
+	"github.com/melegattip/giia-core-engine/services/catalog-service/internal/infrastructure/entrypoints/http/handlers"
+	"github.com/melegattip/giia-core-engine/services/catalog-service/internal/infrastructure/entrypoints/http/middleware"
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 )

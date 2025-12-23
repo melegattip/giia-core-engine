@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/providers"
 )
 
 func TestNewJWTManager(t *testing.T) {

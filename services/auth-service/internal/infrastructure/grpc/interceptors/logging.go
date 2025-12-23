@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
 )
 
 func LoggingInterceptor(logger pkgLogger.Logger) grpc.UnaryServerInterceptor {

@@ -3,9 +3,9 @@ package repositories
 import (
 	"context"
 
-	"github.com/giia/giia-core-engine/pkg/errors"
-	"github.com/giia/giia-core-engine/services/catalog-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/catalog-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/pkg/errors"
+	"github.com/melegattip/giia-core-engine/services/catalog-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/catalog-service/internal/core/providers"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )

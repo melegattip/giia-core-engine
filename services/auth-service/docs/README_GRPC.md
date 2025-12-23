@@ -213,7 +213,7 @@ import (
     "context"
     "log"
 
-    "github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/grpc/client"
+    "github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/grpc/client"
 )
 
 func main() {
@@ -248,7 +248,7 @@ import (
     "context"
     "log"
 
-    "github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/grpc/client"
+    "github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/grpc/client"
 )
 
 func main() {
@@ -286,7 +286,7 @@ package main
 
 import (
     "github.com/gin-gonic/gin"
-    "github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/grpc/client"
+    "github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/grpc/client"
 )
 
 func main() {

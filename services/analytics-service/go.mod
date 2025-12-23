@@ -1,4 +1,4 @@
-module github.com/giia/giia-core-engine/services/analytics-service
+module github.com/melegattip/giia-core-engine/services/analytics-service
 
 go 1.24.0
 
@@ -25,6 +25,6 @@ require (
 )
 
 replace (
-	github.com/giia/giia-core-engine/pkg/errors => ../../pkg/errors
-	github.com/giia/giia-core-engine/pkg/logger => ../../pkg/logger
+	github.com/melegattip/giia-core-engine/pkg/errors => ../../pkg/errors
+	github.com/melegattip/giia-core-engine/pkg/logger => ../../pkg/logger
 )

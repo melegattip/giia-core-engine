@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/providers"
 )
 
 func TestUpdateRoleUseCase_Execute_WithValidRequest_UpdatesRoleSuccessfully(t *testing.T) {

@@ -18,7 +18,7 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/giia/giia-core-engine/services/analytics-service/internal/infrastructure/persistence/repositories"
+	"github.com/melegattip/giia-core-engine/services/analytics-service/internal/infrastructure/persistence/repositories"
 )
 
 const (

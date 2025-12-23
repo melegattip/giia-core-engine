@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
 
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/providers"
 )
 
 func TestRegisterUseCase_Execute_WithValidData_CreatesUser(t *testing.T) {

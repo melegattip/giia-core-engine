@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
 )
 
 type Server struct {

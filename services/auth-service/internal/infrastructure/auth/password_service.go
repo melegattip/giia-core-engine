@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
+	pkgErrors "github.com/melegattip/giia-core-engine/pkg/errors"
 )
 
 type PasswordService interface {

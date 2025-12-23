@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/giia/giia-core-engine/pkg/logger"
-	authpb "github.com/giia/giia-core-engine/services/auth-service/api/proto/gen/go/auth/v1"
-	"github.com/giia/giia-core-engine/services/catalog-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/pkg/logger"
+	authpb "github.com/melegattip/giia-core-engine/services/auth-service/api/proto/gen/go/auth/v1"
+	"github.com/melegattip/giia-core-engine/services/catalog-service/internal/core/providers"
 	"github.com/google/uuid"
 )
 

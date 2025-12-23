@@ -57,7 +57,7 @@ $ go test ./internal/core/usecases/product -v -count=1
 ✅ TestCreateProductUseCase_Execute_WithMissingSKU_ReturnsError     PASS
 
 PASS
-ok github.com/giia/giia-core-engine/services/catalog-service/internal/core/usecases/product 0.964s
+ok github.com/melegattip/giia-core-engine/services/catalog-service/internal/core/usecases/product 0.964s
 ```
 
 **Coverage:** 3/3 tests passing (100%)

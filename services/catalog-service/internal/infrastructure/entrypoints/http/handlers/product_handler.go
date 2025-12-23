@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/giia/giia-core-engine/pkg/errors"
-	"github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/giia/giia-core-engine/services/catalog-service/internal/core/usecases/product"
-	"github.com/giia/giia-core-engine/services/catalog-service/internal/infrastructure/entrypoints/http/dto"
+	"github.com/melegattip/giia-core-engine/pkg/errors"
+	"github.com/melegattip/giia-core-engine/pkg/logger"
+	"github.com/melegattip/giia-core-engine/services/catalog-service/internal/core/usecases/product"
+	"github.com/melegattip/giia-core-engine/services/catalog-service/internal/infrastructure/entrypoints/http/dto"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )

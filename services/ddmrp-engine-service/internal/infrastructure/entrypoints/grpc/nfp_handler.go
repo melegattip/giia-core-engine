@@ -3,8 +3,8 @@ package grpc
 import (
 	"context"
 
-	"github.com/giia/giia-core-engine/services/ddmrp-engine-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/ddmrp-engine-service/internal/core/usecases/nfp"
+	"github.com/melegattip/giia-core-engine/services/ddmrp-engine-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/ddmrp-engine-service/internal/core/usecases/nfp"
 	"github.com/google/uuid"
 )
 

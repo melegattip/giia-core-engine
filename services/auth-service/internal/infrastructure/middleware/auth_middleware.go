@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/auth"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/auth"
 )
 
 type AuthMiddleware struct {

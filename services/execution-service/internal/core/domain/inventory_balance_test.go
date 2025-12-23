@@ -3,7 +3,7 @@ package domain_test
 import (
 	"testing"
 
-	"github.com/giia/giia-core-engine/services/execution-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/execution-service/internal/core/domain"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )

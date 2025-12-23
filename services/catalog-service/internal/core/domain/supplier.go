@@ -3,7 +3,7 @@ package domain
 import (
 	"time"
 
-	"github.com/giia/giia-core-engine/pkg/errors"
+	"github.com/melegattip/giia-core-engine/pkg/errors"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 )

@@ -7,8 +7,8 @@ import (
 	"html/template"
 	"net/smtp"
 
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/providers"
 )
 
 type SMTPConfig struct {

@@ -7,12 +7,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
-	authv1 "github.com/giia/giia-core-engine/services/auth-service/api/proto/gen/go/auth/v1"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/auth"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/rbac"
+	pkgErrors "github.com/melegattip/giia-core-engine/pkg/errors"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
+	authv1 "github.com/melegattip/giia-core-engine/services/auth-service/api/proto/gen/go/auth/v1"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/usecases/auth"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/usecases/rbac"
 )
 
 type AuthServiceServer struct {

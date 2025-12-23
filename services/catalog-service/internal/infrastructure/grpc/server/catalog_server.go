@@ -9,13 +9,13 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
-	catalogv1 "github.com/giia/giia-core-engine/services/catalog-service/api/proto/gen/go/catalog/v1"
-	"github.com/giia/giia-core-engine/services/catalog-service/internal/core/domain"
-	bufferProfile "github.com/giia/giia-core-engine/services/catalog-service/internal/core/usecases/buffer_profile"
-	"github.com/giia/giia-core-engine/services/catalog-service/internal/core/usecases/product"
-	"github.com/giia/giia-core-engine/services/catalog-service/internal/core/usecases/supplier"
+	pkgErrors "github.com/melegattip/giia-core-engine/pkg/errors"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
+	catalogv1 "github.com/melegattip/giia-core-engine/services/catalog-service/api/proto/gen/go/catalog/v1"
+	"github.com/melegattip/giia-core-engine/services/catalog-service/internal/core/domain"
+	bufferProfile "github.com/melegattip/giia-core-engine/services/catalog-service/internal/core/usecases/buffer_profile"
+	"github.com/melegattip/giia-core-engine/services/catalog-service/internal/core/usecases/product"
+	"github.com/melegattip/giia-core-engine/services/catalog-service/internal/core/usecases/supplier"
 )
 
 type CatalogServer struct {

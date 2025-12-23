@@ -6,11 +6,11 @@ import (
 
 	"github.com/google/uuid"
 
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
-	"github.com/giia/giia-core-engine/pkg/events"
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
+	pkgErrors "github.com/melegattip/giia-core-engine/pkg/errors"
+	"github.com/melegattip/giia-core-engine/pkg/events"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/providers"
 )
 
 type DeactivateUserUseCase struct {

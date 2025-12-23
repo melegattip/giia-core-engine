@@ -3,8 +3,8 @@ package product
 import (
 	"context"
 
-	"github.com/giia/giia-core-engine/pkg/logger"
-	"github.com/giia/giia-core-engine/services/catalog-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/pkg/logger"
+	"github.com/melegattip/giia-core-engine/services/catalog-service/internal/core/providers"
 )
 
 type SearchProductsRequest struct {

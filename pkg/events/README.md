@@ -14,7 +14,7 @@ NATS Jetstream event publishing and subscription with CloudEvents-like event str
 ## Installation
 
 ```go
-import "github.com/giia/giia-core-engine/pkg/events"
+import "github.com/melegattip/giia-core-engine/pkg/events"
 ```
 
 ## Usage

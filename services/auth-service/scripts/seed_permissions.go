@@ -8,10 +8,10 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	pkgErrors "github.com/giia/giia-core-engine/pkg/errors"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/repositories"
+	pkgErrors "github.com/melegattip/giia-core-engine/pkg/errors"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/repositories"
 )
 
 func main() {

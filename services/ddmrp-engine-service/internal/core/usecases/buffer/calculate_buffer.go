@@ -5,9 +5,9 @@ import (
 	"math"
 	"time"
 
-	"github.com/giia/giia-core-engine/pkg/errors"
-	"github.com/giia/giia-core-engine/services/ddmrp-engine-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/ddmrp-engine-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/pkg/errors"
+	"github.com/melegattip/giia-core-engine/services/ddmrp-engine-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/ddmrp-engine-service/internal/core/providers"
 	"github.com/google/uuid"
 )
 

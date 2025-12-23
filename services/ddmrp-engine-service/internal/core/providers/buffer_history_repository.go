@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/giia/giia-core-engine/services/ddmrp-engine-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/ddmrp-engine-service/internal/core/domain"
 	"github.com/google/uuid"
 )
 

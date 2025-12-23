@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/giia/giia-core-engine/services/ddmrp-engine-service/internal/core/domain"
-	"github.com/giia/giia-core-engine/services/ddmrp-engine-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/services/ddmrp-engine-service/internal/core/domain"
+	"github.com/melegattip/giia-core-engine/services/ddmrp-engine-service/internal/core/providers"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

@@ -9,12 +9,12 @@ import (
 	"google.golang.org/grpc/reflection"
 	"gorm.io/gorm"
 
-	pkgLogger "github.com/giia/giia-core-engine/pkg/logger"
-	authv1 "github.com/giia/giia-core-engine/services/auth-service/api/proto/gen/go/auth/v1"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/providers"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/auth"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/core/usecases/rbac"
-	"github.com/giia/giia-core-engine/services/auth-service/internal/infrastructure/grpc/interceptors"
+	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
+	authv1 "github.com/melegattip/giia-core-engine/services/auth-service/api/proto/gen/go/auth/v1"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/providers"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/usecases/auth"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/core/usecases/rbac"
+	"github.com/melegattip/giia-core-engine/services/auth-service/internal/infrastructure/grpc/interceptors"
 )
 
 type GRPCServer struct {
