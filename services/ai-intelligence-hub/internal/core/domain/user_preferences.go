@@ -7,19 +7,21 @@ import (
 )
 
 type UserNotificationPreferences struct {
-	ID     uuid.UUID
-	UserID uuid.UUID
+	ID             uuid.UUID
+	UserID         uuid.UUID
 	OrganizationID uuid.UUID
 
-	EnableInApp bool
-	EnableEmail bool
-	EnableSMS   bool
-	EnableSlack bool
+	EnableInApp     bool
+	EnableEmail     bool
+	EnableSMS       bool
+	EnableSlack     bool
 	SlackWebhookURL string
+	EmailAddress    string
+	PhoneNumber     string
 
-	InAppMinPriority  NotificationPriority
-	EmailMinPriority  NotificationPriority
-	SMSMinPriority    NotificationPriority
+	InAppMinPriority NotificationPriority
+	EmailMinPriority NotificationPriority
+	SMSMinPriority   NotificationPriority
 
 	DigestTime      string
 	QuietHoursStart *time.Time

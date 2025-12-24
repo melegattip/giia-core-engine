@@ -1,8 +1,9 @@
 # DDMRP Engine Service
 
-**Version**: 1.0.0
-**Status**: Foundation Complete - In Development
-**Phase**: 2B - New Microservices
+**Version**: 1.0.0  
+**Status**: 🟢 65% Complete - Core Functionality Ready  
+**Phase**: 2B - New Microservices  
+**Last Updated**: 2025-12-23
 
 ---
 
@@ -15,29 +16,53 @@ The DDMRP (Demand Driven Material Requirements Planning) Engine Service is the c
 ## Features
 
 ### ✅ Implemented
-- **Buffer Zone Calculation**: Red, Yellow, Green zones with DDMRP formulas
-- **FAD System**: Factor de Ajuste de Demanda (Demand Adjustment Factor) with multi-factor support
-- **Net Flow Position**: NFP calculation and zone determination
-- **Buffer History**: Daily snapshots for trend analysis
-- **Multi-Tenancy**: Organization-level isolation
-- **Domain Models**: Complete entities with business logic
-- **Database Migrations**: PostgreSQL schema with indexes and constraints
 
-### 🔨 In Progress
-- Repository implementations (GORM)
-- ADU calculation use cases
-- NFP update use cases
-- gRPC API implementation
+**Domain Layer**
+- Buffer entity with zone calculations and validation
+- ADUCalculation entity for usage tracking
+- DemandAdjustment (FAD) entity with multi-factor support
+- BufferAdjustment for manual overrides
+- BufferHistory for daily snapshots
+- Complete GORM tags and business logic
+
+**Use Cases**
+- `CalculateBuffer` - Full buffer zone calculation with tests
+- `GetBuffer` - Retrieve buffer details
+- `ListBuffers` - List with filtering and pagination
+- `RecalculateAllBuffers` - Batch recalculation
+- `CalculateADU` - Average daily usage with tests
+- `UpdateNFP` - Net Flow Position updates
+- `CheckReplenishment` - Replenishment alerts
+- `CreateFAD`, `UpdateFAD`, `DeleteFAD`, `ListFADs` - Full FAD CRUD
+
+**Repositories (GORM)**
+- `BufferRepository` - Buffer CRUD with multi-tenancy
+- `ADURepository` - ADU calculations storage
+- `DemandAdjustmentRepository` - FAD management
+- `BufferAdjustmentRepository` - Manual adjustments
+- `BufferHistoryRepository` - Historical snapshots
+
+**Infrastructure**
+- gRPC handlers: `BufferHandler`, `FADHandler`, `NFPHandler`
+- Catalog gRPC client adapter
+- NATS event publisher adapter
 - Daily recalculation cron job
-- Catalog service integration
-- Event publishing (NATS)
-
-### 📋 Planned
-- Unit tests (85%+ coverage goal)
-- Integration tests
 - Configuration management
-- Docker containerization
-- API documentation
+- Docker containerization (Dockerfile, Makefile)
+- Database migrations (5 files)
+- Health check endpoint
+- Full dependency injection in main.go
+
+### 🔨 Pending
+
+- **Unit Tests**: Currently 3 test files (~30% coverage), need 85%+ coverage
+  - Repository tests (5 files)
+  - NFP use case tests (2 files)
+  - FAD use case tests (4 files)
+  - gRPC handler tests (3 files)
+- **gRPC Service Registration**: Handlers exist but not registered in main.go
+- **Integration Tests**: End-to-end testing
+- **API Documentation**: Swagger/OpenAPI specs
 
 ---
 
@@ -307,10 +332,25 @@ ddmrp.fad.deleted             - Demand adjustment deleted
 
 ## Implementation Status
 
-See [TASK_14_IMPLEMENTATION_STATUS.md](./TASK_14_IMPLEMENTATION_STATUS.md) for detailed progress.
+**Current**: 🟢 65% Complete
 
-**Current**: 30% Complete (Foundation Ready)
-**Next**: Repository layer, remaining use cases, gRPC API
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Domain Entities | ✅ 100% | All entities with validation |
+| Use Cases | ✅ 100% | All CRUD and calculations |
+| Repositories | ✅ 100% | All 5 repositories implemented |
+| gRPC Handlers | ✅ 90% | Handlers ready, registration pending |
+| Adapters | ✅ 100% | Catalog client, NATS publisher |
+| Cron Jobs | ✅ 100% | Daily recalculation |
+| Unit Tests | 🔨 30% | 3 test files, need ~15 more |
+| Integration Tests | ⏸️ 0% | Not started |
+
+**Next Steps**:
+1. Register gRPC handlers in main.go
+2. Add unit tests for repositories
+3. Add unit tests for remaining use cases
+4. Add gRPC handler tests
+5. Integration testing
 
 ---
 

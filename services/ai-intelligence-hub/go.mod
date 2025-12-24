@@ -4,12 +4,14 @@ go 1.24.0
 
 require (
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.10.9
 	github.com/melegattip/giia-core-engine/pkg/config v0.0.0
 	github.com/melegattip/giia-core-engine/pkg/database v0.0.0
 	github.com/melegattip/giia-core-engine/pkg/errors v0.0.0
 	github.com/melegattip/giia-core-engine/pkg/events v0.0.0
 	github.com/melegattip/giia-core-engine/pkg/logger v0.0.0
+	github.com/stretchr/testify v1.11.1
 )
 
 require (
@@ -41,7 +43,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.18.2 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/crypto v0.43.0 // indirect

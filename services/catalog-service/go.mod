@@ -11,13 +11,13 @@ replace (
 )
 
 require (
-	github.com/melegattip/giia-core-engine/pkg/errors v0.0.0-00010101000000-000000000000
-	github.com/melegattip/giia-core-engine/pkg/events v0.0.0-00010101000000-000000000000
-	github.com/melegattip/giia-core-engine/pkg/logger v0.0.0-00010101000000-000000000000
-	github.com/melegattip/giia-core-engine/services/auth-service v0.0.0-00010101000000-000000000000
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
+	github.com/melegattip/giia-core-engine/pkg/errors v0.0.0
+	github.com/melegattip/giia-core-engine/pkg/events v0.0.0
+	github.com/melegattip/giia-core-engine/pkg/logger v0.0.0
+	github.com/melegattip/giia-core-engine/services/auth-service v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/grpc v1.77.0
 	google.golang.org/protobuf v1.36.11
