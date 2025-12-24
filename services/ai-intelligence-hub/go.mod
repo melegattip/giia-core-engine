@@ -5,6 +5,7 @@ go 1.24.0
 require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/lib/pq v1.10.9
 	github.com/melegattip/giia-core-engine/pkg/config v0.0.0
 	github.com/melegattip/giia-core-engine/pkg/database v0.0.0
@@ -12,6 +13,7 @@ require (
 	github.com/melegattip/giia-core-engine/pkg/events v0.0.0
 	github.com/melegattip/giia-core-engine/pkg/logger v0.0.0
 	github.com/stretchr/testify v1.11.1
+	google.golang.org/grpc v1.68.1
 )
 
 require (

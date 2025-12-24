@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/melegattip/giia-core-engine/services/analytics-service/internal/core/domain"
 	"github.com/google/uuid"
+	"github.com/melegattip/giia-core-engine/services/analytics-service/internal/core/domain"
 )
 
 type PostgresKPIRepository struct {
@@ -150,17 +150,17 @@ func (r *PostgresKPIRepository) GetImmobilizedInventoryKPI(ctx context.Context, 
 	return kpi, nil
 }
 
-func (r *PostgresKPIRepository) ListImmobilizedInventoryKPI(ctx context.Context, organizationID uuid.UUID, startDate, endDate time.Time) ([]*domain.ImmobilizedInventoryKPI, error) {
+func (r *PostgresKPIRepository) ListImmobilizedInventoryKPI(ctx context.Context, organizationID uuid.UUID, startDate, endDate time.Time, thresholdYears int) ([]*domain.ImmobilizedInventoryKPI, error) {
 	query := `
 		SELECT id, organization_id, snapshot_date, threshold_years,
 			immobilized_count, immobilized_value, total_stock_value,
 			immobilized_percentage, created_at
 		FROM immobilized_inventory_kpi
-		WHERE organization_id = $1 AND snapshot_date BETWEEN $2 AND $3
+		WHERE organization_id = $1 AND snapshot_date BETWEEN $2 AND $3 AND threshold_years = $4
 		ORDER BY snapshot_date DESC, threshold_years ASC
 	`
 
-	rows, err := r.db.QueryContext(ctx, query, organizationID, startDate, endDate)
+	rows, err := r.db.QueryContext(ctx, query, organizationID, startDate, endDate, thresholdYears)
 	if err != nil {
 		return nil, err
 	}
@@ -392,6 +392,12 @@ func (r *PostgresKPIRepository) SaveBufferAnalytics(ctx context.Context, analyti
 	)
 
 	return err
+}
+
+// GetBufferAnalyticsByProduct retrieves buffer analytics for a specific product.
+// This is an alias for GetBufferAnalytics with the interface-expected parameter order.
+func (r *PostgresKPIRepository) GetBufferAnalyticsByProduct(ctx context.Context, organizationID, productID uuid.UUID, date time.Time) (*domain.BufferAnalytics, error) {
+	return r.GetBufferAnalytics(ctx, productID, organizationID, date)
 }
 
 func (r *PostgresKPIRepository) GetBufferAnalytics(ctx context.Context, productID, organizationID uuid.UUID, date time.Time) (*domain.BufferAnalytics, error) {

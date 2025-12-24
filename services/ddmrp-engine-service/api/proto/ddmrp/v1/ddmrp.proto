@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package ddmrp.v1;
 
-option go_package = "github.com/giia/giia-core-engine/services/ddmrp-engine-service/api/proto/ddmrp/v1;ddmrpv1";
+option go_package = "github.com/melegattip/giia-core-engine/services/ddmrp-engine-service/api/proto/ddmrp/v1;ddmrpv1";
 
 import "google/protobuf/timestamp.proto";
 

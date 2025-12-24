@@ -170,7 +170,7 @@ The GIIA platform consists of **6 microservices** designed around business capab
 
 **Database Schema**: `analytics`
 
-**Status**: 🟢 85% Complete (Core KPI use cases with 92.5% test coverage; Infrastructure adapters in progress)
+**Status**: 🟢 90% Complete (92.5% test coverage; gRPC/HTTP handlers and external adapters in progress)
 
 ---
 

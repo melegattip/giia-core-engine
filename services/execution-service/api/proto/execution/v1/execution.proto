@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+package execution.v1;
+
+option go_package = "github.com/melegattip/giia-core-engine/services/execution-service/api/proto/execution/v1;executionv1";
+
+import "google/protobuf/timestamp.proto";
+
+// ExecutionService provides inter-service communication for execution data.
+service ExecutionService {
+  // GetInventoryBalance returns the current inventory balance for a product/location.
+  rpc GetInventoryBalance(GetBalanceRequest) returns (BalanceResponse);
+
+  // GetPendingPurchaseOrders returns pending purchase orders for a product.
+  rpc GetPendingPurchaseOrders(GetPendingPORequest) returns (PendingPOResponse);
+
+  // GetPendingOnOrder returns the total quantity on order for a product.
+  rpc GetPendingOnOrder(GetPendingOnOrderRequest) returns (OnOrderResponse);
+
+  // GetQualifiedDemand returns the qualified demand for a product.
+  rpc GetQualifiedDemand(GetQualifiedDemandRequest) returns (DemandResponse);
+
+  // RecordTransaction records an inventory transaction.
+  rpc RecordTransaction(RecordTransactionRequest) returns (TransactionResponse);
+}
+
+// GetBalanceRequest is the request for GetInventoryBalance.
+message GetBalanceRequest {
+  string organization_id = 1;
+  string product_id = 2;
+  string location_id = 3; // optional, if empty returns all locations
+}
+
+// BalanceResponse is the response for GetInventoryBalance.
+message BalanceResponse {
+  repeated InventoryBalance balances = 1;
+  double total_on_hand = 2;
+  double total_available = 3;
+}
+
+// InventoryBalance represents inventory at a location.
+message InventoryBalance {
+  string id = 1;
+  string organization_id = 2;
+  string product_id = 3;
+  string location_id = 4;
+  double on_hand = 5;
+  double reserved = 6;
+  double available = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+// GetPendingPORequest is the request for GetPendingPurchaseOrders.
+message GetPendingPORequest {
+  string organization_id = 1;
+  string product_id = 2;
+}
+
+// PendingPOResponse is the response for GetPendingPurchaseOrders.
+message PendingPOResponse {
+  repeated PendingPurchaseOrder orders = 1;
+  double total_pending_quantity = 2;
+}
+
+// PendingPurchaseOrder represents a pending PO with relevant details.
+message PendingPurchaseOrder {
+  string id = 1;
+  string po_number = 2;
+  string status = 3;
+  google.protobuf.Timestamp expected_arrival_date = 4;
+  double pending_quantity = 5;
+}
+
+// GetPendingOnOrderRequest is the request for GetPendingOnOrder.
+message GetPendingOnOrderRequest {
+  string organization_id = 1;
+  string product_id = 2;
+}
+
+// OnOrderResponse is the response for GetPendingOnOrder.
+message OnOrderResponse {
+  double on_order = 1;
+  int32 pending_po_count = 2;
+}
+
+// GetQualifiedDemandRequest is the request for GetQualifiedDemand.
+message GetQualifiedDemandRequest {
+  string organization_id = 1;
+  string product_id = 2;
+}
+
+// DemandResponse is the response for GetQualifiedDemand.
+message DemandResponse {
+  double qualified_demand = 1;
+  int32 confirmed_so_count = 2;
+}
+
+// RecordTransactionRequest is the request for RecordTransaction.
+message RecordTransactionRequest {
+  string organization_id = 1;
+  string product_id = 2;
+  string location_id = 3;
+  string type = 4; // receipt, issue, transfer, adjustment
+  double quantity = 5;
+  double unit_cost = 6;
+  string reference_type = 7;
+  string reference_id = 8;
+  string reason = 9;
+  string created_by = 10;
+}
+
+// TransactionResponse is the response for RecordTransaction.
+message TransactionResponse {
+  InventoryTransaction transaction = 1;
+  InventoryBalance updated_balance = 2;
+}
+
+// InventoryTransaction represents a recorded transaction.
+message InventoryTransaction {
+  string id = 1;
+  string organization_id = 2;
+  string product_id = 3;
+  string location_id = 4;
+  string type = 5;
+  double quantity = 6;
+  double unit_cost = 7;
+  string reference_type = 8;
+  string reference_id = 9;
+  string reason = 10;
+  google.protobuf.Timestamp transaction_date = 11;
+  string created_by = 12;
+  google.protobuf.Timestamp created_at = 13;
+}
