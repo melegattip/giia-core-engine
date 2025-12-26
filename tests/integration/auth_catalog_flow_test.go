@@ -18,7 +18,7 @@ const (
 	catalogServiceURL = "http://localhost:8082"
 )
 
-type RegisterRequest struct {
+type LegacyRegisterRequest struct {
 	Email          string `json:"email"`
 	Password       string `json:"password"`
 	FirstName      string `json:"first_name"`
@@ -27,12 +27,12 @@ type RegisterRequest struct {
 	OrganizationID string `json:"organization_id"`
 }
 
-type LoginRequest struct {
+type LegacyLoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-type LoginResponse struct {
+type LegacyLoginResponse struct {
 	AccessToken string `json:"access_token"`
 	ExpiresIn   int    `json:"expires_in"`
 	User        struct {
@@ -44,7 +44,7 @@ type LoginResponse struct {
 	} `json:"user"`
 }
 
-type CreateProductRequest struct {
+type LegacyCreateProductRequest struct {
 	OrganizationID  string `json:"organization_id"`
 	SKU             string `json:"sku"`
 	Name            string `json:"name"`
@@ -54,7 +54,7 @@ type CreateProductRequest struct {
 	BufferProfileID string `json:"buffer_profile_id,omitempty"`
 }
 
-type ProductResponse struct {
+type LegacyProductResponse struct {
 	ID              string `json:"id"`
 	OrganizationID  string `json:"organization_id"`
 	SKU             string `json:"sku"`
@@ -68,15 +68,15 @@ type ProductResponse struct {
 	UpdatedAt       string `json:"updated_at"`
 }
 
-type CreateProductResponse struct {
-	Product ProductResponse `json:"product"`
+type LegacyCreateProductResponse struct {
+	Product LegacyProductResponse `json:"product"`
 }
 
-type GetProductResponse struct {
-	Product ProductResponse `json:"product"`
+type LegacyGetProductResponse struct {
+	Product LegacyProductResponse `json:"product"`
 }
 
-type ErrorResponse struct {
+type LegacyErrorResponse struct {
 	ErrorCode string `json:"error_code"`
 	Message   string `json:"message"`
 	Details   string `json:"details"`
@@ -108,10 +108,10 @@ func TestAuthCatalogFlow_CompleteUserJourney(t *testing.T) {
 	})
 
 	var accessToken string
-	var userID string
+	_ = accessToken // will be used
 
 	t.Run("2_Login_Success", func(t *testing.T) {
-		loginReq := LoginRequest{
+		loginReq := LegacyLoginRequest{
 			Email:    userEmail,
 			Password: userPassword,
 		}
@@ -121,7 +121,7 @@ func TestAuthCatalogFlow_CompleteUserJourney(t *testing.T) {
 
 		require.Equal(t, http.StatusOK, resp.StatusCode, "Login should succeed")
 
-		var loginResp LoginResponse
+		var loginResp LegacyLoginResponse
 		err := json.NewDecoder(resp.Body).Decode(&loginResp)
 		require.NoError(t, err, "Should decode login response")
 
@@ -131,14 +131,14 @@ func TestAuthCatalogFlow_CompleteUserJourney(t *testing.T) {
 		assert.Equal(t, organizationID, loginResp.User.OrganizationID, "Organization ID should match")
 
 		accessToken = loginResp.AccessToken
-		userID = loginResp.User.ID
+		_ = loginResp.User.ID // userID
 	})
 
 	var productID string
 	productSKU := fmt.Sprintf("SKU-%d", time.Now().Unix())
 
 	t.Run("3_CreateProduct_WithValidToken_Success", func(t *testing.T) {
-		createProductReq := CreateProductRequest{
+		createProductReq := LegacyCreateProductRequest{
 			OrganizationID: organizationID,
 			SKU:            productSKU,
 			Name:           "Integration Test Product",
@@ -152,7 +152,7 @@ func TestAuthCatalogFlow_CompleteUserJourney(t *testing.T) {
 
 		require.Equal(t, http.StatusCreated, resp.StatusCode, "Product creation should succeed")
 
-		var createResp CreateProductResponse
+		var createResp LegacyCreateProductResponse
 		err := json.NewDecoder(resp.Body).Decode(&createResp)
 		require.NoError(t, err, "Should decode create product response")
 
@@ -171,7 +171,7 @@ func TestAuthCatalogFlow_CompleteUserJourney(t *testing.T) {
 
 		require.Equal(t, http.StatusOK, resp.StatusCode, "Get product should succeed")
 
-		var getResp GetProductResponse
+		var getResp LegacyGetProductResponse
 		err := json.NewDecoder(resp.Body).Decode(&getResp)
 		require.NoError(t, err, "Should decode get product response")
 
@@ -182,7 +182,7 @@ func TestAuthCatalogFlow_CompleteUserJourney(t *testing.T) {
 	})
 
 	t.Run("5_CreateProduct_WithoutToken_Unauthorized", func(t *testing.T) {
-		createProductReq := CreateProductRequest{
+		createProductReq := LegacyCreateProductRequest{
 			OrganizationID: organizationID,
 			SKU:            "UNAUTHORIZED-SKU",
 			Name:           "Should Fail",
@@ -196,13 +196,13 @@ func TestAuthCatalogFlow_CompleteUserJourney(t *testing.T) {
 
 		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode, "Should return unauthorized without token")
 
-		var errResp ErrorResponse
+		var errResp LegacyErrorResponse
 		json.NewDecoder(resp.Body).Decode(&errResp)
 		assert.Contains(t, errResp.Message, "unauthorized", "Error message should indicate unauthorized")
 	})
 
 	t.Run("6_CreateProduct_WithInvalidToken_Unauthorized", func(t *testing.T) {
-		createProductReq := CreateProductRequest{
+		createProductReq := LegacyCreateProductRequest{
 			OrganizationID: organizationID,
 			SKU:            "INVALID-TOKEN-SKU",
 			Name:           "Should Fail",
@@ -217,7 +217,7 @@ func TestAuthCatalogFlow_CompleteUserJourney(t *testing.T) {
 
 		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode, "Should return unauthorized with invalid token")
 
-		var errResp ErrorResponse
+		var errResp LegacyErrorResponse
 		json.NewDecoder(resp.Body).Decode(&errResp)
 		assert.Contains(t, errResp.Message, "unauthorized", "Error message should indicate unauthorized")
 	})
@@ -238,10 +238,10 @@ func TestAuthCatalogFlow_CompleteUserJourney(t *testing.T) {
 		require.Equal(t, http.StatusOK, resp.StatusCode, "List products should succeed")
 
 		var listResp struct {
-			Products []ProductResponse `json:"products"`
-			Total    int               `json:"total"`
-			Page     int               `json:"page"`
-			PageSize int               `json:"page_size"`
+			Products []LegacyProductResponse `json:"products"`
+			Total    int                     `json:"total"`
+			Page     int                     `json:"page"`
+			PageSize int                     `json:"page_size"`
 		}
 		err := json.NewDecoder(resp.Body).Decode(&listResp)
 		require.NoError(t, err, "Should decode list products response")
@@ -261,13 +261,13 @@ func TestAuthCatalogFlow_CompleteUserJourney(t *testing.T) {
 
 	t.Run("9_UpdateProduct_WithValidToken_Success", func(t *testing.T) {
 		updateReq := map[string]interface{}{
-			"id":               productID,
-			"organization_id":  organizationID,
-			"name":             "Updated Product Name",
-			"description":      "Updated description",
-			"category":         "Updated Category",
-			"unit_of_measure":  "UNIT",
-			"status":           "active",
+			"id":              productID,
+			"organization_id": organizationID,
+			"name":            "Updated Product Name",
+			"description":     "Updated description",
+			"category":        "Updated Category",
+			"unit_of_measure": "UNIT",
+			"status":          "active",
 		}
 
 		url := fmt.Sprintf("%s/api/v1/products/%s", catalogServiceURL, productID)
@@ -277,7 +277,7 @@ func TestAuthCatalogFlow_CompleteUserJourney(t *testing.T) {
 		require.Equal(t, http.StatusOK, resp.StatusCode, "Update product should succeed")
 
 		var updateResp struct {
-			Product ProductResponse `json:"product"`
+			Product LegacyProductResponse `json:"product"`
 		}
 		err := json.NewDecoder(resp.Body).Decode(&updateResp)
 		require.NoError(t, err, "Should decode update product response")
@@ -294,8 +294,8 @@ func TestAuthCatalogFlow_CompleteUserJourney(t *testing.T) {
 		require.Equal(t, http.StatusOK, resp.StatusCode, "Search products should succeed")
 
 		var searchResp struct {
-			Products []ProductResponse `json:"products"`
-			Total    int               `json:"total"`
+			Products []LegacyProductResponse `json:"products"`
+			Total    int                     `json:"total"`
 		}
 		err := json.NewDecoder(resp.Body).Decode(&searchResp)
 		require.NoError(t, err, "Should decode search products response")

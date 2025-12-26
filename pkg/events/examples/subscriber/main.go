@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/giia/giia-core-engine/pkg/events"
+	"github.com/melegattip/giia-core-engine/pkg/events"
 )
 
 type UserEventProcessor struct {

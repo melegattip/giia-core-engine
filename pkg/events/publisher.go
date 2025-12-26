@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/giia/giia-core-engine/pkg/errors"
+	"github.com/melegattip/giia-core-engine/pkg/errors"
 	"github.com/nats-io/nats.go"
 )
 

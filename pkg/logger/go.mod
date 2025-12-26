@@ -1,4 +1,4 @@
-module github.com/giia/giia-core-engine/pkg/logger
+module github.com/melegattip/giia-core-engine/pkg/logger
 
 go 1.24.0
 

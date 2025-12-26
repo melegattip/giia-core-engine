@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/giia/giia-core-engine/pkg/testutil"
+	"github.com/melegattip/giia-core-engine/pkg/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -1,255 +1,208 @@
-# Integration Tests
+# GIIA Integration Test Suite
 
-This directory contains end-to-end integration tests for the GIIA platform services.
+Comprehensive end-to-end integration tests for the GIIA platform, testing all 6 microservices working together.
 
-## Overview
+## 🎯 Overview
 
-The integration tests verify the complete user journey across multiple services, including:
+This test suite verifies:
+- **Authentication flows** across all services
+- **Purchase order lifecycle** (create → receive → inventory update → DDMRP update)
+- **Sales order lifecycle** (create → ship → inventory decrease)
+- **Multi-tenancy isolation** between organizations
+- **Analytics aggregation** across services
+- **NATS event publishing** and consumption
 
-- **Auth Service**: User registration, login, token management
-- **Catalog Service**: Product CRUD operations with authentication
-- **Service-to-Service Communication**: Auth → Catalog flow with JWT tokens
-
-## Prerequisites
-
-Before running integration tests, ensure you have:
-
-1. **Docker & Docker Compose** installed
-2. **Go 1.23+** installed
-3. All services running via Docker Compose
-
-## Running Integration Tests
-
-### Step 1: Start Services with Docker Compose
-
-From the project root directory:
-
-```bash
-# Start all infrastructure and services
-docker compose up -d
-
-# Verify all services are healthy
-docker compose ps
-
-# Check service logs if needed
-docker compose logs auth-service
-docker compose logs catalog-service
-```
-
-Wait for all services to be healthy (usually 30-60 seconds).
-
-### Step 2: Run Integration Tests
-
-```bash
-# From the project root
-cd tests/integration
-
-# Download dependencies
-go mod download
-
-# Run all integration tests
-go test -v ./...
-
-# Run with race detection
-go test -v -race ./...
-
-# Run specific test
-go test -v -run TestAuthCatalogFlow_CompleteUserJourney
-```
-
-### Step 3: Stop Services
-
-```bash
-# From project root
-docker compose down
-
-# Clean up volumes (optional - will delete all data)
-docker compose down -v
-```
-
-## Test Coverage
-
-### Auth-Catalog Flow Test
-
-The `TestAuthCatalogFlow_CompleteUserJourney` test covers:
-
-1. **User Registration** - Create a new user account
-2. **User Login** - Authenticate and receive JWT tokens
-3. **Create Product** - Create product with valid authentication
-4. **Get Product** - Retrieve product details
-5. **Unauthorized Access** - Verify requests without tokens fail
-6. **Invalid Token** - Verify requests with invalid tokens fail
-7. **List Products** - Retrieve paginated product list
-8. **Update Product** - Modify product details
-9. **Search Products** - Full-text search functionality
-10. **Delete Product** - Soft delete product
-11. **Verify Deletion** - Confirm deleted product is inaccessible
-12. **Token Refresh** - Validate token refresh mechanism
-
-## Test Structure
+## 📂 Structure
 
 ```
 tests/integration/
-├── README.md                    # This file
-├── go.mod                       # Go module definition
-├── auth_catalog_flow_test.go   # Auth-Catalog integration tests
-└── ...                          # Additional test files
+├── docker-compose.yml          # All services + infrastructure
+├── setup.go                    # Test environment setup
+├── teardown.go                 # Cleanup utilities
+├── test_data_factory.go        # Factory for test data
+├── clients.go                  # Client re-exports
+├── clients/
+│   ├── auth_client.go          # Auth service client
+│   ├── catalog_client.go       # Catalog service client
+│   ├── execution_client.go     # Execution service client
+│   ├── ddmrp_client.go         # DDMRP Engine client
+│   ├── analytics_client.go     # Analytics service client
+│   └── ai_hub_client.go        # AI Hub client
+├── purchase_order_flow_test.go # PO lifecycle tests
+├── sales_order_flow_test.go    # SO lifecycle tests
+├── analytics_aggregation_test.go # Analytics tests
+├── auth_across_services_test.go # Cross-service auth tests
+├── multi_tenancy_test.go       # Multi-tenancy isolation tests
+├── nats_events_test.go         # NATS event tests
+├── run-tests.sh                # Linux/Mac test runner
+└── run-tests.bat               # Windows test runner
 ```
 
-## Writing New Integration Tests
+## 🚀 Quick Start
 
-When adding new integration tests:
+### Prerequisites
+- Docker & Docker Compose
+- Go 1.24+
+- Access to Docker Hub for pulling images
 
-1. **Naming Convention**: Use `*_test.go` suffix
-2. **Test Functions**: Prefix with `Test` (e.g., `TestServiceFlow`)
-3. **Helper Functions**: Create reusable helpers for HTTP requests
-4. **Cleanup**: Always clean up test data when possible
-5. **Skip in Short Mode**: Add `if testing.Short() { t.Skip() }` for long-running tests
+### Running Tests
 
-### Example Test Template
+**Linux/Mac:**
+```bash
+cd tests/integration
+chmod +x run-tests.sh
+./run-tests.sh
+```
 
+**Windows:**
+```batch
+cd tests\integration
+run-tests.bat
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-v, --verbose` | Run tests with verbose output |
+| `-run PATTERN` | Run only tests matching pattern |
+| `--timeout DURATION` | Set test timeout (default: 10m) |
+| `--skip-setup` | Skip docker-compose up |
+| `--skip-teardown` | Skip docker-compose down |
+
+### Examples
+
+```bash
+# Run all tests verbosely
+./run-tests.sh -v
+
+# Run only auth tests
+./run-tests.sh -run "Auth"
+
+# Run only multi-tenancy tests
+./run-tests.sh -run "MultiTenancy"
+
+# Keep services running after tests
+./run-tests.sh --skip-teardown
+```
+
+## 🔧 Test Scenarios
+
+### Purchase Order Flow (5 tests)
+- `TestPurchaseOrderFlow_CreateToReceive` - Complete PO lifecycle
+- `TestPurchaseOrderFlow_CreateAndCancel` - PO cancellation
+- `TestPurchaseOrderFlow_PartialReceive` - Partial goods receiving
+
+### Sales Order Flow (4 tests)
+- `TestSalesOrderFlow_CreateToShip` - Complete SO lifecycle
+- `TestSalesOrderFlow_CreateAndCancel` - SO cancellation
+- `TestSalesOrderFlow_InsufficientInventory` - Inventory validation
+- `TestSalesOrderFlow_MultipleItems` - Multi-item orders
+
+### Authentication Across Services (6 tests)
+- `TestAuth_JWTWorksAcrossServices` - Token works on all services
+- `TestAuth_ExpiredJWTRejected` - Expired tokens rejected
+- `TestAuth_InvalidJWTRejected` - Invalid tokens rejected
+- `TestAuth_TokenRefresh` - Token refresh flow
+- `TestAuth_Logout` - Session invalidation
+- `TestAuth_OrganizationIsolation` - Org-scoped access
+
+### Multi-Tenancy Isolation (4 tests)
+- `TestMultiTenancy_Isolation` - Data isolation between orgs
+- `TestMultiTenancy_ConcurrentOperations` - Safe concurrent access
+- `TestMultiTenancy_DataLeakPrevention` - No cross-org data leaks
+- `TestMultiTenancy_OrganizationScopedInventory` - Inventory isolation
+
+### Analytics Aggregation (5 tests)
+- `TestAnalyticsAggregation_BufferAnalytics` - Buffer analytics
+- `TestAnalyticsAggregation_Snapshot` - Snapshot retrieval
+- `TestAnalyticsAggregation_SyncBufferData` - Data sync
+- `TestAnalyticsAggregation_AfterTransactions` - Post-transaction updates
+- `TestAnalyticsAggregation_CrossServiceData` - Cross-service aggregation
+
+### NATS Events (6 tests)
+- `TestNATSEvents_ProductCreated` - Product creation events
+- `TestNATSEvents_PurchaseOrderCreated` - PO creation events
+- `TestNATSEvents_GoodsReceived` - Goods receipt events
+- `TestNATSEvents_DDMRPBufferUpdate` - DDMRP buffer events
+- `TestNATSEvents_EventOrdering` - Event sequence verification
+- `TestNATSEvents_JetStreamDurability` - JetStream verification
+
+## 🏗️ Architecture
+
+### Service Ports (Test Environment)
+
+| Service | HTTP Port | gRPC Port |
+|---------|-----------|-----------|
+| Auth | 8183 | 9191 |
+| Catalog | 8182 | - |
+| Execution | 8184 | 9192 |
+| DDMRP | 8185 | 9193 |
+| Analytics | 8186 | 9194 |
+| AI Hub | 8187 | 9195 |
+
+### Infrastructure Ports
+
+| Service | Port |
+|---------|------|
+| PostgreSQL | 5433 |
+| Redis | 6380 |
+| NATS | 4223 |
+| NATS Monitoring | 8223 |
+
+## 📊 Success Criteria
+
+- [x] 20+ integration test scenarios
+- [x] All critical flows tested E2E
+- [ ] Tests run in CI/CD <10 minutes
+- [ ] 100% pass before deploy
+- [x] Test environment fully automated
+- [x] Multi-tenancy isolation verified
+
+## 🔍 Debugging
+
+### View Service Logs
+```bash
+docker-compose -f docker-compose.yml logs auth-service
+docker-compose -f docker-compose.yml logs catalog-service
+```
+
+### Connect to Test Database
+```bash
+docker exec -it giia-test-postgres psql -U giia_test -d giia_test
+```
+
+### Check NATS
+```bash
+curl http://localhost:8223/varz
+```
+
+## 🧪 Writing New Tests
+
+1. Use the `DefaultTestEnvironment()` for setup
+2. Use `clients` package for service interactions
+3. Use `generateTestEmail()` and `generateTestSKU()` helpers
+4. Always clean up with `defer env.Teardown()`
+5. Skip in short mode with `testing.Short()`
+
+Example:
 ```go
-func TestNewServiceFlow(t *testing.T) {
+func TestMyFeature(t *testing.T) {
     if testing.Short() {
-        t.Skip("Skipping integration test in short mode")
+        t.Skip("Skipping integration test")
     }
 
-    t.Run("1_DescriptiveTestCase", func(t *testing.T) {
-        // Arrange
-        // Act
-        // Assert
-    })
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+    defer cancel()
+
+    env := DefaultTestEnvironment()
+    defer env.Teardown()
+
+    authClient := clients.NewAuthClient(env.AuthService.HTTPURL)
+    // ... test logic
 }
 ```
 
-## Environment Variables
+## 📝 License
 
-The tests expect services to be accessible at:
-
-- **Auth Service**: `http://localhost:8083`
-- **Catalog Service**: `http://localhost:8082`
-
-To override these, modify the constants in the test files.
-
-## Troubleshooting
-
-### Services Not Accessible
-
-```bash
-# Check if services are running
-docker compose ps
-
-# Check service health
-curl http://localhost:8083/health
-curl http://localhost:8082/health
-
-# Check service logs
-docker compose logs -f auth-service
-docker compose logs -f catalog-service
-```
-
-### Database Connection Errors
-
-```bash
-# Verify PostgreSQL is running
-docker compose ps postgres
-
-# Check PostgreSQL logs
-docker compose logs postgres
-
-# Restart PostgreSQL
-docker compose restart postgres
-```
-
-### Tests Fail with "Connection Refused"
-
-Ensure all services have finished starting:
-
-```bash
-# Wait for health checks to pass
-docker compose ps
-
-# All services should show "Up (healthy)"
-```
-
-### Clean Slate
-
-If tests are failing due to stale data:
-
-```bash
-# Stop and remove all containers and volumes
-docker compose down -v
-
-# Restart everything
-docker compose up -d
-
-# Wait for services to be ready
-sleep 30
-
-# Run tests
-cd tests/integration && go test -v ./...
-```
-
-## CI/CD Integration
-
-### GitHub Actions Example
-
-```yaml
-name: Integration Tests
-
-on: [push, pull_request]
-
-jobs:
-  integration-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.23'
-
-      - name: Start services
-        run: docker compose up -d
-
-      - name: Wait for services
-        run: |
-          timeout 60 bash -c 'until curl -f http://localhost:8083/health; do sleep 2; done'
-          timeout 60 bash -c 'until curl -f http://localhost:8082/health; do sleep 2; done'
-
-      - name: Run integration tests
-        run: |
-          cd tests/integration
-          go test -v ./...
-
-      - name: Stop services
-        if: always()
-        run: docker compose down -v
-```
-
-## Best Practices
-
-1. **Isolation**: Each test should be independent
-2. **Idempotency**: Tests should be repeatable
-3. **Cleanup**: Always clean up resources
-4. **Realistic Data**: Use realistic test data
-5. **Error Handling**: Test both success and failure paths
-6. **Documentation**: Document complex test scenarios
-
-## Contributing
-
-When adding integration tests:
-
-1. Follow the existing test structure
-2. Add comprehensive test cases
-3. Document any special setup requirements
-4. Ensure tests are idempotent
-5. Update this README with new test coverage
-
-## Additional Resources
-
-- [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Go Testing Package](https://pkg.go.dev/testing)
-- [Testify Documentation](https://github.com/stretchr/testify)
-- [Project README](../../README.md)
+Part of the GIIA Core Engine project.

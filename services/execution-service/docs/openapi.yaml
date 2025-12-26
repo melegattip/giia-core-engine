@@ -1,0 +1,558 @@
+openapi: 3.0.3
+info:
+  title: GIIA Execution Service API
+  description: |
+    Order management and inventory tracking for the GIIA platform.
+    Handles purchase orders, sales orders, and inventory transactions.
+  version: 1.0.0
+  contact:
+    name: GIIA Team
+
+servers:
+  - url: http://localhost:8084
+    description: Local development server
+
+tags:
+  - name: Purchase Orders
+  - name: Sales Orders
+  - name: Inventory
+  - name: Health
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+
+    PurchaseOrder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organization_id:
+          type: string
+          format: uuid
+        po_number:
+          type: string
+        supplier_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [draft, submitted, confirmed, partial, received, cancelled]
+        order_date:
+          type: string
+          format: date
+        expected_arrival_date:
+          type: string
+          format: date
+        total_amount:
+          type: number
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/POLineItem'
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          format: uuid
+
+    POLineItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        quantity:
+          type: number
+        unit_cost:
+          type: number
+        line_total:
+          type: number
+        received_qty:
+          type: number
+
+    SalesOrder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        so_number:
+          type: string
+        customer_name:
+          type: string
+        status:
+          type: string
+          enum: [pending, confirmed, picking, shipped, delivered, cancelled]
+        order_date:
+          type: string
+          format: date
+        required_date:
+          type: string
+          format: date
+        total_amount:
+          type: number
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SOLineItem'
+
+    SOLineItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        quantity:
+          type: number
+        unit_price:
+          type: number
+        shipped_qty:
+          type: number
+
+    InventoryBalance:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        location_id:
+          type: string
+          format: uuid
+        on_hand:
+          type: number
+        reserved:
+          type: number
+        available:
+          type: number
+        updated_at:
+          type: string
+          format: date-time
+
+    InventoryTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        location_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [receipt, issue, transfer, adjustment]
+        quantity:
+          type: number
+        unit_cost:
+          type: number
+        reference_type:
+          type: string
+        reference_id:
+          type: string
+        transaction_date:
+          type: string
+          format: date-time
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  service:
+                    type: string
+                  version:
+                    type: string
+
+  /ready:
+    get:
+      tags: [Health]
+      summary: Readiness check
+      security: []
+      responses:
+        '200':
+          description: Service ready
+
+  /api/v1/purchase-orders:
+    get:
+      tags: [Purchase Orders]
+      summary: List purchase orders
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: supplier_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Purchase orders list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PurchaseOrder'
+                  page:
+                    type: integer
+                  page_size:
+                    type: integer
+                  total:
+                    type: integer
+
+    post:
+      tags: [Purchase Orders]
+      summary: Create purchase order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [po_number, supplier_id, order_date, line_items]
+              properties:
+                po_number:
+                  type: string
+                supplier_id:
+                  type: string
+                order_date:
+                  type: string
+                  format: date
+                expected_arrival_date:
+                  type: string
+                  format: date
+                line_items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      product_id:
+                        type: string
+                      quantity:
+                        type: number
+                      unit_cost:
+                        type: number
+      responses:
+        '201':
+          description: Purchase order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+
+  /api/v1/purchase-orders/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Purchase Orders]
+      summary: Get purchase order
+      responses:
+        '200':
+          description: Purchase order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+        '404':
+          description: Not found
+
+  /api/v1/purchase-orders/{id}/receive:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags: [Purchase Orders]
+      summary: Receive purchase order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [location_id, receipts]
+              properties:
+                location_id:
+                  type: string
+                receipts:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      line_item_id:
+                        type: string
+                      received_qty:
+                        type: number
+      responses:
+        '200':
+          description: Items received
+        '400':
+          description: Invalid request
+
+  /api/v1/purchase-orders/{id}/cancel:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags: [Purchase Orders]
+      summary: Cancel purchase order
+      responses:
+        '200':
+          description: Order cancelled
+        '409':
+          description: Cannot cancel - items already received
+
+  /api/v1/sales-orders:
+    get:
+      tags: [Sales Orders]
+      summary: List sales orders
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Sales orders list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SalesOrder'
+
+    post:
+      tags: [Sales Orders]
+      summary: Create sales order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [so_number, customer_name, line_items]
+              properties:
+                so_number:
+                  type: string
+                customer_name:
+                  type: string
+                order_date:
+                  type: string
+                  format: date
+                required_date:
+                  type: string
+                  format: date
+                line_items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      product_id:
+                        type: string
+                      quantity:
+                        type: number
+                      unit_price:
+                        type: number
+      responses:
+        '201':
+          description: Sales order created
+
+  /api/v1/sales-orders/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Sales Orders]
+      summary: Get sales order
+      responses:
+        '200':
+          description: Sales order details
+
+  /api/v1/sales-orders/{id}/ship:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags: [Sales Orders]
+      summary: Ship sales order
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                shipments:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      line_item_id:
+                        type: string
+                      shipped_qty:
+                        type: number
+      responses:
+        '200':
+          description: Items shipped
+
+  /api/v1/sales-orders/{id}/cancel:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags: [Sales Orders]
+      summary: Cancel sales order
+      responses:
+        '200':
+          description: Order cancelled
+
+  /api/v1/inventory/balances:
+    get:
+      tags: [Inventory]
+      summary: Get inventory balances
+      parameters:
+        - name: product_id
+          in: query
+          schema:
+            type: string
+        - name: location_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Inventory balances
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balances:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InventoryBalance'
+                  total_on_hand:
+                    type: number
+                  total_available:
+                    type: number
+
+  /api/v1/inventory/transactions:
+    get:
+      tags: [Inventory]
+      summary: Get inventory transactions
+      parameters:
+        - name: product_id
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Transactions list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InventoryTransaction'

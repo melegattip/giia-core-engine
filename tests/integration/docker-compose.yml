@@ -1,0 +1,320 @@
+# Docker Compose for GIIA Integration Tests
+# Spins up all 6 microservices + infrastructure for E2E testing
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: giia-test-postgres
+    environment:
+      POSTGRES_USER: giia_test
+      POSTGRES_PASSWORD: giia_test_password
+      POSTGRES_DB: giia_test
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+    ports:
+      - "5433:5432"
+    volumes:
+      - ../../scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U giia_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    networks:
+      - giia-test-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: giia-test-redis
+    command: redis-server --requirepass giia_test_redis_password
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "giia_test_redis_password", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    networks:
+      - giia-test-network
+
+  # NATS Jetstream (Message Bus)
+  nats:
+    image: nats:2-alpine
+    container_name: giia-test-nats
+    command:
+      - "-js"
+      - "-sd=/data"
+      - "-m=8222"
+      - "--max_payload=8MB"
+    ports:
+      - "4223:4222"
+      - "8223:8222"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    networks:
+      - giia-test-network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ../../services/auth-service
+      dockerfile: Dockerfile
+    container_name: giia-test-auth-service
+    environment:
+      PORT: "8083"
+      GRPC_PORT: "9091"
+      SERVICE_NAME: "auth-service"
+      LOG_LEVEL: "debug"
+      ENVIRONMENT: "test"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "giia_test"
+      DB_USER: "giia_test"
+      DB_PASSWORD: "giia_test_password"
+      DB_SSLMODE: "disable"
+      DB_POOL_MODE: "transaction"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: "giia_test_redis_password"
+      NATS_URL: "nats://nats:4222"
+      JWT_SECRET: "test_jwt_secret_for_integration_testing_min_32_chars"
+      JWT_ISSUER: "giia-auth-service"
+      JWT_ACCESS_EXPIRY: "15m"
+      JWT_REFRESH_EXPIRY: "7d"
+    ports:
+      - "8183:8083"
+      - "9191:9091"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - giia-test-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8083/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+
+  # Catalog Service
+  catalog-service:
+    build:
+      context: ../..
+      dockerfile: services/catalog-service/Dockerfile
+    container_name: giia-test-catalog-service
+    environment:
+      PORT: "8082"
+      SERVICE_NAME: "catalog-service"
+      LOG_LEVEL: "debug"
+      ENVIRONMENT: "test"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "giia_test"
+      DB_USER: "giia_test"
+      DB_PASSWORD: "giia_test_password"
+      DB_SSLMODE: "disable"
+      DB_POOL_MODE: "transaction"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: "giia_test_redis_password"
+      NATS_URL: "nats://nats:4222"
+      JWT_SECRET: "test_jwt_secret_for_integration_testing_min_32_chars"
+      JWT_ISSUER: "giia-auth-service"
+      AUTH_SERVICE_GRPC_URL: "auth-service:9091"
+    ports:
+      - "8182:8082"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+    networks:
+      - giia-test-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+
+  # Execution Service
+  execution-service:
+    build:
+      context: ../..
+      dockerfile: services/execution-service/Dockerfile
+    container_name: giia-test-execution-service
+    environment:
+      PORT: "8084"
+      GRPC_PORT: "9092"
+      SERVICE_NAME: "execution-service"
+      LOG_LEVEL: "debug"
+      ENVIRONMENT: "test"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "giia_test"
+      DB_USER: "giia_test"
+      DB_PASSWORD: "giia_test_password"
+      DB_SSLMODE: "disable"
+      DB_POOL_MODE: "transaction"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: "giia_test_redis_password"
+      NATS_URL: "nats://nats:4222"
+      JWT_SECRET: "test_jwt_secret_for_integration_testing_min_32_chars"
+      JWT_ISSUER: "giia-auth-service"
+      AUTH_SERVICE_GRPC_URL: "auth-service:9091"
+      CATALOG_SERVICE_GRPC_URL: "catalog-service:9081"
+      DDMRP_SERVICE_GRPC_URL: "ddmrp-engine-service:9093"
+    ports:
+      - "8184:8084"
+      - "9192:9092"
+    depends_on:
+      catalog-service:
+        condition: service_healthy
+    networks:
+      - giia-test-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+
+  # DDMRP Engine Service
+  ddmrp-engine-service:
+    build:
+      context: ../..
+      dockerfile: services/ddmrp-engine-service/Dockerfile
+    container_name: giia-test-ddmrp-service
+    environment:
+      PORT: "8085"
+      GRPC_PORT: "9093"
+      SERVICE_NAME: "ddmrp-engine-service"
+      LOG_LEVEL: "debug"
+      ENVIRONMENT: "test"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "giia_test"
+      DB_USER: "giia_test"
+      DB_PASSWORD: "giia_test_password"
+      DB_SSLMODE: "disable"
+      DB_POOL_MODE: "transaction"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: "giia_test_redis_password"
+      NATS_URL: "nats://nats:4222"
+      JWT_SECRET: "test_jwt_secret_for_integration_testing_min_32_chars"
+      JWT_ISSUER: "giia-auth-service"
+    ports:
+      - "8185:8085"
+      - "9193:9093"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - giia-test-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8085/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+
+  # Analytics Service
+  analytics-service:
+    build:
+      context: ../..
+      dockerfile: services/analytics-service/Dockerfile
+    container_name: giia-test-analytics-service
+    environment:
+      PORT: "8086"
+      GRPC_PORT: "9094"
+      SERVICE_NAME: "analytics-service"
+      LOG_LEVEL: "debug"
+      ENVIRONMENT: "test"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "giia_test"
+      DB_USER: "giia_test"
+      DB_PASSWORD: "giia_test_password"
+      DB_SSLMODE: "disable"
+      DB_POOL_MODE: "transaction"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: "giia_test_redis_password"
+      NATS_URL: "nats://nats:4222"
+      JWT_SECRET: "test_jwt_secret_for_integration_testing_min_32_chars"
+      JWT_ISSUER: "giia-auth-service"
+      DDMRP_SERVICE_GRPC_URL: "ddmrp-engine-service:9093"
+    ports:
+      - "8186:8086"
+      - "9194:9094"
+    depends_on:
+      ddmrp-engine-service:
+        condition: service_healthy
+    networks:
+      - giia-test-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8086/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+
+  # AI Intelligence Hub
+  ai-intelligence-hub:
+    build:
+      context: ../..
+      dockerfile: services/ai-intelligence-hub/Dockerfile
+    container_name: giia-test-ai-hub
+    environment:
+      PORT: "8087"
+      GRPC_PORT: "9095"
+      SERVICE_NAME: "ai-intelligence-hub"
+      LOG_LEVEL: "debug"
+      ENVIRONMENT: "test"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "giia_test"
+      DB_USER: "giia_test"
+      DB_PASSWORD: "giia_test_password"
+      DB_SSLMODE: "disable"
+      DB_POOL_MODE: "transaction"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: "giia_test_redis_password"
+      NATS_URL: "nats://nats:4222"
+      JWT_SECRET: "test_jwt_secret_for_integration_testing_min_32_chars"
+      JWT_ISSUER: "giia-auth-service"
+    ports:
+      - "8187:8087"
+      - "9195:9095"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - giia-test-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8087/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+
+networks:
+  giia-test-network:
+    driver: bridge

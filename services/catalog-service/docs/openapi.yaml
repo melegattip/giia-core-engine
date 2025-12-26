@@ -1,0 +1,396 @@
+openapi: 3.0.3
+info:
+  title: GIIA Catalog Service API
+  description: Master data management for products, suppliers, and buffer profiles.
+  version: 1.0.0
+  contact:
+    name: GIIA Team
+
+servers:
+  - url: http://localhost:8082
+    description: Local development server
+
+tags:
+  - name: Products
+  - name: Suppliers
+  - name: Buffer Profiles
+  - name: Health
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organization_id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        unit_of_measure:
+          type: string
+        buffer_profile_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [active, inactive, discontinued]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Supplier:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        contact_name:
+          type: string
+        contact_email:
+          type: string
+        contact_phone:
+          type: string
+        address:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive]
+        created_at:
+          type: string
+          format: date-time
+
+    BufferProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        adu_method:
+          type: string
+          enum: [average, exponential, weighted]
+        lead_time_factor:
+          type: number
+        variability_factor:
+          type: number
+        status:
+          type: string
+          enum: [active, inactive]
+
+    ProductSupplier:
+      type: object
+      properties:
+        product_id:
+          type: string
+          format: uuid
+        supplier_id:
+          type: string
+          format: uuid
+        lead_time_days:
+          type: integer
+        is_primary:
+          type: boolean
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Service healthy
+
+  /api/v1/products:
+    get:
+      tags: [Products]
+      summary: List products
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Products list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  total:
+                    type: integer
+    post:
+      tags: [Products]
+      summary: Create product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sku, name, unit_of_measure]
+              properties:
+                sku:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+                category:
+                  type: string
+                unit_of_measure:
+                  type: string
+                buffer_profile_id:
+                  type: string
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /api/v1/products/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Products]
+      summary: Get product
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Not found
+    put:
+      tags: [Products]
+      summary: Update product
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Product updated
+    delete:
+      tags: [Products]
+      summary: Delete product
+      responses:
+        '204':
+          description: Deleted
+
+  /api/v1/products/{id}/suppliers:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Products]
+      summary: Get product suppliers
+      responses:
+        '200':
+          description: Suppliers list
+    post:
+      tags: [Products]
+      summary: Associate supplier
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                supplier_id:
+                  type: string
+                lead_time_days:
+                  type: integer
+                is_primary:
+                  type: boolean
+      responses:
+        '201':
+          description: Associated
+
+  /api/v1/suppliers:
+    get:
+      tags: [Suppliers]
+      summary: List suppliers
+      responses:
+        '200':
+          description: Suppliers list
+    post:
+      tags: [Suppliers]
+      summary: Create supplier
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, name]
+              properties:
+                code:
+                  type: string
+                name:
+                  type: string
+                contact_name:
+                  type: string
+                contact_email:
+                  type: string
+                contact_phone:
+                  type: string
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/suppliers/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Suppliers]
+      summary: Get supplier
+      responses:
+        '200':
+          description: Supplier details
+    put:
+      tags: [Suppliers]
+      summary: Update supplier
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Suppliers]
+      summary: Delete supplier
+      responses:
+        '204':
+          description: Deleted
+
+  /api/v1/buffer-profiles:
+    get:
+      tags: [Buffer Profiles]
+      summary: List buffer profiles
+      responses:
+        '200':
+          description: Buffer profiles list
+    post:
+      tags: [Buffer Profiles]
+      summary: Create buffer profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, adu_method, lead_time_factor, variability_factor]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                adu_method:
+                  type: string
+                  enum: [average, exponential, weighted]
+                lead_time_factor:
+                  type: number
+                variability_factor:
+                  type: number
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/buffer-profiles/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Buffer Profiles]
+      summary: Get buffer profile
+      responses:
+        '200':
+          description: Buffer profile details
+    put:
+      tags: [Buffer Profiles]
+      summary: Update buffer profile
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Buffer Profiles]
+      summary: Delete buffer profile
+      responses:
+        '204':
+          description: Deleted

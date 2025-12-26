@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/giia/giia-core-engine/pkg/errors"
 	"github.com/google/uuid"
+	"github.com/melegattip/giia-core-engine/pkg/errors"
 )
 
 type Event struct {

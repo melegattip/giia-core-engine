@@ -1,4 +1,4 @@
-module github.com/giia/giia-core-engine/pkg/events
+module github.com/melegattip/giia-core-engine/pkg/events
 
 go 1.24.0
 

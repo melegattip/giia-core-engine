@@ -1,4 +1,4 @@
-module github.com/giia/giia-core-engine/pkg/config
+module github.com/melegattip/giia-core-engine/pkg/config
 
 go 1.24.0
 

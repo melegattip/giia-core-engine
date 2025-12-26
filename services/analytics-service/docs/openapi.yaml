@@ -1,0 +1,438 @@
+openapi: 3.0.3
+info:
+  title: GIIA Analytics Service API
+  description: |
+    KPI tracking and analytics for the GIIA platform.
+    Provides inventory metrics, buffer analytics, and performance snapshots.
+  version: 1.0.0
+  contact:
+    name: GIIA Team
+
+servers:
+  - url: http://localhost:8085
+    description: Local development server
+
+tags:
+  - name: KPIs
+  - name: Buffer Analytics
+  - name: Health
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+
+    KPISnapshot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organization_id:
+          type: string
+          format: uuid
+        snapshot_date:
+          type: string
+          format: date
+        inventory_turnover:
+          type: number
+        stockout_rate:
+          type: number
+        service_level:
+          type: number
+        excess_inventory_pct:
+          type: number
+        buffer_score_green:
+          type: number
+        buffer_score_yellow:
+          type: number
+        buffer_score_red:
+          type: number
+        total_inventory_value:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+
+    DaysInInventoryKPI:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organization_id:
+          type: string
+          format: uuid
+        snapshot_date:
+          type: string
+          format: date
+        total_valued_days:
+          type: number
+        average_valued_days:
+          type: number
+        total_products:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    ImmobilizedInventoryKPI:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organization_id:
+          type: string
+          format: uuid
+        snapshot_date:
+          type: string
+          format: date
+        threshold_years:
+          type: integer
+        immobilized_count:
+          type: integer
+        immobilized_value:
+          type: number
+        total_stock_value:
+          type: number
+        immobilized_percentage:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+
+    InventoryRotationKPI:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organization_id:
+          type: string
+          format: uuid
+        snapshot_date:
+          type: string
+          format: date
+        sales_last_30_days:
+          type: number
+        avg_monthly_stock:
+          type: number
+        rotation_ratio:
+          type: number
+        top_rotating_products:
+          type: array
+          items:
+            $ref: '#/components/schemas/RotatingProduct'
+        slow_rotating_products:
+          type: array
+          items:
+            $ref: '#/components/schemas/RotatingProduct'
+
+    RotatingProduct:
+      type: object
+      properties:
+        product_id:
+          type: string
+        sku:
+          type: string
+        name:
+          type: string
+        sales_30_days:
+          type: number
+        avg_stock_value:
+          type: number
+        rotation_ratio:
+          type: number
+
+    BufferAnalytics:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        organization_id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        cpd:
+          type: number
+          description: Consumption Per Day
+        red_zone:
+          type: number
+        red_base:
+          type: number
+        red_safe:
+          type: number
+        yellow_zone:
+          type: number
+        green_zone:
+          type: number
+        ltd:
+          type: integer
+          description: Lead Time Days
+        lead_time_factor:
+          type: number
+        variability_factor:
+          type: number
+        moq:
+          type: integer
+          description: Minimum Order Quantity
+        order_frequency:
+          type: integer
+        optimal_order_freq:
+          type: number
+        safety_days:
+          type: number
+        has_adjustments:
+          type: boolean
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  service:
+                    type: string
+                  version:
+                    type: string
+                  time:
+                    type: string
+                    format: date-time
+
+  /ready:
+    get:
+      tags: [Health]
+      summary: Readiness check
+      security: []
+      responses:
+        '200':
+          description: Service ready
+
+  /metrics:
+    get:
+      tags: [Health]
+      summary: Prometheus metrics
+      security: []
+      responses:
+        '200':
+          description: Metrics in Prometheus format
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /api/v1/analytics/snapshot:
+    get:
+      tags: [KPIs]
+      summary: Get KPI snapshot
+      description: Returns the KPI snapshot for a specific date
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Snapshot date (defaults to today)
+      responses:
+        '200':
+          description: KPI snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KPISnapshot'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Snapshot not found for date
+
+  /api/v1/analytics/days-in-inventory:
+    get:
+      tags: [KPIs]
+      summary: Get days in inventory KPI
+      description: Returns inventory days analysis
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Days in inventory KPI
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/DaysInInventoryKPI'
+                  - type: object
+                    properties:
+                      kpis:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DaysInInventoryKPI'
+        '401':
+          description: Unauthorized
+
+  /api/v1/analytics/immobilized-inventory:
+    get:
+      tags: [KPIs]
+      summary: Get immobilized inventory KPI
+      description: Returns analysis of inventory with no movement
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: threshold_years
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Years threshold for immobilization
+      responses:
+        '200':
+          description: Immobilized inventory KPI
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImmobilizedInventoryKPI'
+        '401':
+          description: Unauthorized
+
+  /api/v1/analytics/inventory-rotation:
+    get:
+      tags: [KPIs]
+      summary: Get inventory rotation KPI
+      description: Returns inventory turnover analysis
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Inventory rotation KPI
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryRotationKPI'
+        '401':
+          description: Unauthorized
+
+  /api/v1/analytics/buffer-analytics:
+    get:
+      tags: [Buffer Analytics]
+      summary: Get buffer analytics
+      description: Returns DDMRP buffer performance analytics
+      parameters:
+        - name: product_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Buffer analytics
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/BufferAnalytics'
+                  - type: object
+                    properties:
+                      analytics:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BufferAnalytics'
+        '401':
+          description: Unauthorized
+
+  /api/v1/analytics/sync-buffer:
+    post:
+      tags: [Buffer Analytics]
+      summary: Sync buffer data
+      description: Manually triggers buffer data synchronization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_id:
+                  type: string
+                  format: uuid
+                  description: Optional, if not provided syncs all
+      responses:
+        '200':
+          description: Sync initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  synced_count:
+                    type: integer
+        '401':
+          description: Unauthorized
+        '500':
+          description: Sync failed

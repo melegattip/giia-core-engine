@@ -1,0 +1,403 @@
+openapi: 3.0.3
+info:
+  title: GIIA AI Intelligence Hub API
+  description: |
+    AI-powered notifications, recommendations, and real-time updates for the GIIA platform.
+    Provides WebSocket connections for real-time notification delivery.
+  version: 1.0.0
+  contact:
+    name: GIIA Team
+
+servers:
+  - url: http://localhost:8086
+    description: Local development server
+
+tags:
+  - name: Notifications
+  - name: Preferences
+  - name: WebSocket
+  - name: Health
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        organization_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [alert, recommendation, insight, action_required]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        title:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+        read:
+          type: boolean
+        read_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+
+    UserPreferences:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        organization_id:
+          type: string
+          format: uuid
+        email_notifications:
+          type: boolean
+        push_notifications:
+          type: boolean
+        sms_notifications:
+          type: boolean
+        notification_types:
+          type: object
+          properties:
+            alerts:
+              type: boolean
+            recommendations:
+              type: boolean
+            insights:
+              type: boolean
+            action_required:
+              type: boolean
+        quiet_hours:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            start:
+              type: string
+              example: "22:00"
+            end:
+              type: string
+              example: "08:00"
+        digest_frequency:
+          type: string
+          enum: [none, daily, weekly]
+        updated_at:
+          type: string
+          format: date-time
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  service:
+                    type: string
+                  version:
+                    type: string
+                  time:
+                    type: string
+                    format: date-time
+
+  /ready:
+    get:
+      tags: [Health]
+      summary: Readiness check
+      security: []
+      responses:
+        '200':
+          description: Service ready
+
+  /metrics:
+    get:
+      tags: [Health]
+      summary: Prometheus metrics
+      security: []
+      responses:
+        '200':
+          description: Metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /api/v1/notifications:
+    get:
+      tags: [Notifications]
+      summary: List notifications
+      description: Returns paginated list of user notifications
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: unread_only
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [alert, recommendation, insight, action_required]
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+      responses:
+        '200':
+          description: Notifications list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+                  page:
+                    type: integer
+                  page_size:
+                    type: integer
+                  total:
+                    type: integer
+                  unread_count:
+                    type: integer
+        '401':
+          description: Unauthorized
+
+  /api/v1/notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Get unread count
+      description: Returns the count of unread notifications
+      responses:
+        '200':
+          description: Unread count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+        '401':
+          description: Unauthorized
+
+  /api/v1/notifications/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Notifications]
+      summary: Get notification
+      responses:
+        '200':
+          description: Notification details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+
+    patch:
+      tags: [Notifications]
+      summary: Update notification
+      description: Mark notification as read/unread
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                read:
+                  type: boolean
+      responses:
+        '200':
+          description: Notification updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+
+    delete:
+      tags: [Notifications]
+      summary: Delete notification
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+
+  /api/v1/notifications/preferences:
+    get:
+      tags: [Preferences]
+      summary: Get user preferences
+      responses:
+        '200':
+          description: Preferences retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+        '401':
+          description: Unauthorized
+
+    put:
+      tags: [Preferences]
+      summary: Update user preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email_notifications:
+                  type: boolean
+                push_notifications:
+                  type: boolean
+                sms_notifications:
+                  type: boolean
+                notification_types:
+                  type: object
+                  properties:
+                    alerts:
+                      type: boolean
+                    recommendations:
+                      type: boolean
+                    insights:
+                      type: boolean
+                    action_required:
+                      type: boolean
+                quiet_hours:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    start:
+                      type: string
+                    end:
+                      type: string
+                digest_frequency:
+                  type: string
+                  enum: [none, daily, weekly]
+      responses:
+        '200':
+          description: Preferences updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+
+  /ws/notifications:
+    get:
+      tags: [WebSocket]
+      summary: WebSocket connection
+      description: |
+        Establish WebSocket connection for real-time notifications.
+        
+        **Connection URL:** `ws://localhost:8086/ws/notifications`
+        
+        **Authentication:** Pass JWT token as query parameter `?token=<jwt>`
+        
+        **Message Types:**
+        - `notification`: New notification received
+        - `mark_read`: Notification marked as read
+        - `delete`: Notification deleted
+        - `ping/pong`: Keep-alive messages
+        
+        **Example Message:**
+        ```json
+        {
+          "type": "notification",
+          "data": {
+            "id": "uuid",
+            "title": "Alert",
+            "message": "Buffer critical",
+            "priority": "high"
+          }
+        }
+        ```
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+          description: JWT access token
+      responses:
+        '101':
+          description: Switching Protocols
+        '401':
+          description: Invalid token
