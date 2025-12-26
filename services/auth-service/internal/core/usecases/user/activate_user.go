@@ -39,12 +39,12 @@ func NewActivateUserUseCase(
 	}
 }
 
-func (uc *ActivateUserUseCase) Execute(ctx context.Context, adminUserID, targetUserID uuid.UUID) error {
+func (uc *ActivateUserUseCase) Execute(ctx context.Context, adminUserID uuid.UUID, targetUserID int) error {
 	if adminUserID == uuid.Nil {
 		return pkgErrors.NewBadRequest("admin user ID is required")
 	}
 
-	if targetUserID == uuid.Nil {
+	if targetUserID == 0 {
 		return pkgErrors.NewBadRequest("target user ID is required")
 	}
 
@@ -52,7 +52,7 @@ func (uc *ActivateUserUseCase) Execute(ctx context.Context, adminUserID, targetU
 	if err != nil {
 		uc.logger.Error(ctx, err, "Failed to check admin permissions", pkgLogger.Tags{
 			"admin_user_id":  adminUserID.String(),
-			"target_user_id": targetUserID.String(),
+			"target_user_id": targetUserID,
 		})
 		return pkgErrors.NewInternalServerError("failed to verify permissions")
 	}
@@ -60,7 +60,7 @@ func (uc *ActivateUserUseCase) Execute(ctx context.Context, adminUserID, targetU
 	if !hasPermission {
 		uc.logger.Warn(ctx, "User attempted to activate account without permission", pkgLogger.Tags{
 			"admin_user_id":  adminUserID.String(),
-			"target_user_id": targetUserID.String(),
+			"target_user_id": targetUserID,
 		})
 		return pkgErrors.NewForbidden("insufficient permissions to activate users")
 	}
@@ -68,14 +68,14 @@ func (uc *ActivateUserUseCase) Execute(ctx context.Context, adminUserID, targetU
 	targetUser, err := uc.userRepo.GetByID(ctx, targetUserID)
 	if err != nil {
 		uc.logger.Error(ctx, err, "Failed to get target user", pkgLogger.Tags{
-			"target_user_id": targetUserID.String(),
+			"target_user_id": targetUserID,
 		})
 		return pkgErrors.NewNotFound("user not found")
 	}
 
 	if targetUser.Status == domain.UserStatusActive {
 		uc.logger.Info(ctx, "User account already active", pkgLogger.Tags{
-			"user_id": targetUser.ID.String(),
+			"user_id": targetUser.IDString(),
 		})
 		return nil
 	}
@@ -86,7 +86,7 @@ func (uc *ActivateUserUseCase) Execute(ctx context.Context, adminUserID, targetU
 
 	if err := uc.userRepo.Update(ctx, targetUser); err != nil {
 		uc.logger.Error(ctx, err, "Failed to update user status", pkgLogger.Tags{
-			"user_id": targetUser.ID.String(),
+			"user_id": targetUser.IDString(),
 		})
 		return pkgErrors.NewInternalServerError("failed to activate user")
 	}
@@ -94,7 +94,7 @@ func (uc *ActivateUserUseCase) Execute(ctx context.Context, adminUserID, targetU
 	uc.publishUserActivatedEvent(ctx, targetUser, adminUserID)
 
 	uc.logger.Info(ctx, "User account activated by admin", pkgLogger.Tags{
-		"user_id":         targetUser.ID.String(),
+		"user_id":         targetUser.IDString(),
 		"email":           targetUser.Email,
 		"organization_id": targetUser.OrganizationID.String(),
 		"admin_user_id":   adminUserID.String(),
@@ -125,19 +125,19 @@ func (uc *ActivateUserUseCase) publishUserActivatedEvent(ctx context.Context, us
 		user.OrganizationID.String(),
 		uc.timeManager.Now(),
 		map[string]interface{}{
-			"user_id":       user.ID.String(),
-			"email":         user.Email,
-			"first_name":    user.FirstName,
-			"last_name":     user.LastName,
-			"status":        string(user.Status),
-			"activated_by":  adminUserID.String(),
-			"activated_at":  uc.timeManager.Now().Format(time.RFC3339),
+			"user_id":      user.IDString(),
+			"email":        user.Email,
+			"first_name":   user.FirstName,
+			"last_name":    user.LastName,
+			"status":       string(user.Status),
+			"activated_by": adminUserID.String(),
+			"activated_at": uc.timeManager.Now().Format(time.RFC3339),
 		},
 	)
 
 	if err := uc.eventPublisher.PublishAsync(ctx, "auth.user.activated", event); err != nil {
 		uc.logger.Error(ctx, err, "Failed to publish user activated event", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 	}
 }

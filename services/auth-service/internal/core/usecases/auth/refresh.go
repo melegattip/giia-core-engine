@@ -2,8 +2,7 @@ package auth
 
 import (
 	"context"
-
-	"github.com/google/uuid"
+	"strconv"
 
 	pkgErrors "github.com/melegattip/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
@@ -56,12 +55,12 @@ func (uc *RefreshTokenUseCase) Execute(ctx context.Context, refreshTokenString s
 
 	if storedToken.Revoked {
 		uc.logger.Warn(ctx, "Attempted to use revoked refresh token", pkgLogger.Tags{
-			"user_id": storedToken.UserID.String(),
+			"user_id": strconv.Itoa(storedToken.UserID),
 		})
 		return "", pkgErrors.NewUnauthorized("refresh token has been revoked")
 	}
 
-	userID, err := uuid.Parse(claims.Subject)
+	userID, err := strconv.Atoi(claims.Subject)
 	if err != nil {
 		return "", pkgErrors.NewUnauthorized("invalid user ID in token")
 	}
@@ -69,14 +68,14 @@ func (uc *RefreshTokenUseCase) Execute(ctx context.Context, refreshTokenString s
 	user, err := uc.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		uc.logger.Error(ctx, err, "Failed to get user", pkgLogger.Tags{
-			"user_id": userID.String(),
+			"user_id": strconv.Itoa(userID),
 		})
 		return "", pkgErrors.NewUnauthorized("user not found")
 	}
 
 	if user.Status != domain.UserStatusActive {
 		uc.logger.Warn(ctx, "Refresh attempt for inactive user", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 			"status":  string(user.Status),
 		})
 		return "", pkgErrors.NewForbidden("account is not active")
@@ -90,13 +89,13 @@ func (uc *RefreshTokenUseCase) Execute(ctx context.Context, refreshTokenString s
 	)
 	if err != nil {
 		uc.logger.Error(ctx, err, "Failed to generate access token", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 		return "", pkgErrors.NewInternalServerError("failed to generate access token")
 	}
 
 	uc.logger.Info(ctx, "Access token refreshed successfully", pkgLogger.Tags{
-		"user_id":         user.ID.String(),
+		"user_id":         user.IDString(),
 		"organization_id": user.OrganizationID.String(),
 	})
 

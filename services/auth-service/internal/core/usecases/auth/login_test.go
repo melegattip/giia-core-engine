@@ -18,7 +18,7 @@ func TestLoginUseCase_Execute_WithValidCredentials_ReturnsTokens(t *testing.T) {
 	// Given
 	givenEmail := "user@example.com"
 	givenPassword := "password123"
-	givenUserID := uuid.New()
+	givenUserID := 1
 	givenOrgID := uuid.New()
 	givenHashedPassword, _ := bcrypt.GenerateFromPassword([]byte(givenPassword), bcrypt.DefaultCost)
 
@@ -156,7 +156,7 @@ func TestLoginUseCase_Execute_WithInvalidPassword_ReturnsUnauthorized(t *testing
 	givenEmail := "user@example.com"
 	givenCorrectPassword := "correct_password"
 	givenWrongPassword := "wrong_password"
-	givenUserID := uuid.New()
+	givenUserID := 1
 	givenOrgID := uuid.New()
 	givenHashedPassword, _ := bcrypt.GenerateFromPassword([]byte(givenCorrectPassword), bcrypt.DefaultCost)
 
@@ -201,7 +201,7 @@ func TestLoginUseCase_Execute_WithInactiveUser_ReturnsForbidden(t *testing.T) {
 	// Given
 	givenEmail := "user@example.com"
 	givenPassword := "password123"
-	givenUserID := uuid.New()
+	givenUserID := 1
 	givenOrgID := uuid.New()
 	givenHashedPassword, _ := bcrypt.GenerateFromPassword([]byte(givenPassword), bcrypt.DefaultCost)
 
@@ -246,7 +246,7 @@ func TestLoginUseCase_Execute_WithSuspendedUser_ReturnsForbidden(t *testing.T) {
 	// Given
 	givenEmail := "user@example.com"
 	givenPassword := "password123"
-	givenUserID := uuid.New()
+	givenUserID := 1
 	givenOrgID := uuid.New()
 	givenHashedPassword, _ := bcrypt.GenerateFromPassword([]byte(givenPassword), bcrypt.DefaultCost)
 
@@ -291,7 +291,7 @@ func TestLoginUseCase_Execute_WhenAccessTokenGenerationFails_ReturnsError(t *tes
 	// Given
 	givenEmail := "user@example.com"
 	givenPassword := "password123"
-	givenUserID := uuid.New()
+	givenUserID := 1
 	givenOrgID := uuid.New()
 	givenHashedPassword, _ := bcrypt.GenerateFromPassword([]byte(givenPassword), bcrypt.DefaultCost)
 
@@ -336,7 +336,7 @@ func TestLoginUseCase_Execute_WhenRefreshTokenGenerationFails_ReturnsError(t *te
 	// Given
 	givenEmail := "user@example.com"
 	givenPassword := "password123"
-	givenUserID := uuid.New()
+	givenUserID := 1
 	givenOrgID := uuid.New()
 	givenHashedPassword, _ := bcrypt.GenerateFromPassword([]byte(givenPassword), bcrypt.DefaultCost)
 
@@ -382,7 +382,7 @@ func TestLoginUseCase_Execute_WhenStoreRefreshTokenFails_ReturnsError(t *testing
 	// Given
 	givenEmail := "user@example.com"
 	givenPassword := "password123"
-	givenUserID := uuid.New()
+	givenUserID := 1
 	givenOrgID := uuid.New()
 	givenHashedPassword, _ := bcrypt.GenerateFromPassword([]byte(givenPassword), bcrypt.DefaultCost)
 

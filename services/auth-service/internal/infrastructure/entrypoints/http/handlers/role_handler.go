@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -129,7 +130,7 @@ func (h *RoleHandler) AssignRole(c *gin.Context) {
 		return
 	}
 
-	userID, err := uuid.Parse(req.UserID)
+	userID, err := strconv.Atoi(req.UserID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkgErrors.ToHTTPResponse(
 			pkgErrors.NewBadRequest("invalid user ID format"),

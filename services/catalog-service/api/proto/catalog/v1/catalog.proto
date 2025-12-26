@@ -4,7 +4,7 @@ package catalog.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/giia/giia-core-engine/services/catalog-service/api/proto/gen/go/catalog/v1;catalogv1";
+option go_package = "github.com/melegattip/giia-core-engine/services/catalog-service/api/proto/gen/go/catalog/v1;catalogv1";
 
 service CatalogService {
   rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);

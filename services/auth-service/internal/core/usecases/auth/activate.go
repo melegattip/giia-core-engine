@@ -48,7 +48,7 @@ func (uc *ActivateAccountUseCase) Execute(ctx context.Context, token string) err
 
 	if activationToken.Used {
 		uc.logger.Warn(ctx, "Attempted to use already used activation token", pkgLogger.Tags{
-			"user_id": activationToken.UserID.String(),
+			"user_id": activationToken.UserID,
 		})
 		return pkgErrors.NewBadRequest("activation token has already been used")
 	}
@@ -56,14 +56,14 @@ func (uc *ActivateAccountUseCase) Execute(ctx context.Context, token string) err
 	user, err := uc.userRepo.GetByID(ctx, activationToken.UserID)
 	if err != nil {
 		uc.logger.Error(ctx, err, "Failed to get user for activation", pkgLogger.Tags{
-			"user_id": activationToken.UserID.String(),
+			"user_id": activationToken.UserID,
 		})
 		return pkgErrors.NewInternalServerError("failed to activate account")
 	}
 
 	if user.Status == domain.UserStatusActive {
 		uc.logger.Info(ctx, "User account already active", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 		return nil
 	}
@@ -73,26 +73,26 @@ func (uc *ActivateAccountUseCase) Execute(ctx context.Context, token string) err
 	user.VerifiedAt = &now
 	if err := uc.userRepo.Update(ctx, user); err != nil {
 		uc.logger.Error(ctx, err, "Failed to update user status", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 		return pkgErrors.NewInternalServerError("failed to activate account")
 	}
 
 	if err := uc.tokenRepo.MarkActivationTokenUsed(ctx, tokenHash); err != nil {
 		uc.logger.Error(ctx, err, "Failed to mark activation token as used", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 	}
 
 	if err := uc.emailService.SendWelcomeEmail(ctx, user.Email, user.FirstName); err != nil {
 		uc.logger.Error(ctx, err, "Failed to send welcome email", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 			"email":   user.Email,
 		})
 	}
 
 	uc.logger.Info(ctx, "User account activated successfully", pkgLogger.Tags{
-		"user_id":         user.ID.String(),
+		"user_id":         user.IDString(),
 		"email":           user.Email,
 		"organization_id": user.OrganizationID.String(),
 	})

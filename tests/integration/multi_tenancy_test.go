@@ -12,6 +12,13 @@ import (
 	"github.com/melegattip/giia-core-engine/tests/integration/clients"
 )
 
+// Pre-existing test organization IDs for multi-tenancy testing
+const (
+	TestOrganizationAID = "11111111-1111-1111-1111-111111111111"
+	TestOrganizationBID = "22222222-2222-2222-2222-222222222222"
+	TestOrganizationCID = "33333333-3333-3333-3333-333333333333"
+)
+
 // TestMultiTenancy_Isolation tests that data from one organization is not visible to another.
 func TestMultiTenancy_Isolation(t *testing.T) {
 	if testing.Short() {
@@ -28,9 +35,9 @@ func TestMultiTenancy_Isolation(t *testing.T) {
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 	executionClient := clients.NewExecutionClient(env.ExecutionService.HTTPURL)
 
-	// Create two separate organizations
-	orgA := uuid.New().String()
-	orgB := uuid.New().String()
+	// Use pre-existing test organizations
+	orgA := TestOrganizationAID
+	orgB := TestOrganizationBID
 
 	// Setup Organization A
 	emailA := generateTestEmail()
@@ -165,7 +172,7 @@ func TestMultiTenancy_ConcurrentOperations(t *testing.T) {
 	}, 3)
 
 	for i := 0; i < 3; i++ {
-		orgs[i].id = uuid.New().String()
+		orgs[i].id = []string{TestOrganizationAID, TestOrganizationBID, TestOrganizationCID}[i]
 		email := generateTestEmail()
 
 		_, err := authClient.Register(ctx, clients.RegisterRequest{
@@ -253,9 +260,9 @@ func TestMultiTenancy_DataLeakPrevention(t *testing.T) {
 	authClient := clients.NewAuthClient(env.AuthService.HTTPURL)
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 
-	// Create two organizations with similar data
-	orgA := uuid.New().String()
-	orgB := uuid.New().String()
+	// Use pre-existing test organizations
+	orgA := TestOrganizationAID
+	orgB := TestOrganizationBID
 
 	emailA := generateTestEmail()
 	_, err := authClient.Register(ctx, clients.RegisterRequest{
@@ -343,8 +350,8 @@ func TestMultiTenancy_OrganizationScopedInventory(t *testing.T) {
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 	executionClient := clients.NewExecutionClient(env.ExecutionService.HTTPURL)
 
-	orgA := uuid.New().String()
-	orgB := uuid.New().String()
+	orgA := TestOrganizationAID
+	orgB := TestOrganizationBID
 
 	// Setup Org A
 	emailA := generateTestEmail()

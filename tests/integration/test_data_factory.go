@@ -125,10 +125,14 @@ type TestOrderItem struct {
 	UnitPrice float64
 }
 
+// DefaultOrganizationID is the ID of the default organization created during migration.
+// This organization always exists in the database and can be used for testing.
+const DefaultOrganizationID = "5d4c3e1c-e528-4dee-9896-892c834af78d"
+
 // CreateCompleteSetup creates a complete test setup with all entities.
 func (f *TestDataFactory) CreateCompleteSetup(ctx context.Context) (*TestSetup, error) {
 	setup := &TestSetup{
-		OrganizationID: uuid.New().String(),
+		OrganizationID: DefaultOrganizationID,
 	}
 
 	// Create user and authenticate

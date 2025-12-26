@@ -1,14 +1,18 @@
-# Build stage
-FROM golang:1.23-alpine AS builder
+# =============================================================================
+# GIIA DDMRP Engine Service - Multi-stage Docker Build
+# =============================================================================
+# Build from repository root:
+#   docker build -f services/ddmrp-engine-service/Dockerfile -t giia/ddmrp-engine-service .
+# =============================================================================
 
-# Install build dependencies
-RUN apk add --no-cache git make
+# -----------------------------------------------------------------------------
+# Stage 1: Build
+# -----------------------------------------------------------------------------
+FROM golang:1.24-alpine AS builder
 
-# Set working directory
+RUN apk add --no-cache git ca-certificates tzdata make
+
 WORKDIR /build
-
-# Copy go workspace files
-COPY go.work go.work.sum* ./
 
 # Copy shared packages
 COPY pkg/ ./pkg/
@@ -16,9 +20,13 @@ COPY pkg/ ./pkg/
 # Copy service files
 COPY services/ddmrp-engine-service/ ./services/ddmrp-engine-service/
 
-# Download dependencies
 WORKDIR /build/services/ddmrp-engine-service
-RUN go mod download
+
+# Disable Go workspace mode for Docker build
+ENV GOWORK=off
+
+# Resolve and download dependencies
+RUN go mod tidy && go mod download
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
@@ -26,34 +34,30 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -o /app/ddmrp-engine-service \
     ./cmd/server
 
-# Final stage
-FROM alpine:latest
+# -----------------------------------------------------------------------------
+# Stage 2: Runtime
+# -----------------------------------------------------------------------------
+FROM alpine:3.20
 
-# Install ca-certificates for HTTPS
-RUN apk --no-cache add ca-certificates tzdata
+RUN apk --no-cache add ca-certificates tzdata wget
 
-# Create non-root user
-RUN addgroup -g 1000 appuser && \
-    adduser -D -u 1000 -G appuser appuser
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
 
-# Set working directory
 WORKDIR /app
 
-# Copy binary from builder
 COPY --from=builder /app/ddmrp-engine-service .
 
-# Change ownership
-RUN chown -R appuser:appuser /app
+RUN chown -R appuser:appgroup /app
 
-# Switch to non-root user
 USER appuser
 
-# Expose port
 EXPOSE 8083
+EXPOSE 9092
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8083/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -q -O- http://localhost:8083/health || exit 1
 
-# Run the application
+ENV ENVIRONMENT=production
+
 ENTRYPOINT ["./ddmrp-engine-service"]

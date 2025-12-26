@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
@@ -31,7 +30,7 @@ func TestConfirmPasswordResetUseCase_Execute_Success(t *testing.T) {
 	ctx := context.Background()
 	token := "reset-token-123"
 	newPassword := "NewSecureP@ss123"
-	userID := uuid.New()
+	userID := 1
 
 	givenResetToken := &domain.PasswordResetToken{
 		TokenHash: hashActivationToken(token),
@@ -220,7 +219,7 @@ func TestConfirmPasswordResetUseCase_Execute_AlreadyUsedToken_ReturnsError(t *te
 	ctx := context.Background()
 	token := "used-token"
 	newPassword := "NewSecureP@ss123"
-	userID := uuid.New()
+	userID := 1
 
 	givenResetToken := &domain.PasswordResetToken{
 		TokenHash: hashActivationToken(token),
@@ -256,7 +255,7 @@ func TestConfirmPasswordResetUseCase_Execute_UserNotFound_ReturnsError(t *testin
 	ctx := context.Background()
 	token := "reset-token-123"
 	newPassword := "NewSecureP@ss123"
-	userID := uuid.New()
+	userID := 1
 
 	givenResetToken := &domain.PasswordResetToken{
 		TokenHash: hashActivationToken(token),
@@ -293,7 +292,7 @@ func TestConfirmPasswordResetUseCase_Execute_UpdateUserFails_ReturnsError(t *tes
 	ctx := context.Background()
 	token := "reset-token-123"
 	newPassword := "NewSecureP@ss123"
-	userID := uuid.New()
+	userID := 1
 
 	givenResetToken := &domain.PasswordResetToken{
 		TokenHash: hashActivationToken(token),
@@ -339,7 +338,7 @@ func TestConfirmPasswordResetUseCase_Execute_MarkTokenUsedFails_StillReturnsSucc
 	ctx := context.Background()
 	token := "reset-token-123"
 	newPassword := "NewSecureP@ss123"
-	userID := uuid.New()
+	userID := 1
 
 	givenResetToken := &domain.PasswordResetToken{
 		TokenHash: hashActivationToken(token),

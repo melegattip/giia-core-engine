@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 
 	pkgErrors "github.com/melegattip/giia-core-engine/pkg/errors"
 	pkgLogger "github.com/melegattip/giia-core-engine/pkg/logger"
@@ -47,7 +47,7 @@ func (h *UserHandler) ActivateUser(c *gin.Context) {
 		return
 	}
 
-	targetUserID, err := uuid.Parse(targetUserIDStr)
+	targetUserID, err := strconv.Atoi(targetUserIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkgErrors.ToHTTPResponse(
 			pkgErrors.NewBadRequest("invalid user ID format"),
@@ -88,7 +88,7 @@ func (h *UserHandler) DeactivateUser(c *gin.Context) {
 		return
 	}
 
-	targetUserID, err := uuid.Parse(targetUserIDStr)
+	targetUserID, err := strconv.Atoi(targetUserIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, pkgErrors.ToHTTPResponse(
 			pkgErrors.NewBadRequest("invalid user ID format"),

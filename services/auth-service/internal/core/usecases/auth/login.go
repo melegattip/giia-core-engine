@@ -63,7 +63,7 @@ func (uc *LoginUseCase) Execute(ctx context.Context, req *domain.LoginRequest) (
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
 		uc.logger.Warn(ctx, "Failed login attempt - invalid password", pkgLogger.Tags{
 			"email":   req.Email,
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 		uc.publishLoginFailedEvent(ctx, req.Email, user.OrganizationID.String(), "invalid_password")
 		return nil, errors.NewUnauthorized("invalid email or password")
@@ -72,7 +72,7 @@ func (uc *LoginUseCase) Execute(ctx context.Context, req *domain.LoginRequest) (
 	if user.Status != domain.UserStatusActive {
 		uc.logger.Warn(ctx, "Login attempt for inactive user", pkgLogger.Tags{
 			"email":   req.Email,
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 			"status":  string(user.Status),
 		})
 		uc.publishLoginFailedEvent(ctx, req.Email, user.OrganizationID.String(), "inactive_account")
@@ -87,7 +87,7 @@ func (uc *LoginUseCase) Execute(ctx context.Context, req *domain.LoginRequest) (
 	)
 	if err != nil {
 		uc.logger.Error(ctx, err, "Failed to generate access token", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 		return nil, errors.NewInternalServerError("failed to generate access token")
 	}
@@ -95,7 +95,7 @@ func (uc *LoginUseCase) Execute(ctx context.Context, req *domain.LoginRequest) (
 	refreshTokenString, err := uc.jwtManager.GenerateRefreshToken(user.ID)
 	if err != nil {
 		uc.logger.Error(ctx, err, "Failed to generate refresh token", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 		return nil, errors.NewInternalServerError("failed to generate refresh token")
 	}
@@ -110,19 +110,19 @@ func (uc *LoginUseCase) Execute(ctx context.Context, req *domain.LoginRequest) (
 
 	if err := uc.tokenRepo.StoreRefreshToken(ctx, refreshToken); err != nil {
 		uc.logger.Error(ctx, err, "Failed to store refresh token", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 		return nil, errors.NewInternalServerError("failed to store refresh token")
 	}
 
 	if err := uc.userRepo.UpdateLastLogin(ctx, user.ID); err != nil {
 		uc.logger.Error(ctx, err, "Failed to update last login", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 	}
 
 	uc.logger.Info(ctx, "User logged in successfully", pkgLogger.Tags{
-		"user_id":         user.ID.String(),
+		"user_id":         user.IDString(),
 		"email":           user.Email,
 		"organization_id": user.OrganizationID.String(),
 	})
@@ -144,14 +144,14 @@ func (uc *LoginUseCase) publishLoginSucceededEvent(ctx context.Context, user *do
 		user.OrganizationID.String(),
 		uc.timeManager.Now(),
 		map[string]interface{}{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 			"email":   user.Email,
 		},
 	)
 
 	if err := uc.eventPublisher.PublishAsync(ctx, "auth.user.login.succeeded", event); err != nil {
 		uc.logger.Error(ctx, err, "Failed to publish login succeeded event", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 	}
 }

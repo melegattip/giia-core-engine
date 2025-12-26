@@ -87,8 +87,10 @@ func (l *ZerologLogger) Fatal(ctx context.Context, err error, msg string, tags T
 }
 
 func (l *ZerologLogger) addContextFields(ctx context.Context, event *zerolog.Event, tags Tags) *zerolog.Event {
-	if requestID := ExtractRequestID(ctx); requestID != "" {
-		event = event.Str("request_id", requestID)
+	if ctx != nil {
+		if requestID := ExtractRequestID(ctx); requestID != "" {
+			event = event.Str("request_id", requestID)
+		}
 	}
 
 	if tags != nil {

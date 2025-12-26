@@ -23,12 +23,12 @@ type MockJWTManager struct {
 	mock.Mock
 }
 
-func (m *MockJWTManager) GenerateAccessToken(userID, orgID uuid.UUID, email string, roles []string) (string, error) {
+func (m *MockJWTManager) GenerateAccessToken(userID int, orgID uuid.UUID, email string, roles []string) (string, error) {
 	args := m.Called(userID, orgID, email, roles)
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockJWTManager) GenerateRefreshToken(userID uuid.UUID) (string, error) {
+func (m *MockJWTManager) GenerateRefreshToken(userID int) (string, error) {
 	args := m.Called(userID)
 	return args.String(0), args.Error(1)
 }

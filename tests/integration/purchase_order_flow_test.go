@@ -37,7 +37,7 @@ func TestPurchaseOrderFlow_CreateToReceive(t *testing.T) {
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 	executionClient := clients.NewExecutionClient(env.ExecutionService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	userEmail := generateTestEmail()
 	userPassword := "SecurePassword123!"
 
@@ -189,7 +189,7 @@ func TestPurchaseOrderFlow_CreateAndCancel(t *testing.T) {
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 	executionClient := clients.NewExecutionClient(env.ExecutionService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 
 	// Setup: Create user, login, and create product
 	_, err := authClient.Register(ctx, clients.RegisterRequest{
@@ -275,7 +275,7 @@ func TestPurchaseOrderFlow_PartialReceive(t *testing.T) {
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 	executionClient := clients.NewExecutionClient(env.ExecutionService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 
 	// Setup

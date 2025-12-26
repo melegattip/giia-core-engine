@@ -1,40 +1,63 @@
-# Build stage
-FROM golang:1.23-alpine AS builder
+# =============================================================================
+# GIIA Catalog Service - Multi-stage Docker Build
+# =============================================================================
+# This Dockerfile builds the catalog-service as part of the GIIA monorepo.
+# It copies shared packages from pkg/ and the auth-service (for gRPC client).
+#
+# Build from repository root:
+#   docker build -f services/catalog-service/Dockerfile -t giia/catalog-service .
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Stage 1: Build
+# -----------------------------------------------------------------------------
+FROM golang:1.24-alpine AS builder
 
 # Install build dependencies
-RUN apk add --no-cache git make
+RUN apk add --no-cache git ca-certificates tzdata make
 
-# Set working directory
+# Set working directory at repository root level
 WORKDIR /build
 
-# Copy go workspace files
-COPY go.work go.work.sum* ./
-
-# Copy shared packages
+# Copy shared packages first (for better caching)
 COPY pkg/ ./pkg/
 
-# Copy service files
+# Copy auth-service (dependency for gRPC client)
+COPY services/auth-service/ ./services/auth-service/
+
+# Copy catalog-service files
 COPY services/catalog-service/ ./services/catalog-service/
 
-# Download dependencies
+# Set working directory to the service
 WORKDIR /build/services/catalog-service
-RUN go mod download
+
+# Disable Go workspace mode for Docker build
+# The service has replace directives in go.mod for local packages
+ENV GOWORK=off
+
+# Resolve and download dependencies
+# go mod tidy is needed to capture transitive deps from pkg/
+RUN go mod tidy && go mod download
 
 # Build the application
+# CGO_ENABLED=0 for static binary
+# -ldflags="-w -s" for smaller binary (strips debug info)
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-    -ldflags="-w -s" \
+    -ldflags="-w -s -X main.version=$(date +%Y%m%d)" \
     -o /app/catalog-service \
     ./cmd/server
 
-# Final stage
-FROM alpine:latest
+# -----------------------------------------------------------------------------
+# Stage 2: Runtime
+# -----------------------------------------------------------------------------
+FROM alpine:3.20
 
-# Install ca-certificates for HTTPS
-RUN apk --no-cache add ca-certificates tzdata
+# Install runtime dependencies
+RUN apk --no-cache add ca-certificates tzdata wget
 
-# Create non-root user
-RUN addgroup -g 1000 appuser && \
-    adduser -D -u 1000 -G appuser appuser
+# Create non-root user for security
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
 
 # Set working directory
 WORKDIR /app
@@ -42,8 +65,11 @@ WORKDIR /app
 # Copy binary from builder
 COPY --from=builder /app/catalog-service .
 
+# Copy migrations if they exist
+# COPY --from=builder /build/services/catalog-service/migrations ./migrations 2>/dev/null || true
+
 # Change ownership
-RUN chown -R appuser:appuser /app
+RUN chown -R appuser:appgroup /app
 
 # Switch to non-root user
 USER appuser
@@ -52,8 +78,11 @@ USER appuser
 EXPOSE 8082
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8082/health || exit 1
+
+# Set default environment variables
+ENV ENVIRONMENT=production
 
 # Run the application
 ENTRYPOINT ["./catalog-service"]

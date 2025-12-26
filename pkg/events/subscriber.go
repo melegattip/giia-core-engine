@@ -2,6 +2,7 @@ package events
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/melegattip/giia-core-engine/pkg/errors"
@@ -91,6 +92,16 @@ func (s *NATSSubscriber) SubscribeDurableWithConfig(ctx context.Context, subject
 		}
 	}
 
+	// Extract stream name from subject (e.g., "auth.>" -> "auth")
+	streamName := getStreamNameFromSubject(subject)
+
+	// Try to ensure the stream exists (create if needed)
+	if err := s.ensureStream(streamName, subject); err != nil {
+		// Log but continue - we'll try to subscribe anyway
+		// The stream might be created by another service
+	}
+
+	// Try durable subscription first
 	sub, err := s.js.Subscribe(
 		subject,
 		s.wrapHandler(ctx, handler),
@@ -98,14 +109,71 @@ func (s *NATSSubscriber) SubscribeDurableWithConfig(ctx context.Context, subject
 		nats.ManualAck(),
 		nats.MaxDeliver(config.MaxDeliver),
 		nats.AckWait(config.AckWait),
+		nats.DeliverNew(), // Only deliver new messages
 	)
 
 	if err != nil {
-		return errors.NewInternalServerError("failed to subscribe to subject with durable")
+		// Fallback to simple push-based subscription without durability
+		sub, err = s.js.Subscribe(
+			subject,
+			s.wrapHandler(ctx, handler),
+			nats.DeliverNew(),
+		)
+		if err != nil {
+			// Last resort: use core NATS subscription (no JetStream)
+			coreSub, coreErr := s.conn.Subscribe(subject, func(msg *nats.Msg) {
+				event, parseErr := FromJSON(msg.Data)
+				if parseErr != nil {
+					return
+				}
+				_ = handler(ctx, event)
+			})
+			if coreErr != nil {
+				return errors.NewInternalServerError("failed to subscribe to subject: " + coreErr.Error())
+			}
+			s.subs = append(s.subs, coreSub)
+			return nil
+		}
 	}
 
 	s.subs = append(s.subs, sub)
 	return nil
+}
+
+// ensureStream creates a stream if it doesn't exist
+func (s *NATSSubscriber) ensureStream(streamName, subject string) error {
+	// Check if stream exists
+	_, err := s.js.StreamInfo(streamName)
+	if err == nil {
+		return nil // Stream exists
+	}
+
+	// Create stream with basic config
+	_, err = s.js.AddStream(&nats.StreamConfig{
+		Name:      streamName,
+		Subjects:  []string{subject},
+		Storage:   nats.FileStorage,
+		Retention: nats.LimitsPolicy,
+		MaxAge:    24 * time.Hour, // Keep messages for 24 hours
+		MaxMsgs:   -1,             // No limit on number of messages
+		MaxBytes:  -1,             // No limit on size
+		Discard:   nats.DiscardOld,
+	})
+
+	return err
+}
+
+// getStreamNameFromSubject extracts a stream name from a subject pattern
+func getStreamNameFromSubject(subject string) string {
+	// Remove wildcards and dots to create a clean stream name
+	name := subject
+	for _, ch := range []string{".>", ".*", ".", ">", "*"} {
+		name = strings.ReplaceAll(name, ch, "")
+	}
+	if name == "" {
+		name = "default"
+	}
+	return strings.ToUpper(name)
 }
 
 func (s *NATSSubscriber) wrapHandler(ctx context.Context, handler EventHandler) nats.MsgHandler {

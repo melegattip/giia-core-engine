@@ -13,7 +13,7 @@ require (
 	github.com/melegattip/giia-core-engine/pkg/events v0.0.0
 	github.com/melegattip/giia-core-engine/pkg/logger v0.0.0
 	github.com/stretchr/testify v1.11.1
-	google.golang.org/grpc v1.68.1
+	google.golang.org/grpc v1.77.0
 )
 
 require (
@@ -30,6 +30,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/melegattip/giia-core-engine/pkg/testutil v0.0.0-00010101000000-000000000000 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/nats-io/nats.go v1.37.0 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
@@ -52,6 +53,8 @@ require (
 	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.37.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251022142026-3a174f9686a8 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
@@ -64,4 +67,5 @@ replace (
 	github.com/melegattip/giia-core-engine/pkg/errors => ../../pkg/errors
 	github.com/melegattip/giia-core-engine/pkg/events => ../../pkg/events
 	github.com/melegattip/giia-core-engine/pkg/logger => ../../pkg/logger
+	github.com/melegattip/giia-core-engine/pkg/testutil => ../../pkg/testutil
 )

@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -64,7 +65,7 @@ func (s *AuthServiceServer) ValidateToken(ctx context.Context, req *authv1.Valid
 	return &authv1.ValidateTokenResponse{
 		Valid: true,
 		User: &authv1.UserInfo{
-			UserId:         result.UserID.String(),
+			UserId:         result.UserID,
 			OrganizationId: result.OrganizationID.String(),
 			Email:          result.Email,
 			Roles:          result.Roles,
@@ -143,7 +144,7 @@ func (s *AuthServiceServer) GetUser(ctx context.Context, req *authv1.GetUserRequ
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	userID, err := uuid.Parse(req.UserId)
+	userID, err := strconv.Atoi(req.UserId)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid user_id format")
 	}
@@ -168,7 +169,7 @@ func (s *AuthServiceServer) GetUser(ctx context.Context, req *authv1.GetUserRequ
 
 	return &authv1.GetUserResponse{
 		User: &authv1.UserInfo{
-			UserId:         user.ID.String(),
+			UserId:         user.IDString(),
 			OrganizationId: user.OrganizationID.String(),
 			Email:          user.Email,
 			Name:           user.FirstName + " " + user.LastName,

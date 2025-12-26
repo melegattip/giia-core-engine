@@ -27,7 +27,7 @@ func TestAnalyticsAggregation_BufferAnalytics(t *testing.T) {
 	authClient := clients.NewAuthClient(env.AuthService.HTTPURL)
 	analyticsClient := clients.NewAnalyticsClient(env.AnalyticsService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 	password := "SecurePassword123!"
 
@@ -94,7 +94,7 @@ func TestAnalyticsAggregation_Snapshot(t *testing.T) {
 	authClient := clients.NewAuthClient(env.AuthService.HTTPURL)
 	analyticsClient := clients.NewAnalyticsClient(env.AnalyticsService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 	password := "SecurePassword123!"
 
@@ -136,7 +136,7 @@ func TestAnalyticsAggregation_SyncBufferData(t *testing.T) {
 	authClient := clients.NewAuthClient(env.AuthService.HTTPURL)
 	analyticsClient := clients.NewAnalyticsClient(env.AnalyticsService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 	password := "SecurePassword123!"
 
@@ -180,7 +180,7 @@ func TestAnalyticsAggregation_AfterTransactions(t *testing.T) {
 	executionClient := clients.NewExecutionClient(env.ExecutionService.HTTPURL)
 	analyticsClient := clients.NewAnalyticsClient(env.AnalyticsService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 	password := "SecurePassword123!"
 
@@ -269,7 +269,7 @@ func TestAnalyticsAggregation_CrossServiceData(t *testing.T) {
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 	analyticsClient := clients.NewAnalyticsClient(env.AnalyticsService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 	password := "SecurePassword123!"
 

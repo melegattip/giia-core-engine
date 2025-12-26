@@ -8,7 +8,6 @@ use (
 	./pkg/events
 	./pkg/logger
 	./pkg/testutil
-	./shared/events
 	// Services
 	./services/ai-intelligence-hub
 	./services/analytics-service
@@ -16,6 +15,7 @@ use (
 	./services/catalog-service
 	./services/ddmrp-engine-service
 	./services/execution-service
+	./shared/events
 	// Integration Tests
 	./tests/integration
 )

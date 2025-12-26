@@ -30,7 +30,7 @@ func TestAuth_JWTWorksAcrossServices(t *testing.T) {
 	analyticsClient := clients.NewAnalyticsClient(env.AnalyticsService.HTTPURL)
 	aiHubClient := clients.NewAIHubClient(env.AIHubService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 	password := "SecurePassword123!"
 
@@ -144,7 +144,7 @@ func TestAuth_ExpiredJWTRejected(t *testing.T) {
 
 	// Use an invalid/expired token
 	expiredToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiZXhwIjoxfQ.4xt6Rl6TxL7r5jGGpAKuRqTXLZtG-p7xB6O8M_hM6AA"
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 
 	t.Run("CatalogServiceRejectsExpiredToken", func(t *testing.T) {
 		_, err := catalogClient.CreateProduct(ctx, clients.CreateProductRequest{
@@ -187,7 +187,7 @@ func TestAuth_InvalidJWTRejected(t *testing.T) {
 
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 
 	invalidTokens := []struct {
 		name  string
@@ -230,7 +230,7 @@ func TestAuth_TokenRefresh(t *testing.T) {
 	authClient := clients.NewAuthClient(env.AuthService.HTTPURL)
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 	password := "SecurePassword123!"
 
@@ -284,7 +284,7 @@ func TestAuth_Logout(t *testing.T) {
 	authClient := clients.NewAuthClient(env.AuthService.HTTPURL)
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 	password := "SecurePassword123!"
 
@@ -339,9 +339,9 @@ func TestAuth_OrganizationIsolation(t *testing.T) {
 	authClient := clients.NewAuthClient(env.AuthService.HTTPURL)
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 
-	// Create two organizations
-	org1ID := uuid.New().String()
-	org2ID := uuid.New().String()
+	// Use pre-existing test organizations
+	org1ID := TestOrganizationAID
+	org2ID := TestOrganizationBID
 
 	// User 1 in Org 1
 	email1 := generateTestEmail()

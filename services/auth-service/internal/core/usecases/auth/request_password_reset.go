@@ -63,20 +63,20 @@ func (uc *RequestPasswordResetUseCase) Execute(ctx context.Context, email string
 
 	if err := uc.tokenRepo.StorePasswordResetToken(ctx, passwordResetToken); err != nil {
 		uc.logger.Error(ctx, err, "Failed to store password reset token", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 		return pkgErrors.NewInternalServerError("failed to initiate password reset")
 	}
 
 	if err := uc.emailService.SendPasswordResetEmail(ctx, user.Email, resetToken, user.FirstName); err != nil {
 		uc.logger.Error(ctx, err, "Failed to send password reset email", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 			"email":   user.Email,
 		})
 	}
 
 	uc.logger.Info(ctx, "Password reset requested successfully", pkgLogger.Tags{
-		"user_id":         user.ID.String(),
+		"user_id":         user.IDString(),
 		"email":           user.Email,
 		"organization_id": user.OrganizationID.String(),
 	})

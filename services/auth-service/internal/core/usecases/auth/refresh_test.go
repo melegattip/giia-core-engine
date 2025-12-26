@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"strconv"
 	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -15,14 +16,14 @@ import (
 
 func TestRefreshTokenUseCase_Execute_WithValidToken_ReturnsNewAccessToken(t *testing.T) {
 	// Given
-	givenUserID := uuid.New()
+	givenUserID := 1
 	givenOrgID := uuid.New()
 	givenEmail := "user@example.com"
 	givenRefreshToken := "valid_refresh_token"
 	givenTokenHash := hashToken(givenRefreshToken)
 
 	givenClaims := &jwt.RegisteredClaims{
-		Subject: givenUserID.String(),
+		Subject: strconv.Itoa(givenUserID),
 	}
 
 	givenStoredToken := &domain.RefreshToken{
@@ -138,12 +139,12 @@ func TestRefreshTokenUseCase_Execute_WithExpiredToken_ReturnsUnauthorized(t *tes
 
 func TestRefreshTokenUseCase_Execute_WithRevokedToken_ReturnsUnauthorized(t *testing.T) {
 	// Given
-	givenUserID := uuid.New()
+	givenUserID := 1
 	givenRevokedToken := "revoked_token"
 	givenTokenHash := hashToken(givenRevokedToken)
 
 	givenClaims := &jwt.RegisteredClaims{
-		Subject: givenUserID.String(),
+		Subject: strconv.Itoa(givenUserID),
 	}
 
 	givenStoredToken := &domain.RefreshToken{
@@ -185,7 +186,7 @@ func TestRefreshTokenUseCase_Execute_WithInvalidUserIDInToken_ReturnsUnauthorize
 
 	givenStoredToken := &domain.RefreshToken{
 		TokenHash: givenTokenHash,
-		UserID:    uuid.New(),
+		UserID:    1,
 		Revoked:   false,
 	}
 
@@ -212,12 +213,12 @@ func TestRefreshTokenUseCase_Execute_WithInvalidUserIDInToken_ReturnsUnauthorize
 
 func TestRefreshTokenUseCase_Execute_WithNonExistentUser_ReturnsUnauthorized(t *testing.T) {
 	// Given
-	givenUserID := uuid.New()
+	givenUserID := 1
 	givenRefreshToken := "valid_token_nonexistent_user"
 	givenTokenHash := hashToken(givenRefreshToken)
 
 	givenClaims := &jwt.RegisteredClaims{
-		Subject: givenUserID.String(),
+		Subject: strconv.Itoa(givenUserID),
 	}
 
 	givenStoredToken := &domain.RefreshToken{
@@ -252,13 +253,13 @@ func TestRefreshTokenUseCase_Execute_WithNonExistentUser_ReturnsUnauthorized(t *
 
 func TestRefreshTokenUseCase_Execute_WithInactiveUser_ReturnsForbidden(t *testing.T) {
 	// Given
-	givenUserID := uuid.New()
+	givenUserID := 1
 	givenOrgID := uuid.New()
 	givenRefreshToken := "valid_token_inactive_user"
 	givenTokenHash := hashToken(givenRefreshToken)
 
 	givenClaims := &jwt.RegisteredClaims{
-		Subject: givenUserID.String(),
+		Subject: strconv.Itoa(givenUserID),
 	}
 
 	givenStoredToken := &domain.RefreshToken{
@@ -300,14 +301,14 @@ func TestRefreshTokenUseCase_Execute_WithInactiveUser_ReturnsForbidden(t *testin
 
 func TestRefreshTokenUseCase_Execute_WhenAccessTokenGenerationFails_ReturnsInternalServerError(t *testing.T) {
 	// Given
-	givenUserID := uuid.New()
+	givenUserID := 1
 	givenOrgID := uuid.New()
 	givenEmail := "user@example.com"
 	givenRefreshToken := "valid_token"
 	givenTokenHash := hashToken(givenRefreshToken)
 
 	givenClaims := &jwt.RegisteredClaims{
-		Subject: givenUserID.String(),
+		Subject: strconv.Itoa(givenUserID),
 	}
 
 	givenStoredToken := &domain.RefreshToken{

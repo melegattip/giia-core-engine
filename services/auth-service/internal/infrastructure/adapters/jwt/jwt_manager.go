@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -26,16 +27,17 @@ func NewJWTManager(secretKey string, accessExpiry, refreshExpiry time.Duration, 
 	}
 }
 
-func (j *JWTManager) GenerateAccessToken(userID, orgID uuid.UUID, email string, roles []string) (string, error) {
+func (j *JWTManager) GenerateAccessToken(userID int, orgID uuid.UUID, email string, roles []string) (string, error) {
 	now := time.Now()
+	userIDStr := strconv.Itoa(userID)
 	claims := &providers.Claims{
-		UserID:         userID.String(),
+		UserID:         userIDStr,
 		Email:          email,
 		OrganizationID: orgID.String(),
 		Roles:          roles,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    j.issuer,
-			Subject:   userID.String(),
+			Subject:   userIDStr,
 			ExpiresAt: jwt.NewNumericDate(now.Add(j.accessExpiry)),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
@@ -51,11 +53,12 @@ func (j *JWTManager) GenerateAccessToken(userID, orgID uuid.UUID, email string, 
 	return signedToken, nil
 }
 
-func (j *JWTManager) GenerateRefreshToken(userID uuid.UUID) (string, error) {
+func (j *JWTManager) GenerateRefreshToken(userID int) (string, error) {
 	now := time.Now()
+	userIDStr := strconv.Itoa(userID)
 	claims := &jwt.RegisteredClaims{
 		Issuer:    j.issuer,
-		Subject:   userID.String(),
+		Subject:   userIDStr,
 		ExpiresAt: jwt.NewNumericDate(now.Add(j.refreshExpiry)),
 		IssuedAt:  jwt.NewNumericDate(now),
 		NotBefore: jwt.NewNumericDate(now),

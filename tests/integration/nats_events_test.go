@@ -45,7 +45,7 @@ func TestNATSEvents_ProductCreated(t *testing.T) {
 	authClient := clients.NewAuthClient(env.AuthService.HTTPURL)
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 	password := "SecurePassword123!"
 
@@ -123,7 +123,7 @@ func TestNATSEvents_PurchaseOrderCreated(t *testing.T) {
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 	executionClient := clients.NewExecutionClient(env.ExecutionService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 	password := "SecurePassword123!"
 
@@ -212,7 +212,7 @@ func TestNATSEvents_GoodsReceived(t *testing.T) {
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 	executionClient := clients.NewExecutionClient(env.ExecutionService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 
 	_, err = authClient.Register(ctx, clients.RegisterRequest{
@@ -354,7 +354,7 @@ func TestNATSEvents_EventOrdering(t *testing.T) {
 	authClient := clients.NewAuthClient(env.AuthService.HTTPURL)
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 
 	_, err = authClient.Register(ctx, clients.RegisterRequest{

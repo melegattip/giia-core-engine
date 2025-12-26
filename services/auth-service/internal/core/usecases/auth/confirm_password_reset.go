@@ -53,7 +53,7 @@ func (uc *ConfirmPasswordResetUseCase) Execute(ctx context.Context, token, newPa
 
 	if resetToken.Used {
 		uc.logger.Warn(ctx, "Attempted to use already used reset token", pkgLogger.Tags{
-			"user_id": resetToken.UserID.String(),
+			"user_id": resetToken.UserID,
 		})
 		return pkgErrors.NewBadRequest("reset token has already been used")
 	}
@@ -61,7 +61,7 @@ func (uc *ConfirmPasswordResetUseCase) Execute(ctx context.Context, token, newPa
 	user, err := uc.userRepo.GetByID(ctx, resetToken.UserID)
 	if err != nil {
 		uc.logger.Error(ctx, err, "Failed to get user for password reset", pkgLogger.Tags{
-			"user_id": resetToken.UserID.String(),
+			"user_id": resetToken.UserID,
 		})
 		return pkgErrors.NewInternalServerError("failed to reset password")
 	}
@@ -75,19 +75,19 @@ func (uc *ConfirmPasswordResetUseCase) Execute(ctx context.Context, token, newPa
 	user.Password = string(hashedPassword)
 	if err := uc.userRepo.Update(ctx, user); err != nil {
 		uc.logger.Error(ctx, err, "Failed to update user password", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 		return pkgErrors.NewInternalServerError("failed to reset password")
 	}
 
 	if err := uc.tokenRepo.MarkPasswordResetTokenUsed(ctx, tokenHash); err != nil {
 		uc.logger.Error(ctx, err, "Failed to mark reset token as used", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 	}
 
 	uc.logger.Info(ctx, "Password reset completed successfully", pkgLogger.Tags{
-		"user_id":         user.ID.String(),
+		"user_id":         user.IDString(),
 		"email":           user.Email,
 		"organization_id": user.OrganizationID.String(),
 	})

@@ -35,7 +35,7 @@ func TestSalesOrderFlow_CreateToShip(t *testing.T) {
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 	executionClient := clients.NewExecutionClient(env.ExecutionService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 	password := "SecurePassword123!"
 
@@ -175,7 +175,7 @@ func TestSalesOrderFlow_CreateAndCancel(t *testing.T) {
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 	executionClient := clients.NewExecutionClient(env.ExecutionService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 
 	_, err := authClient.Register(ctx, clients.RegisterRequest{
@@ -247,7 +247,7 @@ func TestSalesOrderFlow_InsufficientInventory(t *testing.T) {
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 	executionClient := clients.NewExecutionClient(env.ExecutionService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 
 	_, err := authClient.Register(ctx, clients.RegisterRequest{
@@ -326,7 +326,7 @@ func TestSalesOrderFlow_MultipleItems(t *testing.T) {
 	catalogClient := clients.NewCatalogClient(env.CatalogService.HTTPURL)
 	executionClient := clients.NewExecutionClient(env.ExecutionService.HTTPURL)
 
-	organizationID := uuid.New().String()
+	organizationID := DefaultOrganizationID
 	email := generateTestEmail()
 
 	_, err := authClient.Register(ctx, clients.RegisterRequest{

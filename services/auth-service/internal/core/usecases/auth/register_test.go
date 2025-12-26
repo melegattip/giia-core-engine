@@ -431,7 +431,7 @@ func TestRegisterUseCase_Execute_WithDuplicateEmailInOrganization_ReturnsBadRequ
 	}
 
 	givenExistingUser := &domain.User{
-		ID:             uuid.New(),
+		ID:             1,
 		Email:          givenEmail,
 		OrganizationID: givenOrgID,
 	}

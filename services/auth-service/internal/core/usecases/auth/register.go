@@ -131,12 +131,12 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, req *domain.RegisterRequ
 
 	if err := uc.tokenRepo.StoreActivationToken(ctx, activation); err != nil {
 		uc.logger.Error(ctx, err, "Failed to store activation token", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 	}
 
 	uc.logger.Info(ctx, "User registered successfully", pkgLogger.Tags{
-		"user_id":         user.ID.String(),
+		"user_id":         user.IDString(),
 		"email":           user.Email,
 		"organization_id": user.OrganizationID.String(),
 	})
@@ -153,7 +153,7 @@ func (uc *RegisterUseCase) publishUserCreatedEvent(ctx context.Context, user *do
 		user.OrganizationID.String(),
 		uc.timeManager.Now(),
 		map[string]interface{}{
-			"user_id":    user.ID.String(),
+			"user_id":    user.IDString(),
 			"email":      user.Email,
 			"first_name": user.FirstName,
 			"last_name":  user.LastName,
@@ -163,7 +163,7 @@ func (uc *RegisterUseCase) publishUserCreatedEvent(ctx context.Context, user *do
 
 	if err := uc.eventPublisher.PublishAsync(ctx, "auth.user.created", event); err != nil {
 		uc.logger.Error(ctx, err, "Failed to publish user created event", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 		})
 	}
 }

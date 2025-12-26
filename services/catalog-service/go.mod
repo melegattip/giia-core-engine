@@ -8,6 +8,7 @@ replace (
 	github.com/melegattip/giia-core-engine/pkg/errors => ../../pkg/errors
 	github.com/melegattip/giia-core-engine/pkg/events => ../../pkg/events
 	github.com/melegattip/giia-core-engine/pkg/logger => ../../pkg/logger
+	github.com/melegattip/giia-core-engine/pkg/testutil => ../../pkg/testutil
 )
 
 require (
@@ -37,7 +38,6 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/nats-io/nats.go v1.37.0 // indirect
@@ -46,6 +46,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rs/zerolog v1.31.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
+	github.com/testcontainers/testcontainers-go v0.40.0 // indirect
 	golang.org/x/crypto v0.43.0 // indirect
 	golang.org/x/net v0.46.1-0.20251013234738-63d1a5100f82 // indirect
 	golang.org/x/sync v0.17.0 // indirect

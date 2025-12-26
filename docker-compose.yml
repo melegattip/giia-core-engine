@@ -14,7 +14,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U giia"]
+      test: [ "CMD-SHELL", "pg_isready -U giia" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -31,7 +31,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -43,17 +43,16 @@ services:
     image: nats:2-alpine
     container_name: giia-nats
     command:
-      - "-js"              # Enable Jetstream
-      - "-sd=/data"        # Storage directory for persistence
-      - "-m=8222"          # HTTP monitoring port
-      - "--max_payload=8MB" # Max message size
+      - "-js" # Enable Jetstream
+      - "-sd=/data" # Storage directory for persistence
+      - "-m=8222" # HTTP monitoring port
     ports:
-      - "4222:4222"  # Client connections
-      - "8222:8222"  # HTTP monitoring
+      - "4222:4222" # Client connections
+      - "8222:8222" # HTTP monitoring
     volumes:
       - nats_data:/data
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8222/healthz"]
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8222/healthz" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -97,12 +96,12 @@ services:
   # Auth Service
   auth-service:
     build:
-      context: ./services/auth-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/auth-service/Dockerfile
     container_name: giia-auth-service
     environment:
       # Service Configuration
-      PORT: "8083"
+      HTTP_PORT: "8080"
       GRPC_PORT: "9091"
       SERVICE_NAME: "auth-service"
       LOG_LEVEL: "debug"
@@ -128,11 +127,11 @@ services:
       # JWT Configuration
       JWT_SECRET: "dev_jwt_secret_change_in_production_min_32_chars"
       JWT_ISSUER: "giia-auth-service"
-      JWT_ACCESS_EXPIRY: "15m"
-      JWT_REFRESH_EXPIRY: "7d"
+      JWT_ACCESS_EXPIRY_HOURS: "24"
+      JWT_REFRESH_EXPIRY_DAYS: "7"
     ports:
-      - "8083:8083"  # HTTP
-      - "9091:9091"  # gRPC
+      - "8080:8080" # HTTP
+      - "9091:9091" # gRPC
     depends_on:
       postgres:
         condition: service_healthy
@@ -143,7 +142,7 @@ services:
     networks:
       - giia-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8083/health"]
+      test: [ "CMD", "wget", "-q", "-O-", "http://localhost:8080/health" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -157,6 +156,7 @@ services:
     container_name: giia-catalog-service
     environment:
       # Service Configuration
+      HOST: "0.0.0.0"
       PORT: "8082"
       SERVICE_NAME: "catalog-service"
       LOG_LEVEL: "debug"
@@ -169,6 +169,7 @@ services:
       DB_USER: "giia"
       DB_PASSWORD: "giia_dev_password"
       DB_SSLMODE: "disable"
+      DB_SCHEMA: "public"
       DB_POOL_MODE: "transaction"
 
       # Redis Configuration
@@ -199,11 +200,162 @@ services:
     networks:
       - giia-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/health"]
+      test: [ "CMD", "wget", "-q", "-O-", "http://localhost:8082/health" ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  # DDMRP Engine Service
+  ddmrp-engine-service:
+    build:
+      context: .
+      dockerfile: services/ddmrp-engine-service/Dockerfile
+    container_name: giia-ddmrp-engine-service
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8083"
+      GRPC_PORT: "9092"
+      SERVICE_NAME: "ddmrp-engine-service"
+      LOG_LEVEL: "debug"
+      ENVIRONMENT: "development"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "giia_dev"
+      DB_USER: "giia"
+      DB_PASSWORD: "giia_dev_password"
+      DB_SSLMODE: "disable"
+      DB_SCHEMA: "public"
+      NATS_URL: "nats://nats:4222"
+    ports:
+      - "8083:8083"
+      - "9092:9092"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - giia-network
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O-", "http://localhost:8083/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Execution Service
+  execution-service:
+    build:
+      context: .
+      dockerfile: services/execution-service/Dockerfile
+    container_name: giia-execution-service
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8084"
+      SERVICE_NAME: "execution-service"
+      LOG_LEVEL: "debug"
+      ENVIRONMENT: "development"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "giia_dev"
+      DB_USER: "giia"
+      DB_PASSWORD: "giia_dev_password"
+      DB_SSLMODE: "disable"
+      DB_SCHEMA: "public"
+      NATS_URL: "nats://nats:4222"
+      CATALOG_SERVICE_URL: "http://catalog-service:8082"
+      AUTH_SERVICE_GRPC_URL: "auth-service:9091"
+    ports:
+      - "8084:8084"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - giia-network
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O-", "http://localhost:8084/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Analytics Service
+  analytics-service:
+    build:
+      context: .
+      dockerfile: services/analytics-service/Dockerfile
+    container_name: giia-analytics-service
+    environment:
+      # Service uses DATABASE_URL format
+      DATABASE_URL: "postgresql://giia:giia_dev_password@postgres:5432/giia_dev?sslmode=disable"
+      HTTP_PORT: "8085"
+      GRPC_PORT: "9093"
+      # Service adapters
+      CATALOG_SERVICE_ADDR: "catalog-service:9090"
+      DDMRP_SERVICE_ADDR: "ddmrp-engine-service:9092"
+      EXECUTION_SERVICE_ADDR: "execution-service:9091"
+    ports:
+      - "8085:8085"
+      - "9093:9093"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - giia-network
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O-", "http://localhost:8085/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # AI Intelligence Hub
+  ai-intelligence-hub:
+    build:
+      context: .
+      dockerfile: services/ai-intelligence-hub/Dockerfile
+    container_name: giia-ai-intelligence-hub
+    environment:
+      # Service uses AI_HUB_ prefix for config
+      AI_HUB_LOG_LEVEL: "debug"
+      AI_HUB_DB_HOST: "postgres"
+      AI_HUB_DB_PORT: "5432"
+      AI_HUB_DB_NAME: "giia_dev"
+      AI_HUB_DB_USER: "giia"
+      AI_HUB_DB_PASSWORD: "giia_dev_password"
+      AI_HUB_DB_SSLMODE: "disable"
+      AI_HUB_NATS_SERVERS: "nats://nats:4222"
+      # Claude API (optional - service will work without it)
+      AI_HUB_CLAUDE_API_KEY: ""
+      AI_HUB_CLAUDE_MODEL: "claude-3-sonnet-20240229"
+    ports:
+      - "8086:8086"
+      - "8087:8087"
+      - "9094:9094"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - giia-network
+    healthcheck:
+      # This service is event-driven and doesn't expose HTTP endpoints
+      # Check if the process file descriptor is valid
+      test: [ "CMD-SHELL", "ls /proc/1/exe || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
 volumes:
   postgres_data:

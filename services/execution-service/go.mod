@@ -3,14 +3,14 @@ module github.com/melegattip/giia-core-engine/services/execution-service
 go 1.24.0
 
 require (
-	github.com/go-chi/chi/v5 v5.2.0
+	github.com/go-chi/chi/v5 v5.2.3
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/nats-io/nats.go v1.48.0
 	github.com/stretchr/testify v1.11.1
-	google.golang.org/grpc v1.72.0
-	gorm.io/driver/postgres v1.5.11
-	gorm.io/gorm v1.25.12
+	google.golang.org/grpc v1.77.0
+	gorm.io/driver/postgres v1.6.0
+	gorm.io/gorm v1.31.1
 )
 
 require (
@@ -28,17 +28,21 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
-	golang.org/x/net v0.35.0 // indirect
-	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250218202821-56aae31c358a // indirect
-	google.golang.org/protobuf v1.36.6 // indirect
+	golang.org/x/crypto v0.43.0 // indirect
+	golang.org/x/net v0.46.1-0.20251013234738-63d1a5100f82 // indirect
+	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/text v0.30.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251022142026-3a174f9686a8 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace (
+	github.com/melegattip/giia-core-engine/pkg/config => ../../pkg/config
+	github.com/melegattip/giia-core-engine/pkg/database => ../../pkg/database
 	github.com/melegattip/giia-core-engine/pkg/errors => ../../pkg/errors
+	github.com/melegattip/giia-core-engine/pkg/events => ../../pkg/events
 	github.com/melegattip/giia-core-engine/pkg/logger => ../../pkg/logger
+	github.com/melegattip/giia-core-engine/pkg/testutil => ../../pkg/testutil
 )

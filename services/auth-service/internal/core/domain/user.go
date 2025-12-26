@@ -1,23 +1,24 @@
 package domain
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type User struct {
-	ID             uuid.UUID    `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Email          string       `json:"email" gorm:"type:varchar(255);not null;index:idx_users_email_org"`
-	Password       string       `json:"-" gorm:"type:varchar(255);not null"`
-	FirstName      string       `json:"first_name" gorm:"type:varchar(100)"`
-	LastName       string       `json:"last_name" gorm:"type:varchar(100)"`
+	ID             int          `json:"id" gorm:"primaryKey;autoIncrement"`
+	Email          string       `json:"email" gorm:"type:varchar(255);not null;uniqueIndex"`
+	Password       string       `json:"-" gorm:"column:password_hash;type:varchar(255);not null"`
+	FirstName      string       `json:"first_name" gorm:"column:first_name;type:varchar(100);not null"`
+	LastName       string       `json:"last_name" gorm:"column:last_name;type:varchar(100);not null"`
 	Phone          string       `json:"phone" gorm:"type:varchar(20)"`
 	Avatar         string       `json:"avatar,omitempty" gorm:"type:varchar(500)"`
-	Status         UserStatus   `json:"status" gorm:"type:varchar(20);not null;default:'inactive'"`
-	OrganizationID uuid.UUID    `json:"organization_id" gorm:"type:uuid;not null;index:idx_users_organization_id,idx_users_email_org"`
+	Status         UserStatus   `json:"status" gorm:"type:varchar(20);not null;default:'active'"`
+	OrganizationID uuid.UUID    `json:"organization_id" gorm:"type:uuid;not null"`
 	VerifiedAt     *time.Time   `json:"verified_at,omitempty" gorm:"type:timestamp"`
-	LastLoginAt    *time.Time   `json:"last_login_at,omitempty" gorm:"type:timestamp"`
+	LastLoginAt    *time.Time   `json:"last_login_at,omitempty" gorm:"column:last_login;type:timestamp"`
 	CreatedAt      time.Time    `json:"created_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
 	UpdatedAt      time.Time    `json:"updated_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
 	Organization   Organization `json:"organization,omitempty" gorm:"foreignKey:OrganizationID"`
@@ -35,8 +36,13 @@ func (User) TableName() string {
 	return "users"
 }
 
+// IDString returns the user ID as a string for use in tokens, events, etc.
+func (u *User) IDString() string {
+	return strconv.Itoa(u.ID)
+}
+
 type UserResponse struct {
-	ID             uuid.UUID  `json:"id"`
+	ID             int        `json:"id"`
 	Email          string     `json:"email"`
 	FirstName      string     `json:"first_name"`
 	LastName       string     `json:"last_name"`
@@ -47,6 +53,11 @@ type UserResponse struct {
 	VerifiedAt     *time.Time `json:"verified_at,omitempty"`
 	LastLoginAt    *time.Time `json:"last_login_at,omitempty"`
 	CreatedAt      time.Time  `json:"created_at"`
+}
+
+// IDString returns the user ID as a string
+func (u *UserResponse) IDString() string {
+	return strconv.Itoa(u.ID)
 }
 
 func (u *User) ToResponse() *UserResponse {

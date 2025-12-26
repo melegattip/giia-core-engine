@@ -22,7 +22,7 @@ func (r *userRepository) Create(ctx context.Context, user *domain.User) error {
 	return r.db.WithContext(ctx).Create(user).Error
 }
 
-func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
+func (r *userRepository) GetByID(ctx context.Context, id int) (*domain.User, error) {
 	orgID := getOrgIDFromContext(ctx)
 
 	var user domain.User
@@ -79,7 +79,7 @@ func (r *userRepository) Update(ctx context.Context, user *domain.User) error {
 	return query.Save(user).Error
 }
 
-func (r *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *userRepository) Delete(ctx context.Context, id int) error {
 	orgID := getOrgIDFromContext(ctx)
 
 	query := r.db.WithContext(ctx)
@@ -91,7 +91,7 @@ func (r *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return query.Delete(&domain.User{}, "id = ?", id).Error
 }
 
-func (r *userRepository) UpdateLastLogin(ctx context.Context, userID uuid.UUID) error {
+func (r *userRepository) UpdateLastLogin(ctx context.Context, userID int) error {
 	orgID := getOrgIDFromContext(ctx)
 
 	query := r.db.WithContext(ctx)

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/google/uuid"
 
@@ -19,7 +20,7 @@ type ValidateTokenUseCase struct {
 
 type TokenValidationResult struct {
 	Valid          bool
-	UserID         uuid.UUID
+	UserID         string
 	Email          string
 	OrganizationID uuid.UUID
 	Roles          []string
@@ -53,7 +54,7 @@ func (uc *ValidateTokenUseCase) Execute(ctx context.Context, tokenString string)
 		}, nil
 	}
 
-	userID, err := uuid.Parse(claims.UserID)
+	userID, err := strconv.Atoi(claims.UserID)
 	if err != nil {
 		uc.logger.Error(ctx, err, "Invalid user ID in token claims", pkgLogger.Tags{
 			"user_id": claims.UserID,
@@ -76,7 +77,7 @@ func (uc *ValidateTokenUseCase) Execute(ctx context.Context, tokenString string)
 	user, err := uc.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		uc.logger.Warn(ctx, "User not found for valid token", pkgLogger.Tags{
-			"user_id": userID.String(),
+			"user_id": strconv.Itoa(userID),
 		})
 		return &TokenValidationResult{
 			Valid: false,
@@ -85,7 +86,7 @@ func (uc *ValidateTokenUseCase) Execute(ctx context.Context, tokenString string)
 
 	if user.Status != domain.UserStatusActive {
 		uc.logger.Warn(ctx, "Token validation failed - user not active", pkgLogger.Tags{
-			"user_id": user.ID.String(),
+			"user_id": user.IDString(),
 			"status":  string(user.Status),
 		})
 		return &TokenValidationResult{
@@ -96,13 +97,13 @@ func (uc *ValidateTokenUseCase) Execute(ctx context.Context, tokenString string)
 	expiresAt := claims.ExpiresAt.Unix()
 
 	uc.logger.Info(ctx, "Token validated successfully", pkgLogger.Tags{
-		"user_id":         userID.String(),
+		"user_id":         strconv.Itoa(userID),
 		"organization_id": orgID.String(),
 	})
 
 	return &TokenValidationResult{
 		Valid:          true,
-		UserID:         userID,
+		UserID:         strconv.Itoa(userID),
 		Email:          claims.Email,
 		OrganizationID: orgID,
 		Roles:          claims.Roles,

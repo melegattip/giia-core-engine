@@ -16,8 +16,8 @@ type Claims struct {
 }
 
 type JWTManager interface {
-	GenerateAccessToken(userID, orgID uuid.UUID, email string, roles []string) (string, error)
-	GenerateRefreshToken(userID uuid.UUID) (string, error)
+	GenerateAccessToken(userID int, orgID uuid.UUID, email string, roles []string) (string, error)
+	GenerateRefreshToken(userID int) (string, error)
 	ValidateAccessToken(tokenString string) (*Claims, error)
 	ValidateRefreshToken(tokenString string) (*jwt.RegisteredClaims, error)
 	GetAccessExpiry() time.Duration

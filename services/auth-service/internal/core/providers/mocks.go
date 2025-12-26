@@ -23,7 +23,7 @@ func (m *MockUserRepository) Create(ctx context.Context, user *domain.User) erro
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
+func (m *MockUserRepository) GetByID(ctx context.Context, id int) (*domain.User, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -52,12 +52,12 @@ func (m *MockUserRepository) Update(ctx context.Context, user *domain.User) erro
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (m *MockUserRepository) Delete(ctx context.Context, id int) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) UpdateLastLogin(ctx context.Context, userID uuid.UUID) error {
+func (m *MockUserRepository) UpdateLastLogin(ctx context.Context, userID int) error {
 	args := m.Called(ctx, userID)
 	return args.Error(0)
 }
@@ -397,12 +397,12 @@ type MockJWTManager struct {
 	mock.Mock
 }
 
-func (m *MockJWTManager) GenerateAccessToken(userID, orgID uuid.UUID, email string, roles []string) (string, error) {
+func (m *MockJWTManager) GenerateAccessToken(userID int, orgID uuid.UUID, email string, roles []string) (string, error) {
 	args := m.Called(userID, orgID, email, roles)
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockJWTManager) GenerateRefreshToken(userID uuid.UUID) (string, error) {
+func (m *MockJWTManager) GenerateRefreshToken(userID int) (string, error) {
 	args := m.Called(userID)
 	return args.String(0), args.Error(1)
 }

@@ -50,7 +50,7 @@ func TestRequestPasswordResetUseCase_Execute_Success(t *testing.T) {
 	ctx := context.Background()
 	email := "test@example.com"
 	orgID := uuid.New()
-	userID := uuid.New()
+	userID := 1
 
 	givenUser := &domain.User{
 		ID:             userID,
@@ -175,7 +175,7 @@ func TestRequestPasswordResetUseCase_Execute_TokenStorageFails_ReturnsError(t *t
 	ctx := context.Background()
 	email := "test@example.com"
 	orgID := uuid.New()
-	userID := uuid.New()
+	userID := 1
 
 	givenUser := &domain.User{
 		ID:             userID,
@@ -217,7 +217,7 @@ func TestRequestPasswordResetUseCase_Execute_EmailSendFails_StillReturnsSuccess(
 	ctx := context.Background()
 	email := "test@example.com"
 	orgID := uuid.New()
-	userID := uuid.New()
+	userID := 1
 
 	givenUser := &domain.User{
 		ID:             userID,

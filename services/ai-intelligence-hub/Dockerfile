@@ -1,8 +1,8 @@
 # =============================================================================
-# GIIA Execution Service - Multi-stage Docker Build
+# GIIA AI Intelligence Hub - Multi-stage Docker Build
 # =============================================================================
 # Build from repository root:
-#   docker build -f services/execution-service/Dockerfile -t giia/execution-service .
+#   docker build -f services/ai-intelligence-hub/Dockerfile -t giia/ai-intelligence-hub .
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -18,9 +18,9 @@ WORKDIR /build
 COPY pkg/ ./pkg/
 
 # Copy service files
-COPY services/execution-service/ ./services/execution-service/
+COPY services/ai-intelligence-hub/ ./services/ai-intelligence-hub/
 
-WORKDIR /build/services/execution-service
+WORKDIR /build/services/ai-intelligence-hub
 
 # Disable Go workspace mode for Docker build
 ENV GOWORK=off
@@ -31,7 +31,7 @@ RUN go mod tidy && go mod download
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s" \
-    -o /app/execution-service \
+    -o /app/ai-intelligence-hub \
     ./cmd/api
 
 # -----------------------------------------------------------------------------
@@ -46,17 +46,22 @@ RUN addgroup -g 1001 -S appgroup && \
 
 WORKDIR /app
 
-COPY --from=builder /app/execution-service .
+COPY --from=builder /app/ai-intelligence-hub .
 
 RUN chown -R appuser:appgroup /app
 
 USER appuser
 
-EXPOSE 8084
+# HTTP API
+EXPOSE 8086
+# gRPC
+EXPOSE 9094
+# WebSocket
+EXPOSE 8087
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget -q -O- http://localhost:8084/health || exit 1
+    CMD wget -q -O- http://localhost:8086/health || exit 1
 
 ENV ENVIRONMENT=production
 
-ENTRYPOINT ["./execution-service"]
+ENTRYPOINT ["./ai-intelligence-hub"]

@@ -25,6 +25,10 @@ require (
 )
 
 replace (
+	github.com/melegattip/giia-core-engine/pkg/config => ../../pkg/config
+	github.com/melegattip/giia-core-engine/pkg/database => ../../pkg/database
 	github.com/melegattip/giia-core-engine/pkg/errors => ../../pkg/errors
+	github.com/melegattip/giia-core-engine/pkg/events => ../../pkg/events
 	github.com/melegattip/giia-core-engine/pkg/logger => ../../pkg/logger
+	github.com/melegattip/giia-core-engine/pkg/testutil => ../../pkg/testutil
 )
